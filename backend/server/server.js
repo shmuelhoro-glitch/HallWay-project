@@ -8,7 +8,7 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-app.get("/test", (req, res) => {
+app.get("/test", (_req, res) => {
     res.send("hyy")
 })
 
