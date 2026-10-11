@@ -15,7 +15,7 @@ function createSupabaseFactory(supabase) {
         },
 
         async findOne(table, query) {
-            const { data, error } = await supabase.from(table).select().match(query).single();
+            const { data, error } = await supabase.from(table).select().match(query).maybeSingle();
             if (error) throw error;
             return data;
         },

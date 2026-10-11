@@ -1,21 +1,20 @@
 import { supabaseRepo } from "../repositories/sqlRepo.js";
 
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
+
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
     const exists = await supabaseRepo.findOne("users", { email });
     if (!exists) {
-      return next(
-        res.status(401).json({ message: "Invalid email or password" }),
-      );
+      return res.status(401).json({success: false, message: "Invalid email or password" });
     }
 
-    const isMatch = await bcrypt.compare(password, exists.password);
+    const isMatch = await bcrypt.compare(password, exists.hashPassword);
 
     if (!isMatch) {
-      return next(
-        res.status(401).json({ message: "Invalid email or password" }),
-      );
+      return res.status(401).json({success: false, message: "Invalid email or password" })
     }
 
     const token = jwt.sign(
@@ -24,11 +23,11 @@ export async function login(req, res, next) {
       { expiresIn: "24h" },
     );
 
-    return res.status(200).json({
+    return res.status(200).json({success: true,
       token,
       user: {
         id: exists.id,
-        userName: exists.userName,
+        username: exists.userName,
         role: exists.role,
         buildingIds: exists.buildingIds,
       },
