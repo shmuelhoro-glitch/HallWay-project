@@ -1,0 +1,58 @@
+.building-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 8px;
+}
+
+.building-heading {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.building-name {
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.building-subtitle {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.building-search {
+  padding: 4px 16px 0;
+}
+
+.building-map {
+  position: relative;
+  flex: 1;
+  min-height: 180px;
+  margin: 12px 16px 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--map-bg);
+}
+
+.building-floor-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+}

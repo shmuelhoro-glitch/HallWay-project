@@ -1,0 +1,35 @@
+.route-line-outline,
+.route-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-line-outline {
+  stroke: #ffffff;
+}
+
+.route-line {
+  stroke: var(--blue);
+}
+
+.route-floor-change {
+  fill: var(--blue);
+  stroke: #ffffff;
+}
+
+.route-icon {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-destination {
+  fill: var(--blue);
+  stroke: #ffffff;
+}
+
+.route-destination-center {
+  fill: #ffffff;
+}

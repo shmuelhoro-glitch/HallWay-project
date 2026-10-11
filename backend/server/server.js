@@ -20,7 +20,7 @@ app.use(express.json({limit: "5mb" }))
 app.use(cors())
 
 app.get("/test", (_req, res) => {
-    res.send("hyy")
+    res.send({success:true , message: "working..."})
 })
 
 app.use('/api/auth', authRoutes);

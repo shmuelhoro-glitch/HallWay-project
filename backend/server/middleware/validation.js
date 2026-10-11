@@ -20,7 +20,7 @@ export const validateRequest = (schemas) => {
                     details: result.error.flatten().fieldErrors
                 });
             }
-            req.query = result.data; 
+            req.validatedQuery = result.data; 
         }
 
         if (schemas.params) {

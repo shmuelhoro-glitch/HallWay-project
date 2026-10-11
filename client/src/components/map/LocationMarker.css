@@ -1,0 +1,18 @@
+.location-halo {
+  fill: var(--yellow);
+  fill-opacity: 0.35;
+}
+
+.location-dot {
+  fill: var(--yellow);
+  stroke: var(--ink);
+}
+
+.location-pill {
+  fill: var(--ink);
+}
+
+.location-text {
+  fill: #ffffff;
+  font-weight: 500;
+}

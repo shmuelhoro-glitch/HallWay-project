@@ -1,0 +1,23 @@
+.category-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.category-filter .chip-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-filter-floor {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}

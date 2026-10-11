@@ -1,0 +1,11 @@
+.building-filters {
+  padding: 16px 20px 0;
+}
+
+.building-filters-types {
+  margin-top: 12px;
+}
+
+.building-filters-types .chip {
+  height: 44px;
+}

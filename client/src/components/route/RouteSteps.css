@@ -1,0 +1,86 @@
+.route-steps-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.route-steps-count {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.route-steps-bars {
+  display: flex;
+  gap: 4px;
+}
+
+.route-steps-bars span {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.route-steps-bars span.is-done {
+  background: var(--ink);
+}
+
+.route-steps-current {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.route-steps-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--blue);
+  color: #ffffff;
+}
+
+.route-steps-icon.is-shelter {
+  background: var(--green);
+}
+
+.route-steps-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.route-steps-subtitle {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.route-steps-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.route-steps-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}

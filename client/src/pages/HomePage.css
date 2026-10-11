@@ -1,0 +1,61 @@
+.home-header {
+  padding: 20px 20px 0;
+}
+
+.home-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.home-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-username {
+  max-width: 120px;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-title {
+  margin: 22px 0 6px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.home-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.home-map {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+  margin: 16px 20px 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.home-scan-wide {
+  flex: 1;
+}

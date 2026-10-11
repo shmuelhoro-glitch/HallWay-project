@@ -1,0 +1,30 @@
+.map-place {
+  cursor: pointer;
+}
+
+.map-place-dot {
+  fill: #ffffff;
+  stroke: var(--ink);
+}
+
+.map-place.is-shelter .map-place-dot {
+  fill: var(--green-soft);
+  stroke: var(--green);
+}
+
+.map-place.is-selected .map-place-dot {
+  fill: var(--yellow);
+  stroke: var(--ink);
+}
+
+.map-place-label {
+  fill: var(--ink-soft);
+  font-weight: 500;
+  paint-order: stroke; /* white outline behind the text, readable on any plan */
+  stroke: #ffffff;
+  stroke-linejoin: round;
+}
+
+.map-place.is-shelter .map-place-label {
+  fill: var(--green);
+}

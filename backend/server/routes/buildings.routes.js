@@ -5,12 +5,13 @@ import { createBuilding } from "../controllers/buildings.controller.js";
 import { addFloor } from "../controllers/buildings.controller.js";
 
 import { Router } from "express";
+import { getAllBuildings, getBuildingById } from "../controllers/buildings.controller.js";
 
 const router = Router()
 
-// router.get("/")
+router.get("/", getAllBuildings)
 
-// router.get('/:buildingId')
+router.get('/:buildingId', getBuildingById)
 
 router.post('/', verifyToken, requireRole(["admin"]), validateRequest(createBuildingSchema), createBuilding )
 
