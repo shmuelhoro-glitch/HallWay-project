@@ -1,16 +1,16 @@
 import "dotenv/config"
 import  express from "express"
 import cors from "cors"
-import { errorHandler } from "./src/middleware/errorHandler.js"
-import authRoutes from './src/routes/auth.routes.js';
-import buildingsRoutes from './src/routes/buildings.routes.js';
-import placesRoutes from './src/routes/places.routes.js';
-import graphRoutes from './src/routes/graph.routes.js';
-import qrRoutes from './src/routes/qr.routes.js';
-import analyticsRoutes from './src/routes/analytics.routes.js';
-import chatRoutes from './src/routes/chat.routes.js';
-import navigationRoutes from './src/routes/navigation.routes.js';
-import alertsRoutes from './src/routes/alerts.routes.js';
+import { errorHandler } from "./middleware/errorHandler.js"
+import authRoutes from './routes/auth.routes.js';
+import buildingsRoutes from './routes/buildings.routes.js';
+import placesRoutes from './routes/places.routes.js';
+import graphRoutes from './routes/graph.routes.js';
+import qrRoutes from './routes/qr.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
+import chatRoutes from './routes/chat.routes.js';
+import navigationRoutes from './routes/navigation.routes.js';
+import alertsRoutes from './routes/alerts.routes.js';
 
 
 

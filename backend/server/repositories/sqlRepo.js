@@ -1,4 +1,4 @@
-import {db} from "../db/sqlComfig.js"
+import {supabase} from "../db/sqlConfig.js"
 
 function createSupabaseFactory(supabase) {
     return {
@@ -57,4 +57,4 @@ function createSupabaseFactory(supabase) {
     };
 }
 
-export const supabaseRepo = createSupabaseFactory(db)
+export const supabaseRepo = createSupabaseFactory(supabase)
