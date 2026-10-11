@@ -1,0 +1,9 @@
+.location-picker-floors {
+  margin-top: 14px;
+}
+
+/* Long lists scroll inside the sheet */
+.location-picker-list {
+  max-height: 180px;
+  overflow-y: auto;
+}

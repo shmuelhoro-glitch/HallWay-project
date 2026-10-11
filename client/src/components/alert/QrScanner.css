@@ -1,0 +1,18 @@
+/* Above the red alert window too */
+.qr-overlay {
+  z-index: 3000;
+}
+
+.qr-reader {
+  width: 100%;
+  min-height: 260px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--ink);
+}
+
+.qr-reader video {
+  display: block;
+  width: 100% !important;
+}

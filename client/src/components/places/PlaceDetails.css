@@ -1,0 +1,24 @@
+.place-details-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+
+.place-details-info:empty {
+  display: none;
+}
+
+.place-details-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+a.place-details-row {
+  color: var(--blue);
+  font-weight: 500;
+}

@@ -1,0 +1,45 @@
+.buildings-map {
+  position: absolute;
+  inset: 0;
+  background: #cfe0e8;
+  font-family: inherit;
+}
+
+/* The sheet covers the bottom 24px of the map, so lift the credit above it */
+.buildings-map .leaflet-bottom {
+  bottom: 24px;
+}
+
+.building-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.building-pin.is-selected {
+  border-width: 3px;
+  background: var(--yellow);
+}
+
+/* The name under each marker (Leaflet tooltip, restyled) */
+.leaflet-tooltip.building-label {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+  color: var(--ink);
+  font-family: 'Rubik', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.leaflet-tooltip.building-label::before {
+  display: none;
+}
