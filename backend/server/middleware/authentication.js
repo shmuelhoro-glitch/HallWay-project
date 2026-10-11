@@ -20,7 +20,7 @@ export function verifyToken(req, res, next){
 
 export function requireRole(allowedRoles){
     return (req, res, next) => {
-        if(!req.user || !req.allowedRoles.includes(req.user.role)){
+        if(!req.user || !allowedRoles.includes(req.user.role)){
             return res.status(403).json({ error: "Access denied. Insufficient permissions." });
         }
         next()
