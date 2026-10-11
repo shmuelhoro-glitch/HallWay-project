@@ -1,4 +1,4 @@
-import {db} from "../db/sqlComfig.js"
+import {supabase} from "../db/sqlConfig.js"
 
 function createSupabaseFactory(supabase) {
     return {
@@ -15,7 +15,7 @@ function createSupabaseFactory(supabase) {
         },
 
         async findOne(table, query) {
-            const { data, error } = await supabase.from(table).select().match(query).single();
+            const { data, error } = await supabase.from(table).select().match(query).maybeSingle();
             if (error) throw error;
             return data;
         },
@@ -57,4 +57,4 @@ function createSupabaseFactory(supabase) {
     };
 }
 
-export const supabaseRepo = createSupabaseFactory(db)
+export const supabaseRepo = createSupabaseFactory(supabase)
