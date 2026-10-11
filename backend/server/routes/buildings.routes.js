@@ -1,10 +1,11 @@
 import { Router } from "express";
+import { getAllBuildings, getBuildingById } from "../controllers/buildings.controller.js";
 
 const router = Router()
 
-// router.get("/")
+router.get("/", getAllBuildings)
 
-// router.get('/:buildingId')
+router.get('/:buildingId', getBuildingById)
 
 // router.post('/')
 

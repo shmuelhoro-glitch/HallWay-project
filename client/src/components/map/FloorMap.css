@@ -1,0 +1,18 @@
+.floor-map {
+  position: absolute;
+  inset: 0;
+  background: var(--map-bg);
+}
+
+.floor-map-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* we handle drag and pinch ourselves */
+  cursor: grab;
+  user-select: none;
+}
+
+.floor-map-svg:active {
+  cursor: grabbing;
+}

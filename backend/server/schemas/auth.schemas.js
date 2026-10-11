@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const registerSchema = z.object({
+export const registerSchema = {
   body: z.object({
     username: z
       .string()
@@ -15,4 +15,4 @@ export const registerSchema = z.object({
       .max(72, "A password can contain up to 72 characters."),
     role: z.enum(["visitor", "admin"], { message: "תפקיד לא חוקי" }).default("visitor"),
   }),
-});
+};
