@@ -30,13 +30,6 @@ const USER_AREA_ZOOM = 13; // about 5 km around the user
 const LABELS_MIN_ZOOM = 10; // further out the names would cover each other
 const FLY_OPTIONS = { duration: 0.8 };
 
-// Icon drawings for each building type (our own SVG, no user text inside)
-const TYPE_ICONS: Record<BuildingType, string> = {
-  mall: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/>',
-  hospital: '<path d="M12 5v14M5 12h14"/>',
-  campus: '<path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/>',
-};
-
 // A round marker like in the design: yellow when selected, white otherwise.
 // divIcon also avoids the known Vite problem with Leaflet's default marker images.
 function createBuildingIcon(type: BuildingType, isSelected: boolean): L.DivIcon {
