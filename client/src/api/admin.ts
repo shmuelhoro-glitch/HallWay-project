@@ -84,10 +84,16 @@ export interface NewNode {
   x: number;
   y: number;
   type?: NodeType;
+  connectFrom?: string; // draw mode: the point before this one
 }
 
-export function createNode(buildingId: string, node: NewNode): Promise<GraphNode> {
-  return apiRequest<GraphNode>(`/api/buildings/${buildingId}/graph/nodes`, {
+// With connectFrom, the server saves the point and the walkway to it together (both or none)
+export interface CreatedNode extends GraphNode {
+  edge?: GraphEdge;
+}
+
+export function createNode(buildingId: string, node: NewNode): Promise<CreatedNode> {
+  return apiRequest<CreatedNode>(`/api/buildings/${buildingId}/graph/nodes`, {
     method: 'POST',
     body: JSON.stringify(node),
   });

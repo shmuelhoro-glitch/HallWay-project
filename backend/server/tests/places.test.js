@@ -1,23 +1,11 @@
 import { beforeEach, mock, test } from "node:test";
 import assert from "node:assert/strict";
-import { callController, createFakeMongoRepo } from "./helpers.js";
+import { BUILDING_ID, callController, useFakeRepos } from "./helpers.js";
 
 // A place and its entrance node are saved in two collections.
 // These tests check that they stay together, also when the database fails in the middle.
 
-const BUILDING_ID = "11111111-1111-4111-8111-111111111111";
-
-const mongoRepo = createFakeMongoRepo();
-const supabaseRepo = {
-  async findOne(table, query) {
-    return table === "buildings" && query.id === BUILDING_ID ? { id: BUILDING_ID } : null;
-  },
-};
-
-// The controllers import the repositories by themselves, so the fakes are put in their place
-// before the controllers are loaded. The real files (which connect to the database) never run.
-mock.module(new URL("../repositories/mongoRepo.js", import.meta.url).href, { namedExports: { mongoRepo } });
-mock.module(new URL("../repositories/sqlRepo.js", import.meta.url).href, { namedExports: { supabaseRepo } });
+const { mongoRepo } = useFakeRepos();
 
 const { createPlace, updatePlace, deletePlace } = await import("../controllers/places.controller.js");
 const { updateNode } = await import("../controllers/graph.controller.js");

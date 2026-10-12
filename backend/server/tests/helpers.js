@@ -1,7 +1,27 @@
+import { mock } from "node:test";
 import { ObjectId } from "mongodb";
 
 // Helpers for the tests. Nothing here touches a real database:
 // the controllers get a fake mongoRepo that keeps everything in memory.
+
+export const BUILDING_ID = "11111111-1111-4111-8111-111111111111";
+
+// Puts fake repositories in the place of the real ones. Call it BEFORE importing a controller:
+// the controllers import the repositories by themselves, and this way the real files
+// (which connect to the database) never run.
+export function useFakeRepos() {
+  const mongoRepo = createFakeMongoRepo();
+  const supabaseRepo = {
+    async findOne(table, query) {
+      return table === "buildings" && query.id === BUILDING_ID ? { id: BUILDING_ID } : null;
+    },
+  };
+
+  mock.module(new URL("../repositories/mongoRepo.js", import.meta.url).href, { namedExports: { mongoRepo } });
+  mock.module(new URL("../repositories/sqlRepo.js", import.meta.url).href, { namedExports: { supabaseRepo } });
+
+  return { mongoRepo };
+}
 
 // Does a saved document match a query? Supports what the server really uses:
 // plain values, ObjectId, $or and $regex. Anything else throws, so a test can't pass by mistake.

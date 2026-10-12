@@ -4,6 +4,17 @@ import { mongoRepo } from "../repositories/mongoRepo.js";
 // Helpers for the walking graph, used by places.controller and graph.controller.
 // Remember: edges save "from" and "to" as strings, not ObjectId.
 
+// Some changes are saved in two steps (a place + its entrance node, a new point + its walkway),
+// and MongoDB does not undo the first step when the second one fails. So we undo it ourselves.
+// If the undo fails too, we can only write it in the log. The client still gets the first error.
+export async function undo(description, step) {
+  try {
+    await step();
+  } catch (undoError) {
+    console.error(`Could not undo: ${description}`, undoError);
+  }
+}
+
 // The length of a walkway = the straight line between its two nodes, 2 digits after the point
 export function computeLength(a, b) {
   return Math.round(Math.hypot(a.x - b.x, a.y - b.y) * 100) / 100;

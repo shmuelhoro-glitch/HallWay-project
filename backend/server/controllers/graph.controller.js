@@ -6,6 +6,7 @@ import {
   deleteEdgesOfNode,
   toEdgeResponse,
   toNodeResponse,
+  undo,
   updateEdgeLengths,
 } from "../services/graph.service.js";
 
@@ -19,6 +20,11 @@ function nodeNotFound() {
 
 function edgeNotFound() {
   return { status: 404, code: "EDGE_NOT_FOUND", message: "Walkway not found" };
+}
+
+// Floors are connected only by stairs / elevators with the same connectorId
+function differentFloors() {
+  return { status: 400, code: "DIFFERENT_FLOORS", message: "Both points must be on the same floor" };
 }
 
 // Finds a node of this building, or throws 404
@@ -71,10 +77,12 @@ export async function getGraph(req, res, next) {
 }
 
 // POST /api/buildings/:buildingId/graph/nodes
+// With connectFrom (draw mode) the new point is saved together with a walkway to that point,
+// and the answer has the walkway too, in "edge". Both are saved, or none of them.
 export async function createNode(req, res, next) {
   try {
     const { buildingId } = req.params;
-    const { floor, x, y, type, connectorId, label } = req.body;
+    const { floor, x, y, type, connectorId, label, connectFrom } = req.body;
 
     const building = await supabaseRepo.findOne("buildings", { id: buildingId });
     if (!building) {
@@ -83,12 +91,42 @@ export async function createNode(req, res, next) {
 
     checkConnector(type, connectorId);
 
+    // Checked before anything is saved, so a wrong point does not leave a new node behind
+    let previousNode = null;
+    if (connectFrom) {
+      previousNode = await findNode(buildingId, connectFrom);
+      if (previousNode.floor !== floor) {
+        throw differentFloors();
+      }
+    }
+
     const node = { buildingId, floor, x, y, type };
     if (connectorId) node.connectorId = connectorId;
     if (label) node.label = label;
 
     const nodeId = await mongoRepo.insertOne("nodes", node);
-    res.status(201).json(toNodeResponse({ _id: nodeId, ...node }));
+    const response = toNodeResponse({ _id: nodeId, ...node });
+
+    if (previousNode) {
+      const edge = {
+        buildingId,
+        from: connectFrom,
+        to: String(nodeId),
+        length: computeLength(previousNode, node),
+        blocked: false,
+      };
+
+      try {
+        const edgeId = await mongoRepo.insertOne("edges", edge);
+        response.edge = toEdgeResponse({ _id: edgeId, ...edge });
+      } catch (error) {
+        // The walkway was not saved - the new point must not stay alone on the map
+        await undo(`delete the new node ${nodeId}`, () => mongoRepo.deleteOne("nodes", { _id: nodeId }));
+        throw error;
+      }
+    }
+
+    res.status(201).json(response);
   } catch (error) {
     next(error);
   }
@@ -175,9 +213,8 @@ export async function createEdge(req, res, next) {
     const a = await findNode(buildingId, from);
     const b = await findNode(buildingId, to);
 
-    // Floors are connected only by stairs / elevators with the same connectorId
     if (a.floor !== b.floor) {
-      throw { status: 400, code: "DIFFERENT_FLOORS", message: "Both points must be on the same floor" };
+      throw differentFloors();
     }
 
     const existing = await mongoRepo.findOne("edges", {

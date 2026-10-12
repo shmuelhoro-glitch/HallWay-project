@@ -23,6 +23,8 @@ export const createNodeSchema = {
     type: z.enum(NODE_TYPES).default("corridor"),
     connectorId: z.string().trim().max(40).optional(),
     label: z.string().trim().max(60).optional(),
+    // Draw mode: the point before this one. The new point is saved together with a walkway to it.
+    connectFrom: mongoId.optional(),
   }),
 };
 

@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { mongoRepo } from "../repositories/mongoRepo.js";
 import { supabaseRepo } from "../repositories/sqlRepo.js";
-import { deleteEdgesOfNode, updateEdgeLengths } from "../services/graph.service.js";
+import { deleteEdgesOfNode, undo, updateEdgeLengths } from "../services/graph.service.js";
 
 // A visitor picks a landmark to say where he is, so the list must stay short
 const MAX_LANDMARKS_PER_FLOOR = 5;
@@ -13,17 +13,6 @@ function escapeRegex(text) {
 
 function placeNotFound() {
   return { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
-}
-
-// A place is saved in two collections (places + nodes), and MongoDB does not undo the first
-// write when the second one fails. So we undo it ourselves.
-// If the undo fails too, we can only write it in the log. The client still gets the first error.
-async function undo(description, step) {
-  try {
-    await step();
-  } catch (undoError) {
-    console.error(`Could not undo: ${description}`, undoError);
-  }
 }
 
 // The update that puts a document back as it was, for the fields that were changed
