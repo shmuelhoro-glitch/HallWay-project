@@ -43,3 +43,79 @@
 .leaflet-tooltip.building-label::before {
   display: none;
 }
+
+/* ---------- The user's blue dot ---------- */
+
+.user-dot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 1px 4px rgba(18, 22, 28, 0.35);
+}
+
+/* A ring that grows and fades, behind the dot */
+.user-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: 50%;
+  background: var(--blue);
+  animation: user-pulse 2s ease-out infinite;
+}
+
+@keyframes user-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* ---------- "Show my location" button, on top of the map ---------- */
+
+.map-locate-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 450; /* above the map layers (400), under the sheet (500) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.map-locate-btn.is-found {
+  color: var(--blue);
+}
+
+.map-locate-btn.is-locating svg {
+  animation: locate-blink 1s ease-in-out infinite;
+}
+
+@keyframes locate-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user-dot::after,
+  .map-locate-btn.is-locating svg {
+    animation: none;
+  }
+}

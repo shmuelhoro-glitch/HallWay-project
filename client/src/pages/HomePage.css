@@ -1,12 +1,10 @@
+/* A slim top row: the logo on the left, the account button on the right */
 .home-header {
-  padding: 20px 20px 0;
-}
-
-.home-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 14px 20px 0;
 }
 
 .home-logo {
@@ -18,44 +16,37 @@
   letter-spacing: -0.3px;
 }
 
-.home-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.home-username {
-  max-width: 120px;
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.home-title {
-  margin: 22px 0 6px;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.home-subtitle {
-  margin: 0;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.5;
-}
-
 .home-map {
   position: relative;
   flex: 1;
-  min-height: 220px;
-  margin: 16px 20px 0;
+  min-height: 200px;
+  margin: 12px 20px 0;
   overflow: hidden;
   border-radius: var(--radius-lg);
+  /* Leaflet's buttons use z-index 1000. "isolate" keeps all of them inside the map box,
+     so the search list and the sheet can still cover the map. */
+  isolation: isolate;
+}
+
+/* The number next to the list title */
+.home-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .home-scan-wide {
   flex: 1;
+}
+
+.home-retry {
+  padding: 0;
+  color: inherit;
 }
