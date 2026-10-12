@@ -30,7 +30,7 @@ export async function login(req, res, next) {
     }
 
     const token = jwt.sign(
-      { id: exists.id, role: exists.role },
+      { userId: exists.id, role: exists.role },
       process.env.JWT_SECRET,
       { expiresIn: "24h" },
     );
@@ -39,7 +39,8 @@ export async function login(req, res, next) {
       token,
       user: {
         id: exists.id,
-        username: exists.userName,
+        username: exists.username,
+        email: exists.email,
         role: exists.role,
         buildingIds: exists.buildingIds,
       },
