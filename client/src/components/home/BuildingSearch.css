@@ -1,0 +1,126 @@
+.building-search {
+  position: relative; /* the dropdown is placed under the search field */
+  padding: 12px 20px 0;
+}
+
+.building-search-types {
+  margin-top: 10px;
+}
+
+/* ---------- The list under the search field ---------- */
+
+.search-dropdown {
+  position: absolute;
+  top: 70px; /* 12px padding + 52px field + 6px space */
+  right: 20px;
+  left: 20px;
+  z-index: 700; /* above the map (400) and the sheet (500) */
+  max-height: 60dvh;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.search-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 2px 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.search-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-suggestion:hover,
+.search-suggestion:focus-visible {
+  background: var(--surface-soft);
+}
+
+.search-suggestion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+.search-suggestion-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.search-suggestion-name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The part that matches the search */
+.search-suggestion-name mark {
+  background: none;
+  color: inherit;
+  font-weight: 700;
+}
+
+.search-suggestion-meta {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-suggestion-distance {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.search-dropdown-empty {
+  margin: 0;
+  padding: 14px 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.search-show-all {
+  width: 100%;
+  height: 44px;
+  margin-top: 4px;
+  border: none;
+  border-top: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}

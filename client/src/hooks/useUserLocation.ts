@@ -1,0 +1,70 @@
+import { useEffect, useState } from 'react';
+
+export interface UserPosition {
+  lat: number;
+  lng: number;
+  accuracy: number; // in meters: how sure the device is
+}
+
+// locating    - waiting for the device
+// found       - we have a position
+// denied      - the user (or the browser settings) blocked location
+// unavailable - the device could not find a position (no GPS, timeout)
+// insecure    - the page is on plain http, so the browser does not allow location at all
+export type LocationStatus = 'locating' | 'found' | 'denied' | 'unavailable' | 'insecure';
+
+// The browser gives the location only on https or on localhost
+function canAskForLocation(): boolean {
+  return window.isSecureContext && 'geolocation' in navigator;
+}
+
+const LOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10000, // give up after 10 seconds
+  maximumAge: 60000, // a position from the last minute is good enough
+};
+
+// Asks the device where the user is: once when the page opens, and again on every locate()
+export function useUserLocation() {
+  const [position, setPosition] = useState<UserPosition | null>(null);
+  const [status, setStatus] = useState<LocationStatus>(canAskForLocation() ? 'locating' : 'insecure');
+
+  // Every press on "locate me" adds 1, and that runs the effect again
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!canAskForLocation()) return;
+
+    let isCancelled = false;
+
+    navigator.geolocation.getCurrentPosition(
+      (result) => {
+        if (isCancelled) return;
+        // A new object every time, so the map knows to fly to it again
+        setPosition({
+          lat: result.coords.latitude,
+          lng: result.coords.longitude,
+          accuracy: result.coords.accuracy,
+        });
+        setStatus('found');
+      },
+      (error) => {
+        if (isCancelled) return;
+        setStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable');
+      },
+      LOCATION_OPTIONS,
+    );
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [attempt]);
+
+  function locate() {
+    if (!canAskForLocation()) return;
+    setStatus('locating');
+    setAttempt((current) => current + 1);
+  }
+
+  return { position, status, locate };
+}

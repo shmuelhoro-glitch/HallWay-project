@@ -1,27 +1,29 @@
 import jwt from "jsonwebtoken"
 
-export function verifyToken(req, res, next){
+// Reads "Authorization: Bearer <token>". After it, req.user is { userId, role }.
+export function verifyToken(req, res, next) {
     const auth = req.headers.authorization
 
-    if(!auth || !auth.startsWith("Bearer")){
-        return res.status(401).json({success: false, message: "missing token!!!"})
+    if (!auth || !auth.startsWith("Bearer ")) {
+        return res.status(401).json({ error: { code: "NO_TOKEN", message: "Please log in" } })
     }
 
     const token = auth.split(" ")[1]
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = decoded
+        req.user = jwt.verify(token, process.env.JWT_SECRET)
         next()
-    } catch (error) {
-        res.status(403).json({success: false, message: "Invalid token"})
+    } catch {
+        // Expired or fake token. The client logs the user out when it gets this code.
+        return res.status(401).json({ error: { code: "INVALID_TOKEN", message: "Please log in again" } })
     }
 }
 
-export function requireRole(allowedRoles){
+// requireRole(["admin"]) - only these roles may continue
+export function requireRole(allowedRoles) {
     return (req, res, next) => {
-        if(!req.user || !allowedRoles.includes(req.user.role)){
-            return res.status(403).json({ error: "Access denied. Insufficient permissions." });
+        if (!req.user || !allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({ error: { code: "FORBIDDEN", message: "You are not allowed to do this" } })
         }
         next()
     }

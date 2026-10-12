@@ -1,12 +1,22 @@
+import { ObjectId } from "mongodb";
 import { mongoRepo } from "../repositories/mongoRepo.js";
 import { ObjectId } from "mongodb";
-import { updateEdgeLengths } from "../services/graph.service.js";
+import { supabaseRepo } from "../repositories/sqlRepo.js";
+import { deleteEdgesOfNode, updateEdgeLengths } from "../services/graph.service.js";
+
+// A visitor picks a landmark to say where he is, so the list must stay short
+const MAX_LANDMARKS_PER_FLOOR = 5;
 
 // The user's text is searched as plain text, not as a regex ("a.*" must not return everything)
 function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function placeNotFound() {
+  return { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
+}
+
+// GET /api/buildings/:buildingId/places?q=&category=&floor=  (open to everyone)
 export async function getPlaces(req, res, next) {
   try {
     const { buildingId } = req.params;

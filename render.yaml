@@ -1,0 +1,31 @@
+# Render Blueprint - only the server. The client goes to Vercel.
+# Render reads this file from the repo root (New > Blueprint).
+
+services:
+  - type: web
+    name: inroute-server
+    runtime: node
+    plan: free
+    rootDir: backend/server
+    buildCommand: npm ci
+
+    # Not "npm start": it runs node --env-file=.env, and on Render there is no .env file,
+    # so node would stop with an error. server.js already loads .env with dotenv
+    # when the file exists (on your computer), so locally nothing changes.
+    startCommand: node server.js
+
+    # Render checks this route to know the server is up
+    healthCheckPath: /test
+
+    # Render gives PORT by itself. The rest you paste once, when you create the Blueprint.
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGO_URI
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true # Render makes a long random secret

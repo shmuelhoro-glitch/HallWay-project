@@ -1,0 +1,70 @@
+.nearby-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px -20px 0; /* reach the edges of the sheet, so the cards can scroll under them */
+  padding: 0 20px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 20px;
+  scrollbar-width: none;
+}
+
+.nearby-row::-webkit-scrollbar {
+  display: none;
+}
+
+.nearby-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 210px;
+  height: 64px;
+  padding: 0 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  scroll-snap-align: start;
+  cursor: pointer;
+}
+
+.nearby-card:hover {
+  border-color: var(--ink);
+}
+
+.nearby-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+
+.nearby-card-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nearby-card-name,
+.nearby-card-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nearby-card-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.nearby-card-meta {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
