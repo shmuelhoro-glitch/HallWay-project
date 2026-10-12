@@ -44,7 +44,7 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
     // Phones: the system share menu. Computers without it: copy the link.
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: 'Navigate to me', text: `I'm near ${start.label}`, url: link });
+        await navigator.share({ title: 'נווטו אליי', text: `אני ליד ${start.label}`, url: link });
       } catch {
         // The user closed the share menu - nothing to do
       }
@@ -53,9 +53,9 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
 
     try {
       await navigator.clipboard.writeText(link);
-      showToast('Link copied');
+      showToast('הקישור הועתק');
     } catch {
-      showToast('Could not copy the link');
+      showToast('לא הצלחנו להעתיק את הקישור');
     }
   }
 
@@ -64,7 +64,7 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
       <button
         type="button"
         className="icon-btn"
-        aria-label="Navigate to me: share my location"
+        aria-label="נווטו אליי: שיתוף המיקום שלי"
         onClick={handleButtonClick}
       >
         <ShareIcon />
@@ -75,14 +75,14 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
           <div
             className="dialog"
             role="dialog"
-            aria-label="Share my location"
+            aria-label="שיתוף המיקום שלי"
             onClick={(event) => event.stopPropagation()}
           >
-            <h2 className="sheet-title">Share where you are?</h2>
-            <p className="sheet-text">Your friend gets a link that guides them to you.</p>
+            <h2 className="sheet-title">לשתף את המיקום שלכם?</h2>
+            <p className="sheet-text">מי שיקבל את הקישור ינווט ישר אליכם.</p>
 
             <div className="share-spot">
-              <span className="share-spot-label">You are near</span>
+              <span className="share-spot-label">אתם ליד</span>
               <span className="share-spot-name">
                 {start.label} · {floorName}
               </span>
@@ -90,10 +90,10 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
 
             <div className="sheet-actions">
               <button type="button" className="btn btn-primary" onClick={handleShare}>
-                Share link
+                שיתוף הקישור
               </button>
               <button type="button" className="btn btn-outline" onClick={handleChangeLocation}>
-                Not here
+                אני לא כאן
               </button>
             </div>
           </div>

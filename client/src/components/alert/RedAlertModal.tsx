@@ -32,46 +32,46 @@ function RedAlertModal({ buildingName, floors, places, currentFloor, onPickLandm
   // alert:end arrived
   if (status === 'ended') {
     return (
-      <div className="red-alert red-alert-ended" role="alertdialog" aria-label="The event has ended">
+      <div className="red-alert red-alert-ended" role="alertdialog" aria-label="האירוע הסתיים">
         <div className="red-alert-ended-content">
           <div className="red-alert-ended-icon">
             <CheckIcon size={36} />
           </div>
-          <h1 className="red-alert-title">The event has ended</h1>
-          <p className="red-alert-subtitle">You can leave the protected space.</p>
+          <h1 className="red-alert-title">האירוע הסתיים</h1>
+          <p className="red-alert-subtitle">אפשר לצאת מהמרחב המוגן.</p>
         </div>
         <button type="button" className="btn red-alert-ok" onClick={clearAlert}>
-          OK
+          אישור
         </button>
       </div>
     );
   }
 
   return (
-    <div className="red-alert" role="alertdialog" aria-label="Red alert">
+    <div className="red-alert" role="alertdialog" aria-label="צבע אדום">
       <div className="red-alert-source">
         <span className="red-alert-source-icon">
           <SirenIcon size={18} />
         </span>
-        Home Front Command alert
+        התרעת פיקוד העורף
       </div>
 
       <div className="red-alert-head">
         <div>
-          <h1 className="red-alert-title">Red Alert</h1>
+          <h1 className="red-alert-title">צבע אדום</h1>
           <p className="red-alert-subtitle">
             {alert?.title} · {buildingName}
           </p>
         </div>
-        <div className="red-alert-timer" role="timer" aria-label={`${secondsLeft} seconds to reach a protected space`}>
+        <div className="red-alert-timer" role="timer" aria-label={`${secondsLeft} שניות להגעה למרחב מוגן`}>
           <span className="red-alert-seconds">{secondsLeft}</span>
-          <span className="red-alert-seconds-label">seconds</span>
+          <span className="red-alert-seconds-label">שניות</span>
         </div>
       </div>
 
       <div className="red-alert-card">
-        <h2 className="red-alert-card-title">Where are you now?</h2>
-        <p className="red-alert-card-text">We'll show the route to the nearest protected space.</p>
+        <h2 className="red-alert-card-title">איפה אתם עכשיו?</h2>
+        <p className="red-alert-card-text">נציג לכם את המסלול למרחב המוגן הקרוב.</p>
 
         <div className="red-alert-picker">
           <LandmarkPicker
@@ -84,11 +84,11 @@ function RedAlertModal({ buildingName, floors, places, currentFloor, onPickLandm
         </div>
 
         <button type="button" className="text-btn red-alert-skip" onClick={minimize}>
-          Just show protected spaces on the map
+          רק להציג את המרחבים המוגנים במפה
         </button>
       </div>
 
-      <p className="red-alert-disclaimer">For assistance only. Follow Home Front Command instructions.</p>
+      <p className="red-alert-disclaimer">לסיוע בלבד. יש לפעול לפי הנחיות פיקוד העורף.</p>
     </div>
   );
 }

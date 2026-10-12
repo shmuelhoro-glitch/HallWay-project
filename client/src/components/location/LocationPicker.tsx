@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Floor } from '../../types/building';
 import type { Place } from '../../types/place';
+import { getDefaultFloorName } from '../../utils/floors';
 import { ChevronIcon, CloseIcon, QrIcon } from '../ui/Icons';
 import './LocationPicker.css';
 
@@ -31,15 +32,15 @@ function LocationPicker({ places, floors, initialFloor, onPick, onScan, onClose 
     <div className="location-picker">
       <div className="sheet-header">
         <div>
-          <h2 className="sheet-title">Where are you?</h2>
-          <p className="sheet-text">Pick the place you are next to, or tap it on the map.</p>
+          <h2 className="sheet-title">איפה אתם?</h2>
+          <p className="sheet-text">בחרו את המקום שלידכם, או לחצו עליו במפה.</p>
         </div>
-        <button type="button" className="icon-btn icon-btn-plain" aria-label="Close" onClick={onClose}>
+        <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
           <CloseIcon />
         </button>
       </div>
 
-      <div className="segmented location-picker-floors" role="group" aria-label="Floor">
+      <div className="segmented location-picker-floors" role="group" aria-label="קומה">
         {floors.map((item) => (
           <button
             key={item.floor}
@@ -47,14 +48,14 @@ function LocationPicker({ places, floors, initialFloor, onPick, onScan, onClose 
             aria-pressed={item.floor === floor}
             onClick={() => setFloor(item.floor)}
           >
-            Floor {item.floor}
+            {getDefaultFloorName(item.floor)}
           </button>
         ))}
       </div>
 
-      <div className="list-label">I'm near...</div>
+      <div className="list-label">אני ליד...</div>
       <div className="list location-picker-list">
-        {floorPlaces.length === 0 && <p className="list-empty">No places on this floor yet.</p>}
+        {floorPlaces.length === 0 && <p className="list-empty">עדיין אין מקומות בקומה הזאת.</p>}
         {floorPlaces.map((place) => (
           <button key={place._id} type="button" className="list-button" onClick={() => onPick(place)}>
             {place.name}
@@ -63,11 +64,11 @@ function LocationPicker({ places, floors, initialFloor, onPick, onScan, onClose 
         ))}
       </div>
 
-      <div className="or-divider">or</div>
+      <div className="or-divider">או</div>
 
       <button type="button" className="btn btn-dark" onClick={onScan}>
         <QrIcon />
-        Scan the nearest QR code
+        סריקת קוד ה-QR הקרוב
       </button>
     </div>
   );

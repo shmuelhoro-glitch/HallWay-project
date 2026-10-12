@@ -23,10 +23,10 @@ const BUILDING_ZOOM = 16; // close enough to see the building and the streets ar
 
 // The line under the list title, when we don't have the user's location
 function getLocationMessage(status: LocationStatus): string | null {
-  if (status === 'locating') return 'Finding your location...';
-  if (status === 'denied') return 'Location is blocked. Allow it for this site in the browser to see what is near you.';
-  if (status === 'unavailable') return "We couldn't find your location.";
-  if (status === 'insecure') return 'Location works only on a secure (https) site.';
+  if (status === 'locating') return 'מאתרים את המיקום שלכם...';
+  if (status === 'denied') return 'הגישה למיקום חסומה. כדי לראות מה קרוב אליכם, אפשרו לאתר גישה למיקום בהגדרות הדפדפן.';
+  if (status === 'unavailable') return 'לא הצלחנו לאתר את המיקום שלכם.';
+  if (status === 'insecure') return 'איתור המיקום פועל רק באתר מאובטח (https).';
   return null;
 }
 
@@ -63,7 +63,7 @@ function HomePage() {
       })
       .catch(() => {
         if (isCancelled) return;
-        setError('Could not load buildings.');
+        setError('לא הצלחנו לטעון את המבנים.');
       })
       .finally(() => {
         if (isCancelled) return;
@@ -85,7 +85,7 @@ function HomePage() {
     selectedBuilding && userPoint ? getDistanceKm(userPoint, getBuildingPoint(selectedBuilding)) : null;
 
   // A logged-in user is greeted by name
-  const searchPlaceholder = user && user.username ? `Where to, ${user.username}?` : 'Where are you going today?';
+  const searchPlaceholder = user && user.username ? `לאן הולכים, ${user.username}?` : 'לאן הולכים היום?';
 
   // ---------- Actions ----------
 
@@ -151,11 +151,11 @@ function HomePage() {
 
     const isSearching = searchText.trim() !== '';
 
-    let title = 'All buildings';
+    let title = 'כל המבנים';
     if (isSearching) {
-      title = 'Search results';
+      title = 'תוצאות חיפוש';
     } else if (userPosition) {
-      title = 'Near you';
+      title = 'קרוב אליכם';
     }
 
     const locationMessage = isSearching ? null : getLocationMessage(locationStatus);
@@ -172,31 +172,31 @@ function HomePage() {
             {locationMessage}
             {locationStatus === 'unavailable' && (
               <button type="button" className="text-btn" onClick={locate}>
-                Try again
+                נסו שוב
               </button>
             )}
           </p>
         )}
 
-        {isLoading && <p className="message-info">Loading buildings...</p>}
+        {isLoading && <p className="message-info">טוען מבנים...</p>}
 
         {error && (
           <p className="message-error">
             {error}{' '}
             <button type="button" className="text-btn home-retry" onClick={handleRetryLoad}>
-              Try again
+              נסו שוב
             </button>
           </p>
         )}
 
-        {!isLoading && !error && results.length === 0 && <p className="message-info">No buildings found.</p>}
+        {!isLoading && !error && results.length === 0 && <p className="message-info">לא נמצאו מבנים.</p>}
 
         {results.length > 0 && <NearbyBuildings results={results} onPick={selectBuilding} />}
 
         <div className="sheet-actions">
           <button type="button" className="btn btn-outline home-scan-wide" onClick={() => setIsScannerOpen(true)}>
             <QrIcon />
-            Scan the QR code at the entrance
+            סריקת קוד ה-QR שבכניסה
           </button>
         </div>
       </>
@@ -213,7 +213,7 @@ function HomePage() {
         <UserMenu />
       </header>
 
-      <h1 className="sr-only">Find a building</h1>
+      <h1 className="sr-only">חיפוש מבנה</h1>
 
       <BuildingSearch
         text={searchText}

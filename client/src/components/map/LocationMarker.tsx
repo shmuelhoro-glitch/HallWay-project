@@ -8,7 +8,7 @@ interface LocationMarkerProps {
 }
 
 // "You are here": a big see-through circle with a small full circle on it
-function LocationMarker({ x, y, label = 'You are here' }: LocationMarkerProps) {
+function LocationMarker({ x, y, label = 'אתם כאן' }: LocationMarkerProps) {
   const scale = useMapScale();
   const labelWidth = label.length * 7 + 20; // a rough text width, good enough for a short label
 

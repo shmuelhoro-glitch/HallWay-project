@@ -41,7 +41,7 @@ function UserMenu() {
   if (!user) {
     return (
       <Link to="/login" className="user-login-link">
-        Log in
+        התחברות
       </Link>
     );
   }
@@ -50,6 +50,10 @@ function UserMenu() {
   const displayName = user.username || user.email || '';
   const initial = displayName ? displayName.charAt(0).toUpperCase() : '?';
   const isAdmin = user.role === 'admin' || user.role === 'super';
+
+  let roleLabel = 'מבקר';
+  if (user.role === 'admin') roleLabel = 'מנהל מבנה';
+  if (user.role === 'super') roleLabel = 'מנהל מערכת';
 
   function handleLogout() {
     setIsOpen(false);
@@ -61,7 +65,7 @@ function UserMenu() {
       <button
         type="button"
         className={isAdmin ? 'user-avatar is-admin' : 'user-avatar'}
-        aria-label="Account menu"
+        aria-label="תפריט החשבון"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
@@ -72,19 +76,23 @@ function UserMenu() {
       {isOpen && (
         <div className="user-popover" role="menu">
           <div className="user-popover-name">{user.username}</div>
-          {user.email && <div className="user-popover-email">{user.email}</div>}
-          <div className="user-popover-role">{isAdmin ? 'Building manager' : 'Visitor'}</div>
+          {user.email && (
+            <div className="user-popover-email" dir="ltr">
+              {user.email}
+            </div>
+          )}
+          <div className="user-popover-role">{roleLabel}</div>
 
           {isAdmin && (
             <Link to="/admin" role="menuitem" className="user-popover-link" onClick={() => setIsOpen(false)}>
               <DashboardIcon />
-              Manage buildings
+              ניהול מבנים
             </Link>
           )}
 
           <button type="button" role="menuitem" className="user-popover-item" onClick={handleLogout}>
             <LogoutIcon />
-            Log out
+            התנתקות
           </button>
         </div>
       )}

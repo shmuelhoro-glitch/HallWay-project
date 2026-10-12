@@ -73,6 +73,17 @@ a:hover {
   outline-offset: 2px;
 }
 
+/* Arrows (back, forward, send) point the other way when the page is right-to-left */
+[dir='rtl'] .icon-directional {
+  transform: scaleX(-1);
+}
+
+/* Emails, links and codes are always written left-to-right, also inside a Hebrew page */
+.ltr-text {
+  direction: ltr;
+  text-align: left;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -190,7 +201,8 @@ a:hover {
   align-items: center;
   gap: 10px;
   height: 52px;
-  padding: 0 8px 0 16px;
+  padding-block: 0;
+  padding-inline: 16px 8px;
   border: 1.5px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -356,7 +368,7 @@ a:hover {
   color: var(--ink);
   font-size: 15px;
   font-weight: 500;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 

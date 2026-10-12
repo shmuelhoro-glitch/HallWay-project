@@ -37,6 +37,9 @@ interface BuildingPageProps {
   targetParam: string | null; // ?target= from "navigate to me": where to go
 }
 
+// "Navigate to me": the name of the destination when a friend shared where he is
+const MEETING_POINT_LABEL = 'נקודת המפגש';
+
 function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps) {
   const navigate = useNavigate();
   const socket = useBuildingRoom(buildingId);
@@ -60,7 +63,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   // ---------- Navigation ----------
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Destination | null>(
-    targetParam ? { label: 'your friend', nodeId: targetParam } : null,
+    targetParam ? { label: MEETING_POINT_LABEL, nodeId: targetParam } : null,
   );
   const [route, setRoute] = useState<RouteNode[] | null>(null);
   const [routeStatus, setRouteStatus] = useState<RouteStatus>('idle');
@@ -85,7 +88,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       })
       .catch(() => {
         if (isCancelled) return;
-        setLoadError('Could not load this building.');
+        setLoadError('לא הצלחנו לטעון את המבנה.');
       });
 
     return () => {
@@ -147,7 +150,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         setFloorChoice(startPoint.floor);
 
         if (targetParam) {
-          startRoute(startPoint, { label: 'your friend', nodeId: targetParam });
+          startRoute(startPoint, { label: MEETING_POINT_LABEL, nodeId: targetParam });
         }
       })
       .catch(() => {
@@ -219,7 +222,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
     setRoute(null);
     setIsShelterRoute(true);
-    setDestination({ label: 'the protected space' });
+    setDestination({ label: 'המרחב המוגן' });
     setRouteStatus('loading');
 
     try {
@@ -288,7 +291,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         <div className="screen-message">
           <p>{loadError}</p>
           <Link to="/" className="btn btn-outline">
-            Back to the map
+            חזרה למפה
           </Link>
         </div>
       </div>
@@ -298,7 +301,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   if (!building) {
     return (
       <div className="screen">
-        <div className="screen-message">Loading building...</div>
+        <div className="screen-message">טוען את המבנה...</div>
       </div>
     );
   }
@@ -309,9 +312,9 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     return (
       <div className="screen">
         <div className="screen-message">
-          <p>This building has no floor plans yet.</p>
+          <p>למבנה הזה עדיין אין תוכניות קומה.</p>
           <Link to="/" className="btn btn-outline">
-            Back to the map
+            חזרה למפה
           </Link>
         </div>
       </div>
@@ -327,20 +330,20 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   let subtitle = building.city;
   if (route && destination) {
-    subtitle = `Route to ${destination.label}`;
+    subtitle = `מסלול אל ${destination.label}`;
   } else if (start) {
-    subtitle = `You are near ${start.label}`;
+    subtitle = `אתם ליד ${start.label}`;
   }
 
   let floorBadge = getFloorName(floors, currentFloor.floor);
   if (start && start.floor === currentFloor.floor) {
-    floorBadge += ' · You are here';
+    floorBadge += ' · אתם כאן';
   }
 
   const chatButton = (
     <button type="button" className="btn btn-outline" onClick={() => setIsChatOpen(true)}>
       <ChatIcon />
-      Chat
+      צ׳אט
     </button>
   );
 
@@ -392,20 +395,20 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     }
 
     // Nothing selected: a short hint, or the state of a waiting route
-    let title = 'Where to?';
-    let text = 'Search for a place or tap one on the map.';
+    let title = 'לאן?';
+    let text = 'חפשו מקום, או לחצו עליו במפה.';
 
     if (destination) {
-      title = isShelterRoute ? 'Route to a protected space' : `Route to ${destination.label}`;
+      title = isShelterRoute ? 'מסלול למרחב מוגן' : `מסלול אל ${destination.label}`;
 
       if (routeStatus === 'loading') {
-        text = 'Finding the best route...';
+        text = 'מחפשים את המסלול הטוב ביותר...';
       } else if (routeStatus === 'no-route') {
-        text = 'No route found. A passage may be blocked right now.';
+        text = 'לא נמצא מסלול. ייתכן שמעבר חסום כרגע.';
       } else if (routeStatus === 'error') {
-        text = 'Something went wrong. Please try again.';
+        text = 'משהו השתבש. נסו שוב.';
       } else if (!start) {
-        text = 'Tell us where you are to start.';
+        text = 'כדי להתחיל, ספרו לנו איפה אתם.';
       }
     }
 
@@ -420,7 +423,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           </div>
           {destination && (
             <button type="button" className="text-btn" onClick={handleEndRoute}>
-              Cancel
+              ביטול
             </button>
           )}
         </div>
@@ -428,12 +431,12 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         <div className="sheet-actions">
           {!start && (
             <button type="button" className="btn btn-primary" onClick={() => setIsPickerOpen(true)}>
-              Set my location
+              קביעת המיקום שלי
             </button>
           )}
           {canRetry && (
             <button type="button" className="btn btn-primary" onClick={handleRetry}>
-              Try again
+              נסו שוב
             </button>
           )}
           {chatButton}
@@ -447,7 +450,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       <AlertBanner />
 
       <header className="building-topbar">
-        <button type="button" className="icon-btn" aria-label="Back to the map" onClick={() => navigate('/')}>
+        <button type="button" className="icon-btn" aria-label="חזרה למפה" onClick={() => navigate('/')}>
           <BackIcon />
         </button>
         <div className="building-heading">
@@ -456,7 +459,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         </div>
         {/* Only a building manager sees the edit button */}
         {isAdmin && (
-          <Link to={`/admin/${buildingId}/places`} className="icon-btn" aria-label="Edit this building" title="Edit this building">
+          <Link to={`/admin/${buildingId}/places`} className="icon-btn" aria-label="עריכת המבנה" title="עריכת המבנה">
             <PencilIcon size={20} />
           </Link>
         )}

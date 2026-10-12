@@ -58,7 +58,7 @@ function QrScanner({ onScan, onClose }: QrScannerProps) {
             if (isDone) return;
             const result = parseQrText(decodedText);
             if (!result) {
-              setError('This is not an InRoute code.');
+              setError('זה לא קוד של InRoute.');
               return;
             }
             isDone = true;
@@ -69,7 +69,7 @@ function QrScanner({ onScan, onClose }: QrScannerProps) {
           },
         )
         .catch(() => {
-          setError('Could not open the camera. Allow camera access and try again.');
+          setError('לא הצלחנו לפתוח את המצלמה. אפשרו גישה למצלמה ונסו שוב.');
         });
     }, 0);
 
@@ -88,13 +88,13 @@ function QrScanner({ onScan, onClose }: QrScannerProps) {
 
   return (
     <div className="overlay qr-overlay">
-      <div className="dialog qr-scanner" role="dialog" aria-label="Scan QR code">
+      <div className="dialog qr-scanner" role="dialog" aria-label="סריקת קוד QR">
         <div className="sheet-header">
           <div>
-            <h2 className="sheet-title">Scan a QR code</h2>
-            <p className="sheet-text">Point the camera at an InRoute sign.</p>
+            <h2 className="sheet-title">סריקת קוד QR</h2>
+            <p className="sheet-text">כוונו את המצלמה אל שלט של InRoute.</p>
           </div>
-          <button type="button" className="icon-btn icon-btn-plain" aria-label="Close" onClick={onClose}>
+          <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
             <CloseIcon />
           </button>
         </div>

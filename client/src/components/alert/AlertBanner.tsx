@@ -21,10 +21,10 @@ function AlertBanner() {
     <div className="alert-banner" role="alert">
       <SirenIcon size={18} />
       <span className="alert-banner-text">
-        Red Alert · <strong>{secondsLeft}s</strong>
+        צבע אדום · <strong>{secondsLeft} שניות</strong>
       </span>
       <button type="button" className="alert-banner-button" onClick={restore}>
-        Where am I?
+        איפה אני?
       </button>
     </div>
   );

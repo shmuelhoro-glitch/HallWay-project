@@ -34,7 +34,7 @@
   border: none;
   border-bottom: 1px solid var(--line-soft);
   background: none;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 

@@ -28,14 +28,14 @@ export function getDistanceKm(from: LatLng, to: LatLng): number {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a));
 }
 
-// 0.348 -> "350 m" | 2.46 -> "2.5 km" | 37.2 -> "37 km"
+// 0.348 -> "350 מ׳" | 2.46 -> "2.5 ק״מ" | 37.2 -> "37 ק״מ"
 export function formatDistance(km: number): string {
   if (km < 1) {
     const meters = Math.round((km * 1000) / 10) * 10;
-    return `${meters} m`;
+    return `${meters} מ׳`;
   }
   if (km < 10) {
-    return `${km.toFixed(1)} km`;
+    return `${km.toFixed(1)} ק״מ`;
   }
-  return `${Math.round(km)} km`;
+  return `${Math.round(km)} ק״מ`;
 }

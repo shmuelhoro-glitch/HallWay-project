@@ -10,11 +10,14 @@ interface IconProps {
 
 interface BaseIconProps extends IconProps {
   children: ReactNode;
+  // An icon that points somewhere (back, forward, send). In a right-to-left page it is mirrored, in theme.css.
+  isDirectional?: boolean;
 }
 
-function BaseIcon({ size = 20, children }: BaseIconProps) {
+function BaseIcon({ size = 20, isDirectional = false, children }: BaseIconProps) {
   return (
     <svg
+      className={isDirectional ? 'icon-directional' : undefined}
       width={size}
       height={size}
       viewBox="0 0 24 24"
@@ -41,7 +44,7 @@ export function SearchIcon({ size }: IconProps) {
 
 export function BackIcon({ size }: IconProps) {
   return (
-    <BaseIcon size={size}>
+    <BaseIcon size={size} isDirectional>
       <path d="M15 6l-6 6 6 6" />
     </BaseIcon>
   );
@@ -49,7 +52,7 @@ export function BackIcon({ size }: IconProps) {
 
 export function ChevronIcon({ size = 18 }: IconProps) {
   return (
-    <BaseIcon size={size}>
+    <BaseIcon size={size} isDirectional>
       <path d="M9 6l6 6-6 6" />
     </BaseIcon>
   );
@@ -99,7 +102,7 @@ export function ChatIcon({ size }: IconProps) {
 
 export function SendIcon({ size }: IconProps) {
   return (
-    <BaseIcon size={size}>
+    <BaseIcon size={size} isDirectional>
       <path d="M4 12l16-8-6 16-2.5-6.5L4 12z" />
     </BaseIcon>
   );

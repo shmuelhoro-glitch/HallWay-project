@@ -20,13 +20,16 @@
   align-self: flex-start;
   max-width: 80%;
   padding: 8px 12px;
-  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 4px;
+  /* The small corner is on the side the message hangs on, in both writing directions */
+  border-radius: var(--radius-md);
+  border-end-start-radius: 4px;
   background: var(--surface);
 }
 
 .chat-message.is-mine {
   align-self: flex-end;
-  border-radius: var(--radius-md) var(--radius-md) 4px var(--radius-md);
+  border-end-start-radius: var(--radius-md);
+  border-end-end-radius: 4px;
   background: var(--yellow);
 }
 

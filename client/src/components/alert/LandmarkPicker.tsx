@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Floor } from '../../types/building';
 import type { Place } from '../../types/place';
+import { getDefaultFloorName } from '../../utils/floors';
 import { ChevronIcon, QrIcon } from '../ui/Icons';
 
 interface LandmarkPickerProps {
@@ -19,7 +20,7 @@ function LandmarkPicker({ floors, places, initialFloor, onPick, onScan }: Landma
 
   return (
     <div>
-      <div className="segmented" role="group" aria-label="Floor">
+      <div className="segmented" role="group" aria-label="קומה">
         {floors.map((item) => (
           <button
             key={item.floor}
@@ -27,14 +28,14 @@ function LandmarkPicker({ floors, places, initialFloor, onPick, onScan }: Landma
             aria-pressed={item.floor === floor}
             onClick={() => setFloor(item.floor)}
           >
-            Floor {item.floor}
+            {getDefaultFloorName(item.floor)}
           </button>
         ))}
       </div>
 
-      <div className="list-label">Near which place?</div>
+      <div className="list-label">ליד איזה מקום?</div>
       <div className="list">
-        {landmarks.length === 0 && <p className="list-empty">No landmarks on this floor. Scan a QR code.</p>}
+        {landmarks.length === 0 && <p className="list-empty">אין נקודות ציון בקומה הזאת. סרקו קוד QR.</p>}
         {landmarks.map((place) => (
           <button key={place._id} type="button" className="list-button" onClick={() => onPick(place)}>
             {place.name}
@@ -43,11 +44,11 @@ function LandmarkPicker({ floors, places, initialFloor, onPick, onScan }: Landma
         ))}
       </div>
 
-      <div className="or-divider">or</div>
+      <div className="or-divider">או</div>
 
       <button type="button" className="btn btn-dark" onClick={onScan}>
         <QrIcon />
-        Scan the nearest QR code
+        סריקת קוד ה-QR הקרוב
       </button>
     </div>
   );

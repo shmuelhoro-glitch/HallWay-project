@@ -29,14 +29,14 @@ function PlaceDetails({ place, floorName, routeStatus, onNavigate, onClose, onOp
             {place.category} · {floorName}
           </p>
         </div>
-        <button type="button" className="icon-btn icon-btn-plain" aria-label="Close" onClick={onClose}>
+        <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
           <CloseIcon />
         </button>
       </div>
 
       <div className="place-details-info">
-        {place.type === 'shelter' && <span className="badge badge-green">Protected space</span>}
-        {place.isLandmark && <span className="badge badge-blue">Landmark</span>}
+        {place.type === 'shelter' && <span className="badge badge-green">מרחב מוגן</span>}
+        {place.isLandmark && <span className="badge badge-blue">נקודת ציון</span>}
         {place.hours && (
           <span className="place-details-row">
             <ClockIcon />
@@ -46,23 +46,21 @@ function PlaceDetails({ place, floorName, routeStatus, onNavigate, onClose, onOp
         {isWebLink(place.url) && (
           <a className="place-details-row" href={place.url} target="_blank" rel="noreferrer">
             <LinkIcon />
-            Website
+            לאתר
           </a>
         )}
       </div>
 
-      {routeStatus === 'no-route' && (
-        <p className="message-error">No route found. A passage may be blocked right now.</p>
-      )}
-      {routeStatus === 'error' && <p className="message-error">Something went wrong. Please try again.</p>}
+      {routeStatus === 'no-route' && <p className="message-error">לא נמצא מסלול. ייתכן שמעבר חסום כרגע.</p>}
+      {routeStatus === 'error' && <p className="message-error">משהו השתבש. נסו שוב.</p>}
 
       <div className="sheet-actions">
         <button type="button" className="btn btn-primary" onClick={onNavigate} disabled={isLoading}>
-          {isLoading ? 'Finding route...' : 'Navigate'}
+          {isLoading ? 'מחפש מסלול...' : 'ניווט'}
         </button>
         <button type="button" className="btn btn-outline" onClick={onOpenChat}>
           <ChatIcon />
-          Chat
+          צ׳אט
         </button>
       </div>
     </div>

@@ -69,21 +69,21 @@ function SearchBar({ buildingId, categories, floors, onSelectPlace }: SearchBarP
   return (
     <div className="search-bar">
       <label className="sr-only" htmlFor="place-search">
-        Search a place
+        חיפוש מקום
       </label>
       <div className="search-field">
         <SearchIcon />
         <input
           id="place-search"
           type="search"
-          placeholder="Store, service or shelter"
+          placeholder="חנות, שירות או מרחב מוגן"
           autoComplete="off"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setIsOpen(true)}
         />
         {isOpen && (
-          <button type="button" className="icon-btn icon-btn-plain" aria-label="Close search" onClick={handleClose}>
+          <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירת החיפוש" onClick={handleClose}>
             <CloseIcon />
           </button>
         )}
@@ -102,8 +102,8 @@ function SearchBar({ buildingId, categories, floors, onSelectPlace }: SearchBarP
 
           {hasFilter && (
             <div className="search-results">
-              {hasError && <p className="list-empty">Search is not available right now.</p>}
-              {!hasError && results.length === 0 && <p className="list-empty">No places found.</p>}
+              {hasError && <p className="list-empty">החיפוש לא זמין כרגע.</p>}
+              {!hasError && results.length === 0 && <p className="list-empty">לא נמצאו מקומות.</p>}
 
               {results.map((place) => (
                 <button key={place._id} type="button" className="search-result" onClick={() => handleSelect(place)}>
@@ -113,7 +113,7 @@ function SearchBar({ buildingId, categories, floors, onSelectPlace }: SearchBarP
                       {place.category} · {getFloorName(floors, place.floor)}
                     </span>
                   </span>
-                  {place.type === 'shelter' ? <span className="badge badge-green">Shelter</span> : <ChevronIcon />}
+                  {place.type === 'shelter' ? <span className="badge badge-green">מרחב מוגן</span> : <ChevronIcon />}
                 </button>
               ))}
             </div>

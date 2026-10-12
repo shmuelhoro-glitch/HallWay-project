@@ -25,9 +25,9 @@ export interface BuildingDetails extends Building {
 }
 
 export const BUILDING_TYPE_LABELS: Record<BuildingType, string> = {
-  mall: 'Mall',
-  hospital: 'Hospital',
-  campus: 'Campus',
-  office: 'Office',
-  other: 'Other',
+  mall: 'קניון',
+  hospital: 'בית חולים',
+  campus: 'קמפוס',
+  office: 'משרדים',
+  other: 'אחר',
 };
