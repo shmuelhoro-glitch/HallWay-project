@@ -163,12 +163,23 @@ function GraphEditorPage() {
     if (mode === 'draw') {
       const previousNodeId = activeNodeId;
       run(async () => {
-        const node = await createNode(building.id, { floor, x, y });
+        // One request for the point and its walkway, so a point is never left without one
+        let created;
+        try {
+          created = await createNode(building.id, { floor, x, y, connectFrom: previousNodeId ?? undefined });
+        } catch (createError) {
+          // The point we were drawing from is gone (deleted in another tab): the next click starts a new line
+          if (createError instanceof ApiError && createError.code === 'NODE_NOT_FOUND') {
+            setActiveNodeId(null);
+          }
+          throw createError;
+        }
+
+        const { edge, ...node } = created;
         addNodeToScreen(node);
         setActiveNodeId(node.id); // the next point connects to this one
 
-        if (previousNodeId) {
-          const edge = await createEdge(building.id, previousNodeId, node.id);
+        if (edge) {
           addEdgeToScreen(edge);
         }
       });
