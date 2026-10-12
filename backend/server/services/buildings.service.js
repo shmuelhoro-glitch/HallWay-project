@@ -3,7 +3,7 @@ export function readSvgSize(svg) {
     /viewBox\s*=\s*["']\s*[\d.-]+[\s,]+[\d.-]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*["']/i
   );
   if (!match) {
-    throw { status: 400, message: "The SVG must have a viewBox" };
+    throw { status: 400, code: "INVALID_SVG", message: "The SVG must have a viewBox" };
   }
   return { width: Number(match[1]), height: Number(match[2]) };
 }

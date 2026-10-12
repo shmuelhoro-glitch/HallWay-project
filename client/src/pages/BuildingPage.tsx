@@ -6,6 +6,7 @@ import { getNearestShelter, getNode, getRoute } from '../api/navigation';
 import { useBuildingRoom } from '../socket/useBuildingRoom';
 import { useLocationStore } from '../store/locationStore';
 import { useAlertStore } from '../store/alertStore';
+import { useAuthStore } from '../store/authStore';
 import { getFloorName } from '../utils/floors';
 import { nodeToStartPoint, placeToStartPoint } from '../utils/startPoint';
 import type { BuildingDetails } from '../types/building';
@@ -27,7 +28,7 @@ import AlertBanner from '../components/alert/AlertBanner';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
 import ShareLocationButton from '../components/share/ShareLocationButton';
-import { BackIcon, ChatIcon } from '../components/ui/Icons';
+import { BackIcon, ChatIcon, PencilIcon } from '../components/ui/Icons';
 import './BuildingPage.css';
 
 interface BuildingPageProps {
@@ -46,6 +47,9 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const alertStatus = useAlertStore((state) => state.status);
   const minimizeAlert = useAlertStore((state) => state.minimize);
   const clearAlert = useAlertStore((state) => state.clearAlert);
+
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user !== null && (user.role === 'admin' || user.role === 'super');
 
   // ---------- Building data ----------
   const [building, setBuilding] = useState<BuildingDetails | null>(null);
@@ -450,6 +454,12 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           <div className="building-name">{building.name}</div>
           <div className="building-subtitle">{subtitle}</div>
         </div>
+        {/* Only a building manager sees the edit button */}
+        {isAdmin && (
+          <Link to={`/admin/${buildingId}/places`} className="icon-btn" aria-label="Edit this building" title="Edit this building">
+            <PencilIcon size={20} />
+          </Link>
+        )}
         <ShareLocationButton
           buildingId={buildingId}
           start={start}

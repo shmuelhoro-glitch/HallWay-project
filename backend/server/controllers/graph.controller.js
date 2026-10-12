@@ -1,0 +1,245 @@
+import { ObjectId } from "mongodb";
+import { mongoRepo } from "../repositories/mongoRepo.js";
+import { supabaseRepo } from "../repositories/sqlRepo.js";
+import {
+  computeLength,
+  deleteEdgesOfNode,
+  toEdgeResponse,
+  toNodeResponse,
+  updateEdgeLengths,
+} from "../services/graph.service.js";
+
+// The walking graph of a building, for the admin editor.
+// The Python service reads the same collections on every route, so every change here
+// (a new walkway, a blocked passage) counts for the visitors right away.
+
+function nodeNotFound() {
+  return { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
+}
+
+function edgeNotFound() {
+  return { status: 404, code: "EDGE_NOT_FOUND", message: "Walkway not found" };
+}
+
+// Finds a node of this building, or throws 404
+async function findNode(buildingId, nodeId) {
+  if (!ObjectId.isValid(nodeId)) {
+    throw nodeNotFound();
+  }
+  const node = await mongoRepo.findOne("nodes", { _id: new ObjectId(nodeId), buildingId });
+  if (!node) {
+    throw nodeNotFound();
+  }
+  return node;
+}
+
+// Stairs and elevators connect floors only through connectorId, so it must be there
+function checkConnector(type, connectorId) {
+  if ((type === "stairs" || type === "elevator") && !connectorId) {
+    throw {
+      status: 400,
+      code: "CONNECTOR_REQUIRED",
+      message: "Stairs and elevators need a connector id, the same on every floor",
+    };
+  }
+}
+
+// GET /api/buildings/:buildingId/graph?floor=0
+export async function getGraph(req, res, next) {
+  try {
+    const { buildingId } = req.params;
+    const floor = req.validatedQuery.floor;
+
+    const nodeQuery = { buildingId };
+    if (floor !== undefined) {
+      nodeQuery.floor = floor;
+    }
+    const nodes = await mongoRepo.findMany("nodes", nodeQuery);
+
+    // An edge has no floor field. We keep the edges whose two nodes are in the list.
+    const nodeIds = new Set(nodes.map((node) => String(node._id)));
+    const allEdges = await mongoRepo.findMany("edges", { buildingId });
+    const edges = allEdges.filter((edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to));
+
+    res.json({
+      nodes: nodes.map(toNodeResponse),
+      edges: edges.map(toEdgeResponse),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// POST /api/buildings/:buildingId/graph/nodes
+export async function createNode(req, res, next) {
+  try {
+    const { buildingId } = req.params;
+    const { floor, x, y, type, connectorId, label } = req.body;
+
+    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
+    if (!building) {
+      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
+    }
+
+    checkConnector(type, connectorId);
+
+    const node = { buildingId, floor, x, y, type };
+    if (connectorId) node.connectorId = connectorId;
+    if (label) node.label = label;
+
+    const nodeId = await mongoRepo.insertOne("nodes", node);
+    res.status(201).json(toNodeResponse({ _id: nodeId, ...node }));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// PUT /api/buildings/:buildingId/graph/nodes/:nodeId - send only what changed
+export async function updateNode(req, res, next) {
+  try {
+    const { buildingId, nodeId } = req.params;
+    const node = await findNode(buildingId, nodeId);
+    const changes = req.body;
+
+    // Check the node as it will be after the change
+    const finalType = changes.type ?? node.type;
+    const finalConnector = changes.connectorId !== undefined ? changes.connectorId : node.connectorId;
+    checkConnector(finalType, finalConnector);
+
+    // An empty text removes the field
+    const fieldsToSet = {};
+    const fieldsToRemove = {};
+    for (const [key, value] of Object.entries(changes)) {
+      if (value === "") {
+        fieldsToRemove[key] = "";
+      } else {
+        fieldsToSet[key] = value;
+      }
+    }
+
+    const update = {};
+    if (Object.keys(fieldsToSet).length > 0) update.$set = fieldsToSet;
+    if (Object.keys(fieldsToRemove).length > 0) update.$unset = fieldsToRemove;
+
+    if (Object.keys(update).length > 0) {
+      await mongoRepo.updateOne("nodes", { _id: node._id }, update);
+    }
+
+    // The node moved - its walkways got longer or shorter
+    if (changes.x !== undefined || changes.y !== undefined) {
+      await updateEdgeLengths(nodeId);
+    }
+
+    const updatedNode = await mongoRepo.findOne("nodes", { _id: node._id });
+    res.json(toNodeResponse(updatedNode));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// DELETE /api/buildings/:buildingId/graph/nodes/:nodeId
+export async function deleteNode(req, res, next) {
+  try {
+    const { buildingId, nodeId } = req.params;
+    const node = await findNode(buildingId, nodeId);
+
+    // The entrance of a place is deleted together with the place, in the Places screen
+    const place = await mongoRepo.findOne("places", { buildingId, entryNodeId: nodeId });
+    if (place) {
+      throw {
+        status: 409,
+        code: "NODE_IN_USE",
+        message: `This is the entrance of "${place.name}". Delete the place instead.`,
+      };
+    }
+
+    await deleteEdgesOfNode(nodeId);
+    await mongoRepo.deleteOne("nodes", { _id: node._id });
+
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+}
+
+// POST /api/buildings/:buildingId/graph/edges  { from, to }
+export async function createEdge(req, res, next) {
+  try {
+    const { buildingId } = req.params;
+    const { from, to } = req.body;
+
+    if (from === to) {
+      throw { status: 400, code: "SAME_NODE", message: "A walkway needs two different points" };
+    }
+
+    const a = await findNode(buildingId, from);
+    const b = await findNode(buildingId, to);
+
+    // Floors are connected only by stairs / elevators with the same connectorId
+    if (a.floor !== b.floor) {
+      throw { status: 400, code: "DIFFERENT_FLOORS", message: "Both points must be on the same floor" };
+    }
+
+    const existing = await mongoRepo.findOne("edges", {
+      buildingId,
+      $or: [
+        { from, to },
+        { from: to, to: from },
+      ],
+    });
+    if (existing) {
+      throw { status: 409, code: "EDGE_EXISTS", message: "These points are already connected" };
+    }
+
+    // from / to are saved as strings, like in the demo data
+    const edge = { buildingId, from, to, length: computeLength(a, b), blocked: false };
+    const edgeId = await mongoRepo.insertOne("edges", edge);
+
+    res.status(201).json(toEdgeResponse({ _id: edgeId, ...edge }));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// PATCH /api/buildings/:buildingId/graph/edges/:edgeId  { blocked: true / false }
+export async function updateEdge(req, res, next) {
+  try {
+    const { buildingId, edgeId } = req.params;
+    const { blocked } = req.body;
+
+    if (!ObjectId.isValid(edgeId)) {
+      throw edgeNotFound();
+    }
+    const _id = new ObjectId(edgeId);
+
+    const edge = await mongoRepo.findOne("edges", { _id, buildingId });
+    if (!edge) {
+      throw edgeNotFound();
+    }
+
+    await mongoRepo.updateOne("edges", { _id }, { $set: { blocked } });
+    res.json(toEdgeResponse({ ...edge, blocked }));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// DELETE /api/buildings/:buildingId/graph/edges/:edgeId
+export async function deleteEdge(req, res, next) {
+  try {
+    const { buildingId, edgeId } = req.params;
+
+    if (!ObjectId.isValid(edgeId)) {
+      throw edgeNotFound();
+    }
+
+    const deletedCount = await mongoRepo.deleteOne("edges", { _id: new ObjectId(edgeId), buildingId });
+    if (deletedCount === 0) {
+      throw edgeNotFound();
+    }
+
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+}

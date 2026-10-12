@@ -79,3 +79,10 @@
 .auth-switch a {
   font-weight: 500;
 }
+
+/* The short line under "Account type" */
+.auth-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
