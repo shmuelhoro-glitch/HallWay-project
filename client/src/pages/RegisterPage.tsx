@@ -34,6 +34,7 @@ function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'visitor' | 'admin'>('visitor');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,11 +44,17 @@ function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await register(username, email, password);
+      await register(username, email, password, role);
       // Registered - now log in, so the user does not have to type it again
       const result = await login(email, password);
       setAuth(result.token, result.user);
-      navigate(redirect, { replace: true });
+
+      // A new building manager goes straight to the admin screens
+      if (role === 'admin' && redirect === '/') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(redirect, { replace: true });
+      }
     } catch (registerError) {
       setError(getErrorMessage(registerError));
     } finally {
@@ -66,6 +73,21 @@ function RegisterPage() {
       <p className="auth-subtitle">Create an account to chat with others in the building.</p>
 
       <form className="auth-form" onSubmit={handleSubmit}>
+        <span className="auth-label">Account type</span>
+        <div className="segmented" role="group" aria-label="Account type">
+          <button type="button" aria-pressed={role === 'visitor'} onClick={() => setRole('visitor')}>
+            Visitor
+          </button>
+          <button type="button" aria-pressed={role === 'admin'} onClick={() => setRole('admin')}>
+            Building manager
+          </button>
+        </div>
+        <p className="auth-hint">
+          {role === 'visitor'
+            ? 'Find your way and chat with others in the building.'
+            : 'Add your building, its floors, places and walkways.'}
+        </p>
+
         <label className="auth-label" htmlFor="register-username">
           Username
         </label>

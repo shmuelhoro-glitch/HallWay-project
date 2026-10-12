@@ -4,6 +4,7 @@ import { getBuildings } from '../api/buildings';
 import { useUserLocation } from '../hooks/useUserLocation';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useRecentStore } from '../store/recentStore';
+import { useAuthStore } from '../store/authStore';
 import type { Building, BuildingType } from '../types/building';
 import { searchBuildings } from '../utils/buildingSearch';
 import { getBuildingPoint, getDistanceKm } from '../utils/distance';
@@ -33,6 +34,7 @@ function HomePage() {
   const navigate = useNavigate();
   const { position: userPosition, status: locationStatus, locate } = useUserLocation();
 
+  const user = useAuthStore((state) => state.user);
   const recent = useRecentStore((state) => state.recent);
   const addRecent = useRecentStore((state) => state.addRecent);
   const clearRecent = useRecentStore((state) => state.clearRecent);
@@ -81,6 +83,9 @@ function HomePage() {
   const selectedBuilding = buildings.find((building) => building.id === selectedId) ?? null;
   const selectedDistance =
     selectedBuilding && userPoint ? getDistanceKm(userPoint, getBuildingPoint(selectedBuilding)) : null;
+
+  // A logged-in user is greeted by name
+  const searchPlaceholder = user && user.username ? `Where to, ${user.username}?` : 'Where are you going today?';
 
   // ---------- Actions ----------
 
@@ -221,6 +226,7 @@ function HomePage() {
         recent={recent}
         onPickRecent={(buildingId) => navigate(`/b/${buildingId}`)}
         onClearRecent={clearRecent}
+        placeholder={searchPlaceholder}
       />
 
       <div className="home-map">

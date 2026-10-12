@@ -8,10 +8,15 @@ export function login(email: string, password: string): Promise<LoginResponse> {
   });
 }
 
-// role is not sent, so the server uses the default: visitor
-export function register(username: string, email: string, password: string): Promise<unknown> {
+// role: 'visitor' for a regular user, 'admin' for someone who manages a building
+export function register(
+  username: string,
+  email: string,
+  password: string,
+  role: 'visitor' | 'admin',
+): Promise<unknown> {
   return apiRequest<unknown>('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password, role }),
   });
 }

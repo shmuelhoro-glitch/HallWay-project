@@ -18,6 +18,11 @@
   cursor: pointer;
 }
 
+/* A building manager gets a yellow ring, so it is clear who is logged in */
+.user-avatar.is-admin {
+  box-shadow: 0 0 0 3px var(--yellow);
+}
+
 .user-login-link {
   display: inline-flex;
   align-items: center;
@@ -68,6 +73,40 @@
   margin-top: 2px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.user-popover-role {
+  display: inline-block;
+  margin: 8px 10px 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.user-popover-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  margin-top: 10px;
+  padding: 0 10px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.user-popover-link:hover {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+/* After the admin link there is no extra space before "Log out" */
+.user-popover-link + .user-popover-item {
+  margin-top: 0;
 }
 
 .user-popover-item {

@@ -1,20 +1,40 @@
 import { Router } from "express";
+import { verifyToken, requireRole } from "../middleware/authentication.js";
+import { validateRequest } from "../middleware/validation.js";
+import {
+  createEdgeSchema,
+  createNodeSchema,
+  graphQuerySchema,
+  updateEdgeSchema,
+  updateNodeSchema,
+} from "../schemas/graph.schemas.js";
+import {
+  createEdge,
+  createNode,
+  deleteEdge,
+  deleteNode,
+  getGraph,
+  updateEdge,
+  updateNode,
+} from "../controllers/graph.controller.js";
 
-const router = Router({mergeParams:true})
+const router = Router({ mergeParams: true })
 
-// router.get('/')
+// Everything here is for building managers only
+router.use(verifyToken, requireRole(["admin"]))
 
-// router.post('/nodes')
+router.get('/', validateRequest(graphQuerySchema), getGraph)
 
-// router.put('/nodes/:nodeId')
+router.post('/nodes', validateRequest(createNodeSchema), createNode)
 
-// router.delete('/nodes/:nodeId')
+router.put('/nodes/:nodeId', validateRequest(updateNodeSchema), updateNode)
 
-// router.post('/edges')
+router.delete('/nodes/:nodeId', deleteNode)
 
-// router.patch('/edges/:edgeId')
+router.post('/edges', validateRequest(createEdgeSchema), createEdge)
 
-// router.delete('/edges/:edgeId')
+router.patch('/edges/:edgeId', validateRequest(updateEdgeSchema), updateEdge)
 
+router.delete('/edges/:edgeId', deleteEdge)
 
 export default router

@@ -5,6 +5,7 @@ import type { Building, BuildingType } from '../../types/building';
 import type { LocationStatus, UserPosition } from '../../hooks/useUserLocation';
 import { getBuildingPoint } from '../../utils/distance';
 import { LocateIcon } from '../ui/Icons';
+import { getBuildingTypePaths } from '../ui/buildingTypeIcons';
 import './BuildingsMap.css';
 
 // What the page can ask the map to show:
@@ -40,7 +41,7 @@ const TYPE_ICONS: Record<BuildingType, string> = {
 // divIcon also avoids the known Vite problem with Leaflet's default marker images.
 function createBuildingIcon(type: BuildingType, isSelected: boolean): L.DivIcon {
   const size = isSelected ? 44 : 36;
-  const svg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TYPE_ICONS[type] ?? TYPE_ICONS.mall}</svg>`;
+  const svg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${getBuildingTypePaths(type)}</svg>`;
 
   return L.divIcon({
     className: '', // removes Leaflet's default white square

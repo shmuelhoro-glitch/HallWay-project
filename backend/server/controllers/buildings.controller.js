@@ -2,6 +2,7 @@ import { geocodeAddress } from "../services/geocoding.service.js";
 import { supabaseRepo } from "../repositories/sqlRepo.js";
 import { mongoRepo } from "../repositories/mongoRepo.js";
 import { readSvgSize } from "../services/buildings.service.js";
+import { wakeRoutingService } from "../services/routingClient.js";
 
 export async function createBuilding(req, res, next) {
   try {
@@ -32,9 +33,14 @@ export async function addFloor(req, res, next) {
     const { buildingId } = req.params;
     const { floor, name, svg } = req.body;
 
+    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
+    if (!building) {
+      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
+    }
+
     const start = svg.indexOf("<svg");
     if (start === -1) {
-      throw { status: 400, message: "The file is not an SVG" };
+      throw { status: 400, code: "INVALID_SVG", message: "The file is not an SVG" };
     }
     const cleanSvg = svg.slice(start);
 
@@ -71,9 +77,13 @@ export async function addFloor(req, res, next) {
 }
 
 export async function getAllBuildings(req, res, next) {
-    const {city, type} = req.query
-    const data = await supabaseRepo.findMany("buildings", {city, type})
-    res.send(data)
+  try {
+    const { city, type } = req.query;
+    const data = await supabaseRepo.findMany("buildings", { city, type });
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
 }
 
 
@@ -83,8 +93,11 @@ export async function getBuildingById(req, res, next) {
 
     const building = await supabaseRepo.findOne("buildings", { id: buildingId });
     if (!building) {
-      throw { status: 404, message: "Building not found" };
+      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
     }
+
+    // A visitor opened a building - wake the routing service now, so the first route is fast
+    wakeRoutingService();
 
     const floorDocs = await mongoRepo.findMany("floors", { buildingId });
 
@@ -110,11 +123,14 @@ export async function getFloorPlan(req, res, next) {
 
     const floorDoc = await mongoRepo.findOne("floors", { buildingId, floor: Number(floor) });
     if (!floorDoc) {
-      throw { status: 404, message: "Floor not found" };
+      throw { status: 404, code: "FLOOR_NOT_FOUND", message: "Floor not found" };
     }
 
     // Someone who opens the file directly in the browser won't run scripts hidden in it
     res.set("Content-Security-Policy", "script-src 'none'");
+    // Check with the server every time (cheap: an unchanged plan answers 304),
+    // so a plan the admin replaced shows up right away
+    res.set("Cache-Control", "no-cache");
     res.type("image/svg+xml").send(floorDoc.svg);
   } catch (error) {
     next(error);

@@ -7,9 +7,10 @@ interface PlacesLayerProps {
   selectedPlaceId: string | null;
   highlightShelters: boolean; // during a red alert
   onSelect: (place: Place) => void;
+  showAllLabels?: boolean; // the admin screens show every name
 }
 
-function PlacesLayer({ places, selectedPlaceId, highlightShelters, onSelect }: PlacesLayerProps) {
+function PlacesLayer({ places, selectedPlaceId, highlightShelters, onSelect, showAllLabels = false }: PlacesLayerProps) {
   const scale = useMapScale();
 
   return (
@@ -18,7 +19,8 @@ function PlacesLayer({ places, selectedPlaceId, highlightShelters, onSelect }: P
         const isSelected = place._id === selectedPlaceId;
         const isShelter = place.type === 'shelter';
         const isBig = isSelected || (isShelter && highlightShelters);
-        const showLabel = isSelected || isShelter || place.isLandmark;
+        // The floor plan already shows the names. A label is added only where it helps.
+        const showLabel = showAllLabels || isSelected || (isShelter && highlightShelters);
 
         const classNames = ['map-place'];
         if (isShelter) classNames.push('is-shelter');

@@ -19,6 +19,7 @@ interface BuildingSearchProps {
   recent: RecentBuilding[];
   onPickRecent: (buildingId: string) => void;
   onClearRecent: () => void;
+  placeholder: string; // a logged-in user is greeted by name
 }
 
 const TYPE_FILTERS: { value: BuildingType | null; label: string }[] = [
@@ -56,6 +57,7 @@ function BuildingSearch({
   recent,
   onPickRecent,
   onClearRecent,
+  placeholder,
 }: BuildingSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +110,7 @@ function BuildingSearch({
             id="building-search-input"
             type="search"
             enterKeyHint="search"
-            placeholder="Where are you going today?"
+            placeholder={placeholder}
             autoComplete="off"
             value={text}
             onChange={(event) => {

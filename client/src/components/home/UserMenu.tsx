@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { LogoutIcon } from '../ui/Icons';
+import { DashboardIcon, LogoutIcon } from '../ui/Icons';
 import './UserMenu.css';
 
 // A small round button with the first letter of the name.
 // A tap opens a small menu with the name, the email and "Log out".
+// A building manager (admin) also gets "Manage buildings" there.
 function UserMenu() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -48,6 +49,7 @@ function UserMenu() {
   // If the server didn't send a name, use the email. If nothing at all, "?".
   const displayName = user.username || user.email || '';
   const initial = displayName ? displayName.charAt(0).toUpperCase() : '?';
+  const isAdmin = user.role === 'admin' || user.role === 'super';
 
   function handleLogout() {
     setIsOpen(false);
@@ -58,7 +60,7 @@ function UserMenu() {
     <div className="user-menu" ref={menuRef}>
       <button
         type="button"
-        className="user-avatar"
+        className={isAdmin ? 'user-avatar is-admin' : 'user-avatar'}
         aria-label="Account menu"
         aria-haspopup="menu"
         aria-expanded={isOpen}
@@ -71,6 +73,14 @@ function UserMenu() {
         <div className="user-popover" role="menu">
           <div className="user-popover-name">{user.username}</div>
           {user.email && <div className="user-popover-email">{user.email}</div>}
+          <div className="user-popover-role">{isAdmin ? 'Building manager' : 'Visitor'}</div>
+
+          {isAdmin && (
+            <Link to="/admin" role="menuitem" className="user-popover-link" onClick={() => setIsOpen(false)}>
+              <DashboardIcon />
+              Manage buildings
+            </Link>
+          )}
 
           <button type="button" role="menuitem" className="user-popover-item" onClick={handleLogout}>
             <LogoutIcon />

@@ -1,4 +1,5 @@
-export type BuildingType = 'mall' | 'hospital' | 'campus';
+// The same list as the server's createBuildingSchema
+export type BuildingType = 'mall' | 'hospital' | 'campus' | 'office' | 'other';
 
 export interface Building {
   id: string;
@@ -27,4 +28,6 @@ export const BUILDING_TYPE_LABELS: Record<BuildingType, string> = {
   mall: 'Mall',
   hospital: 'Hospital',
   campus: 'Campus',
+  office: 'Office',
+  other: 'Other',
 };

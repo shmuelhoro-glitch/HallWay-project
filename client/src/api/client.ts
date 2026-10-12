@@ -6,11 +6,13 @@ export const API_URL: string = import.meta.env.VITE_API_URL;
 export class ApiError extends Error {
   status: number;
   code: string;
+  fields: Record<string, string[]>; // for VALIDATION_ERROR: which field failed and why
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, fields: Record<string, string[]> = {}) {
     super(message);
     this.status = status;
     this.code = code;
+    this.fields = fields;
   }
 }
 
@@ -18,6 +20,7 @@ interface ErrorBody {
   error?: {
     code?: string;
     message?: string;
+    fields?: Record<string, string[]>;
   };
 }
 
@@ -40,7 +43,12 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     const body = data as ErrorBody | null;
     const code = body?.error?.code ?? 'UNKNOWN_ERROR';
     const message = body?.error?.message ?? 'Something went wrong';
-    throw new ApiError(response.status, code, message);
+
+    // The saved token expired (after 24 hours) - log out, so the user is asked to log in again
+    if (code === 'INVALID_TOKEN') {
+      useAuthStore.getState().logout();
+    }
+    throw new ApiError(response.status, code, message, body?.error?.fields);
   }
 
   return data as T;
