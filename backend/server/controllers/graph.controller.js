@@ -1,245 +1,301 @@
 import { ObjectId } from "mongodb";
 import { mongoRepo } from "../repositories/mongoRepo.js";
-import { supabaseRepo } from "../repositories/sqlRepo.js";
-import {
-  computeLength,
-  deleteEdgesOfNode,
-  toEdgeResponse,
-  toNodeResponse,
-  updateEdgeLengths,
-} from "../services/graph.service.js";
+import { updateEdgeLengths } from "../services/graph.service.js";
 
-// The walking graph of a building, for the admin editor.
-// The Python service reads the same collections on every route, so every change here
-// (a new walkway, a blocked passage) counts for the visitors right away.
-
-function nodeNotFound() {
-  return { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
+// פונקציות עזר לעיצוב התשובה בדיוק לפי האפיון (id כמחרוזת במקום _id)
+function formatNode(node) {
+  return {
+    id: String(node._id),
+    floor: node.floor,
+    x: node.x,
+    y: node.y,
+    type: node.type,
+    connectorId: node.connectorId ?? null,
+    label: node.label ?? null,
+  };
 }
 
-function edgeNotFound() {
-  return { status: 404, code: "EDGE_NOT_FOUND", message: "Walkway not found" };
+function formatEdge(edge) {
+  return {
+    id: String(edge._id),
+    from: edge.from,
+    to: edge.to,
+    length: edge.length,
+    blocked: edge.blocked,
+  };
 }
 
-// Finds a node of this building, or throws 404
-async function findNode(buildingId, nodeId) {
-  if (!ObjectId.isValid(nodeId)) {
-    throw nodeNotFound();
-  }
-  const node = await mongoRepo.findOne("nodes", { _id: new ObjectId(nodeId), buildingId });
-  if (!node) {
-    throw nodeNotFound();
-  }
-  return node;
-}
-
-// Stairs and elevators connect floors only through connectorId, so it must be there
-function checkConnector(type, connectorId) {
-  if ((type === "stairs" || type === "elevator") && !connectorId) {
-    throw {
-      status: 400,
-      code: "CONNECTOR_REQUIRED",
-      message: "Stairs and elevators need a connector id, the same on every floor",
-    };
-  }
-}
-
-// GET /api/buildings/:buildingId/graph?floor=0
+// 1. שליפת הגרף של קומה: GET /api/buildings/:buildingId/graph?floor=0
 export async function getGraph(req, res, next) {
   try {
     const { buildingId } = req.params;
-    const floor = req.validatedQuery.floor;
+    const floor = Number(req.query.floor);
 
-    const nodeQuery = { buildingId };
-    if (floor !== undefined) {
-      nodeQuery.floor = floor;
-    }
-    const nodes = await mongoRepo.findMany("nodes", nodeQuery);
+    // א. מביאים את כל הצמתים של הקומה המבוקשת
+    const rawNodes = await mongoRepo.findMany("nodes", { buildingId, floor });
+    const nodes = rawNodes.map(formatNode);
 
-    // An edge has no floor field. We keep the edges whose two nodes are in the list.
-    const nodeIds = new Set(nodes.map((node) => String(node._id)));
-    const allEdges = await mongoRepo.findMany("edges", { buildingId });
-    const edges = allEdges.filter((edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to));
+    // ב. שומרים ב-Set את כל מזהי הצמתים של הקומה הזו
+    const floorNodeIds = new Set(nodes.map((n) => n.id));
 
-    res.json({
-      nodes: nodes.map(toNodeResponse),
-      edges: edges.map(toEdgeResponse),
-    });
-  } catch (error) {
-    next(error);
+    // ג. מביאים את הקשתות של המבנה ומסננים רק קשתות ששייכות לצמתים בקומה הזו
+    const rawEdges = await mongoRepo.findMany("edges", { buildingId });
+    const edges = rawEdges
+      .filter((e) => floorNodeIds.has(e.from) && floorNodeIds.has(e.to))
+      .map(formatEdge);
+
+    res.status(200).json({ nodes, edges });
+  } catch (err) {
+    next(err);
   }
 }
 
-// POST /api/buildings/:buildingId/graph/nodes
+// 2. יצירת צומת חדש: POST /api/buildings/:buildingId/graph/nodes
 export async function createNode(req, res, next) {
   try {
     const { buildingId } = req.params;
-    const { floor, x, y, type, connectorId, label } = req.body;
+    const { floor, x, y, type, connectorId = null, label = null } = req.body;
 
-    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
-    if (!building) {
-      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
-    }
+    const newNode = {
+      buildingId,
+      floor: Number(floor),
+      x,
+      y,
+      type,
+      connectorId,
+      label,
+    };
 
-    checkConnector(type, connectorId);
+    const insertedId = await mongoRepo.insertOne("nodes", newNode);
 
-    const node = { buildingId, floor, x, y, type };
-    if (connectorId) node.connectorId = connectorId;
-    if (label) node.label = label;
-
-    const nodeId = await mongoRepo.insertOne("nodes", node);
-    res.status(201).json(toNodeResponse({ _id: nodeId, ...node }));
-  } catch (error) {
-    next(error);
+    res.status(201).json(formatNode({ _id: insertedId, ...newNode }));
+  } catch (err) {
+    next(err);
   }
 }
 
-// PUT /api/buildings/:buildingId/graph/nodes/:nodeId - send only what changed
+// 3. עדכון צומת קיים: PUT /api/buildings/:buildingId/graph/nodes/:nodeId
 export async function updateNode(req, res, next) {
   try {
     const { buildingId, nodeId } = req.params;
-    const node = await findNode(buildingId, nodeId);
-    const changes = req.body;
 
-    // Check the node as it will be after the change
-    const finalType = changes.type ?? node.type;
-    const finalConnector = changes.connectorId !== undefined ? changes.connectorId : node.connectorId;
-    checkConnector(finalType, finalConnector);
-
-    // An empty text removes the field
-    const fieldsToSet = {};
-    const fieldsToRemove = {};
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === "") {
-        fieldsToRemove[key] = "";
-      } else {
-        fieldsToSet[key] = value;
-      }
+    if (!ObjectId.isValid(nodeId)) {
+      throw { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
     }
 
-    const update = {};
-    if (Object.keys(fieldsToSet).length > 0) update.$set = fieldsToSet;
-    if (Object.keys(fieldsToRemove).length > 0) update.$unset = fieldsToRemove;
+    const _id = new ObjectId(nodeId);
+    const existingNode = await mongoRepo.findOne("nodes", { _id, buildingId });
 
-    if (Object.keys(update).length > 0) {
-      await mongoRepo.updateOne("nodes", { _id: node._id }, update);
+    if (!existingNode) {
+      throw { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
     }
 
-    // The node moved - its walkways got longer or shorter
-    if (changes.x !== undefined || changes.y !== undefined) {
-      await updateEdgeLengths(nodeId);
-    }
+    // בדיקה שאם הצומת הופך למדרגות/מעלית, יש לו connectorId
+    const targetType = req.body.type ?? existingNode.type;
+    const targetConnector =
+      req.body.connectorId !== undefined
+        ? req.body.connectorId
+        : existingNode.connectorId;
 
-    const updatedNode = await mongoRepo.findOne("nodes", { _id: node._id });
-    res.json(toNodeResponse(updatedNode));
-  } catch (error) {
-    next(error);
-  }
-}
-
-// DELETE /api/buildings/:buildingId/graph/nodes/:nodeId
-export async function deleteNode(req, res, next) {
-  try {
-    const { buildingId, nodeId } = req.params;
-    const node = await findNode(buildingId, nodeId);
-
-    // The entrance of a place is deleted together with the place, in the Places screen
-    const place = await mongoRepo.findOne("places", { buildingId, entryNodeId: nodeId });
-    if (place) {
+    if (
+      (targetType === "stairs" || targetType === "elevator") &&
+      !targetConnector
+    ) {
       throw {
-        status: 409,
-        code: "NODE_IN_USE",
-        message: `This is the entrance of "${place.name}". Delete the place instead.`,
+        status: 400,
+        code: "VALIDATION_ERROR",
+        message: "connectorId is required for stairs and elevator nodes",
       };
     }
 
-    await deleteEdgesOfNode(nodeId);
-    await mongoRepo.deleteOne("nodes", { _id: node._id });
+    await mongoRepo.updateOne("nodes", { _id }, { $set: req.body });
 
-    res.status(204).end();
-  } catch (error) {
-    next(error);
+    // אם הקואורדינטות x או y השתנו - מחשבים מחדש את אורך הקשתות שמחוברות לצומת
+    const coordsChanged =
+      (req.body.x !== undefined && req.body.x !== existingNode.x) ||
+      (req.body.y !== undefined && req.body.y !== existingNode.y);
+
+    if (coordsChanged) {
+      await updateEdgeLengths(nodeId);
+    }
+
+    const updatedNode = await mongoRepo.findOne("nodes", { _id, buildingId });
+    res.status(200).json(formatNode(updatedNode));
+  } catch (err) {
+    next(err);
   }
 }
 
-// POST /api/buildings/:buildingId/graph/edges  { from, to }
+// 4. מחיקת צומת: DELETE /api/buildings/:buildingId/graph/nodes/:nodeId
+export async function deleteNode(req, res, next) {
+  try {
+    const { buildingId, nodeId } = req.params;
+
+    if (!ObjectId.isValid(nodeId)) {
+      throw { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
+    }
+
+    const _id = new ObjectId(nodeId);
+    const existingNode = await mongoRepo.findOne("nodes", { _id, buildingId });
+
+    if (!existingNode) {
+      throw { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
+    }
+
+    // א. בודקים אם הצומת הזה משמש כצומת כניסה (entryNodeId) של מקום כלשהו
+    const placeUsingNode = await mongoRepo.findOne("places", {
+      buildingId,
+      entryNodeId: nodeId,
+    });
+
+    if (placeUsingNode) {
+      throw {
+        status: 409,
+        code: "NODE_IN_USE",
+        message: "Cannot delete an entrance node that belongs to a place",
+      };
+    }
+
+    // ב. מוחקים קודם את כל הקשתות שמחוברות לצומת הזה
+    await mongoRepo.deleteMany("edges", {
+      $or: [{ from: nodeId }, { to: nodeId }],
+    });
+
+    // ג. מוחקים את הצומת עצמו
+    await mongoRepo.deleteOne("nodes", { _id });
+
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+// 5. יצירת קשת (חיבור שני צמתים): POST /api/buildings/:buildingId/graph/edges
 export async function createEdge(req, res, next) {
   try {
     const { buildingId } = req.params;
     const { from, to } = req.body;
 
+    // א. אסור לחבר צומת לעצמו
     if (from === to) {
-      throw { status: 400, code: "SAME_NODE", message: "A walkway needs two different points" };
+      throw {
+        status: 400,
+        code: "INVALID_EDGE",
+        message: "Cannot connect a node to itself",
+      };
     }
 
-    const a = await findNode(buildingId, from);
-    const b = await findNode(buildingId, to);
-
-    // Floors are connected only by stairs / elevators with the same connectorId
-    if (a.floor !== b.floor) {
-      throw { status: 400, code: "DIFFERENT_FLOORS", message: "Both points must be on the same floor" };
+    // ב. בדיקה ששני הצמתים תקינים וקיימים באותו מבנה
+    if (!ObjectId.isValid(from) || !ObjectId.isValid(to)) {
+      throw { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
     }
 
-    const existing = await mongoRepo.findOne("edges", {
+    const fromNode = await mongoRepo.findOne("nodes", {
+      _id: new ObjectId(from),
+      buildingId,
+    });
+    const toNode = await mongoRepo.findOne("nodes", {
+      _id: new ObjectId(to),
+      buildingId,
+    });
+
+    if (!fromNode || !toNode) {
+      throw { status: 404, code: "NODE_NOT_FOUND", message: "Node not found" };
+    }
+
+    // ג. בדיקה ששני הצמתים נמצאים באותה קומה
+    if (fromNode.floor !== toNode.floor) {
+      throw {
+        status: 400,
+        code: "DIFFERENT_FLOORS",
+        message: "Cannot connect nodes on different floors",
+      };
+    }
+
+    // ד. בדיקה שלא קיימת כבר קשת ביניהם (בשני הכיוונים: A->B או B->A)
+    const existingEdge = await mongoRepo.findOne("edges", {
       buildingId,
       $or: [
         { from, to },
         { from: to, to: from },
       ],
     });
-    if (existing) {
-      throw { status: 409, code: "EDGE_EXISTS", message: "These points are already connected" };
+
+    if (existingEdge) {
+      throw {
+        status: 409,
+        code: "EDGE_EXISTS",
+        message: "An edge between these nodes already exists",
+      };
     }
 
-    // from / to are saved as strings, like in the demo data
-    const edge = { buildingId, from, to, length: computeLength(a, b), blocked: false };
-    const edgeId = await mongoRepo.insertOne("edges", edge);
+    // ה. חישוב אורך הקשת לפי המרחק בין שני הצמתים
+    const length =
+      Math.round(Math.hypot(fromNode.x - toNode.x, fromNode.y - toNode.y) * 100) /
+      100;
 
-    res.status(201).json(toEdgeResponse({ _id: edgeId, ...edge }));
-  } catch (error) {
-    next(error);
+    const newEdge = {
+      buildingId,
+      from,
+      to,
+      length,
+      blocked: false,
+    };
+
+    const insertedId = await mongoRepo.insertOne("edges", newEdge);
+
+    res.status(201).json(formatEdge({ _id: insertedId, ...newEdge }));
+  } catch (err) {
+    next(err);
   }
 }
 
-// PATCH /api/buildings/:buildingId/graph/edges/:edgeId  { blocked: true / false }
-export async function updateEdge(req, res, next) {
+// 6. חסימה או פתיחה של קשת: PATCH /api/buildings/:buildingId/graph/edges/:edgeId
+export async function patchEdge(req, res, next) {
   try {
     const { buildingId, edgeId } = req.params;
     const { blocked } = req.body;
 
     if (!ObjectId.isValid(edgeId)) {
-      throw edgeNotFound();
+      throw { status: 404, code: "EDGE_NOT_FOUND", message: "Edge not found" };
     }
-    const _id = new ObjectId(edgeId);
 
-    const edge = await mongoRepo.findOne("edges", { _id, buildingId });
-    if (!edge) {
-      throw edgeNotFound();
+    const _id = new ObjectId(edgeId);
+    const existingEdge = await mongoRepo.findOne("edges", { _id, buildingId });
+
+    if (!existingEdge) {
+      throw { status: 404, code: "EDGE_NOT_FOUND", message: "Edge not found" };
     }
 
     await mongoRepo.updateOne("edges", { _id }, { $set: { blocked } });
-    res.json(toEdgeResponse({ ...edge, blocked }));
-  } catch (error) {
-    next(error);
+
+    const updatedEdge = await mongoRepo.findOne("edges", { _id, buildingId });
+    res.status(200).json(formatEdge(updatedEdge));
+  } catch (err) {
+    next(err);
   }
 }
 
-// DELETE /api/buildings/:buildingId/graph/edges/:edgeId
+// 7. מחיקת קשת: DELETE /api/buildings/:buildingId/graph/edges/:edgeId
 export async function deleteEdge(req, res, next) {
   try {
     const { buildingId, edgeId } = req.params;
 
     if (!ObjectId.isValid(edgeId)) {
-      throw edgeNotFound();
+      throw { status: 404, code: "EDGE_NOT_FOUND", message: "Edge not found" };
     }
 
-    const deletedCount = await mongoRepo.deleteOne("edges", { _id: new ObjectId(edgeId), buildingId });
-    if (deletedCount === 0) {
-      throw edgeNotFound();
+    const _id = new ObjectId(edgeId);
+    const existingEdge = await mongoRepo.findOne("edges", { _id, buildingId });
+
+    if (!existingEdge) {
+      throw { status: 404, code: "EDGE_NOT_FOUND", message: "Edge not found" };
     }
+
+    await mongoRepo.deleteOne("edges", { _id });
 
     res.status(204).end();
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 }

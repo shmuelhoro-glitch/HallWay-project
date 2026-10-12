@@ -1,20 +1,34 @@
-import { Router } from "express"
-import { verifyToken, requireRole } from "../middleware/authentication.js";
+import { Router } from "express";
+
+import { getPlaces, createPlace, updatePlace, deletePlace } from "../controllers/places.controller.js";
+import { verifyToken } from "../middleware/authentication.js";
+import { requireRole } from "../middleware/authentication.js";
 import { validateRequest } from "../middleware/validation.js";
-import { createPlaceSchema, updatePlaceSchema } from "../schemas/places.schemas.js";
-import { createPlace, deletePlace, getPlaces, updatePlace } from "../controllers/places.controller.js";
+import {
+  createPlaceSchema,
+  updatePlaceSchema,
+} from "../schemas/places.schemas.js";
 
-// mergeParams: gives us :buildingId from the path in server.js
-const router = Router({ mergeParams: true })
-
-const adminOnly = [verifyToken, requireRole(["admin"])]
+const router = Router({ mergeParams: true });
 
 router.get("/", getPlaces);
 
-router.post("/", adminOnly, validateRequest(createPlaceSchema), createPlace);
+router.post(
+  "/",
+  verifyToken,
+  requireRole(["admin"]),
+  validateRequest(createPlaceSchema),
+  createPlace,
+);
 
-router.put("/:placeId", adminOnly, validateRequest(updatePlaceSchema), updatePlace);
+router.put(
+  "/:placeId",
+  verifyToken,
+  requireRole(["admin"]),
+  validateRequest(updatePlaceSchema),
+  updatePlace,
+);
 
-router.delete("/:placeId", adminOnly, deletePlace);
+router.delete("/:placeId", verifyToken, requireRole(["admin"]), deletePlace);
 
-export default router
+export default router;
