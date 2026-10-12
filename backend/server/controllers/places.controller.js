@@ -1,6 +1,5 @@
 import { ObjectId } from "mongodb";
 import { mongoRepo } from "../repositories/mongoRepo.js";
-import { ObjectId } from "mongodb";
 import { supabaseRepo } from "../repositories/sqlRepo.js";
 import { deleteEdgesOfNode, updateEdgeLengths } from "../services/graph.service.js";
 
@@ -41,53 +40,48 @@ export async function getPlaces(req, res, next) {
   }
 }
 
+// Throws when the floor already has 5 landmarks (not counting the place we are editing)
+async function checkLandmarkLimit(buildingId, floor, ignorePlaceId) {
+  const landmarks = await mongoRepo.findMany("places", { buildingId, floor, isLandmark: true });
+  const others = landmarks.filter((place) => String(place._id) !== ignorePlaceId);
 
+  if (others.length >= MAX_LANDMARKS_PER_FLOOR) {
+    throw {
+      status: 400,
+      code: "TOO_MANY_LANDMARKS",
+      message: `A floor can have up to ${MAX_LANDMARKS_PER_FLOOR} landmarks`,
+    };
+  }
+}
 
-// 1. יצירת מקום חדש: POST /api/buildings/:buildingId/places
+// POST /api/buildings/:buildingId/places  (admin)
+// Every place gets an entrance node in the walking graph, in the same spot.
+// The admin then connects that node to a walkway in the editor.
 export async function createPlace(req, res, next) {
   try {
     const { buildingId } = req.params;
-    const {
-      floor,
-      name,
-      type,
-      category,
-      x,
-      y,
-      hours,
-      url,
-      isLandmark = false,
-    } = req.body;
+    const { floor, name, type, category, x, y, hours, url, isLandmark } = req.body;
 
-    // א. בדיקת מגבלת 5 מקומות בולטים (landmarks) בקומה
-    if (isLandmark) {
-      const landmarks = await mongoRepo.findMany("places", {
-        buildingId,
-        floor,
-        isLandmark: true,
-      });
-
-      if (landmarks.length >= 5) {
-        throw {
-          status: 400,
-          code: "TOO_MANY_LANDMARKS",
-          message: "Cannot have more than 5 landmarks on the same floor",
-        };
-      }
+    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
+    if (!building) {
+      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
     }
 
-    // ב. יצירת צומת כניסה (entrance) אוטומטי באוסף nodes
+    if (isLandmark) {
+      await checkLandmarkLimit(buildingId, floor, null);
+    }
+
+    // 1. The entrance node (insertOne returns its ObjectId)
     const nodeId = await mongoRepo.insertOne("nodes", {
       buildingId,
       floor,
       x,
       y,
       type: "entrance",
-      connectorId: null,
       label: name,
     });
 
-    // ג. בניית אובייקט המקום ושמירתו באוסף places
+    // 2. The place. Optional fields only when they have a value (no nulls in the database).
     const place = {
       buildingId,
       floor,
@@ -99,143 +93,121 @@ export async function createPlace(req, res, next) {
       isLandmark,
       entryNodeId: String(nodeId),
     };
-
-    if (hours) place.hours = hours;
-    if (url) place.url = url;
+    if (hours) {
+      place.hours = hours;
+    }
+    if (url) {
+      place.url = url;
+    }
 
     const placeId = await mongoRepo.insertOne("places", place);
-
-    // ד. החזרת המקום שנוצר כולל ה-_id שלו
     res.status(201).json({ _id: placeId, ...place });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 }
 
-// 2. עדכון מקום קיים: PUT /api/buildings/:buildingId/places/:placeId
+// The entrance node follows the place: same floor, same spot, same name
+async function syncEntryNode(place, changes) {
+  if (!place.entryNodeId) return;
+
+  const nodeChanges = {};
+  if (changes.floor !== undefined) nodeChanges.floor = changes.floor;
+  if (changes.x !== undefined) nodeChanges.x = changes.x;
+  if (changes.y !== undefined) nodeChanges.y = changes.y;
+  if (changes.name !== undefined) nodeChanges.label = changes.name;
+
+  if (Object.keys(nodeChanges).length === 0) return;
+
+  await mongoRepo.updateOne("nodes", { _id: new ObjectId(place.entryNodeId) }, { $set: nodeChanges });
+
+  const floorChanged = changes.floor !== undefined && changes.floor !== place.floor;
+  const moved = changes.x !== undefined || changes.y !== undefined;
+
+  if (floorChanged) {
+    // Its walkways belong to the old floor - remove them. The admin connects it again on the new floor.
+    await deleteEdgesOfNode(place.entryNodeId);
+  } else if (moved) {
+    await updateEdgeLengths(place.entryNodeId);
+  }
+}
+
+// PUT /api/buildings/:buildingId/places/:placeId  (admin) - send only what changed
 export async function updatePlace(req, res, next) {
   try {
     const { buildingId, placeId } = req.params;
 
-    // א. בדיקה שהמזהה תקין ושהמקום באמת קיים במבנה הזה
     if (!ObjectId.isValid(placeId)) {
-      throw { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
+      throw placeNotFound();
     }
-
     const _id = new ObjectId(placeId);
-    const existingPlace = await mongoRepo.findOne("places", { _id, buildingId });
 
-    if (!existingPlace) {
-      throw { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
+    const place = await mongoRepo.findOne("places", { _id, buildingId });
+    if (!place) {
+      throw placeNotFound();
     }
 
-    // ב. אם המקום הופך לבולט (או עובר קומה כשהוא בולט) - בודקים שאין כבר 5 אחרים בקומה
-    const targetFloor = req.body.floor ?? existingPlace.floor;
-    const willBeLandmark = req.body.isLandmark ?? existingPlace.isLandmark;
+    const changes = req.body;
 
-    if (willBeLandmark) {
-      const landmarks = await mongoRepo.findMany("places", {
-        buildingId,
-        floor: targetFloor,
-        isLandmark: true,
-      });
+    // Becomes a landmark, or moves as a landmark to another floor: check the limit there
+    const newFloor = changes.floor ?? place.floor;
+    const willBeLandmark = changes.isLandmark ?? place.isLandmark;
+    if (willBeLandmark && (!place.isLandmark || newFloor !== place.floor)) {
+      await checkLandmarkLimit(buildingId, newFloor, placeId);
+    }
 
-      const otherLandmarks = landmarks.filter(
-        (p) => String(p._id) !== placeId
-      );
-
-      if (otherLandmarks.length >= 5) {
-        throw {
-          status: 400,
-          code: "TOO_MANY_LANDMARKS",
-          message: "Cannot have more than 5 landmarks on the same floor",
-        };
+    // An empty text removes the field (for example, the admin deleted the opening hours)
+    const fieldsToSet = {};
+    const fieldsToRemove = {};
+    for (const [key, value] of Object.entries(changes)) {
+      if (value === "") {
+        fieldsToRemove[key] = "";
+      } else {
+        fieldsToSet[key] = value;
       }
     }
 
-    // ג. עדכון השדות של המקום עצמו באוסף places
-    await mongoRepo.updateOne("places", { _id }, { $set: req.body });
+    const update = {};
+    if (Object.keys(fieldsToSet).length > 0) update.$set = fieldsToSet;
+    if (Object.keys(fieldsToRemove).length > 0) update.$unset = fieldsToRemove;
 
-    // ד. אם השתנו x, y, floor או name - מעדכנים גם את צומת הכניסה התואם ב-nodes
-    const entryNodeId = existingPlace.entryNodeId;
-    const nodeUpdates = {};
-
-    if (req.body.x !== undefined) nodeUpdates.x = req.body.x;
-    if (req.body.y !== undefined) nodeUpdates.y = req.body.y;
-    if (req.body.floor !== undefined) nodeUpdates.floor = req.body.floor;
-    if (req.body.name !== undefined) nodeUpdates.label = req.body.name;
-
-    if (Object.keys(nodeUpdates).length > 0 && entryNodeId) {
-      await mongoRepo.updateOne(
-        "nodes",
-        { _id: new ObjectId(entryNodeId) },
-        { $set: nodeUpdates }
-      );
+    if (Object.keys(update).length > 0) {
+      await mongoRepo.updateOne("places", { _id }, update);
     }
 
-    // ה. טיפול בקשתות (edges) שמחוברות לצומת הכניסה:
-    const floorChanged =
-      req.body.floor !== undefined && req.body.floor !== existingPlace.floor;
-    const coordsChanged =
-      (req.body.x !== undefined && req.body.x !== existingPlace.x) ||
-      (req.body.y !== undefined && req.body.y !== existingPlace.y);
+    await syncEntryNode(place, changes);
 
-    if (floorChanged && entryNodeId) {
-      // אם הקומה השתנתה - מוחקים את הקשתות מהקומה הישנה
-      await mongoRepo.deleteMany("edges", {
-        $or: [{ from: entryNodeId }, { to: entryNodeId }],
-      });
-    } else if (coordsChanged && entryNodeId) {
-      // אם רק המיקום (x או y) השתנה באותה קומה - מחשבים מחדש את אורך הקשתות
-      await updateEdgeLengths(entryNodeId);
-    }
-
-    // ו. שליפת המקום המעודכן והחזרתו ללקוח
-    const updatedPlace = await mongoRepo.findOne("places", { _id, buildingId });
-    res.status(200).json(updatedPlace);
-  } catch (err) {
-    next(err);
+    const updatedPlace = await mongoRepo.findOne("places", { _id });
+    res.json(updatedPlace);
+  } catch (error) {
+    next(error);
   }
 }
 
-// 3. מחיקת מקום: DELETE /api/buildings/:buildingId/places/:placeId
+// DELETE /api/buildings/:buildingId/places/:placeId  (admin)
+// Deletes, in this order: the walkways of the entrance node, the node, the place.
 export async function deletePlace(req, res, next) {
   try {
     const { buildingId, placeId } = req.params;
 
-    // א. בדיקה שהמזהה תקין ושהמקום קיים
     if (!ObjectId.isValid(placeId)) {
-      throw { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
+      throw placeNotFound();
     }
-
     const _id = new ObjectId(placeId);
-    const existingPlace = await mongoRepo.findOne("places", { _id, buildingId });
 
-    if (!existingPlace) {
-      throw { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
+    const place = await mongoRepo.findOne("places", { _id, buildingId });
+    if (!place) {
+      throw placeNotFound();
     }
 
-    const entryNodeId = existingPlace.entryNodeId;
-
-    // ב. מחיקת הקשתות שמחוברות לצומת הכניסה, ואז מחיקת צומת הכניסה עצמו
-    if (entryNodeId) {
-      await mongoRepo.deleteMany("edges", {
-        $or: [{ from: entryNodeId }, { to: entryNodeId }],
-      });
-
-      if (ObjectId.isValid(entryNodeId)) {
-        await mongoRepo.deleteOne("nodes", {
-          _id: new ObjectId(entryNodeId),
-        });
-      }
+    if (place.entryNodeId) {
+      await deleteEdgesOfNode(place.entryNodeId);
+      await mongoRepo.deleteOne("nodes", { _id: new ObjectId(place.entryNodeId) });
     }
-
-    // ג. מחיקת המקום עצמו מאוסף places
     await mongoRepo.deleteOne("places", { _id });
 
-    // ד. החזרת סטטוס 204 (הצליח, ללא תוכן בגוף התשובה)
     res.status(204).end();
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 }
