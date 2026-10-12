@@ -41,7 +41,7 @@ function NewBuildingPage() {
       });
       navigate(`/admin/${building.id}/floors`);
     } catch (saveError) {
-      setError(getErrorMessage(saveError, 'Could not save the building. Please try again.'));
+      setError(getErrorMessage(saveError, 'לא הצלחנו לשמור את המבנה. נסו שוב.'));
       setIsSaving(false);
     }
   }
@@ -49,12 +49,12 @@ function NewBuildingPage() {
   return (
     <div className="admin-screen">
       <header className="admin-topbar">
-        <Link to="/admin" className="icon-btn" aria-label="Back to buildings">
+        <Link to="/admin" className="icon-btn" aria-label="חזרה למבנים">
           <BackIcon />
         </Link>
         <div className="admin-topbar-titles">
-          <h1 className="admin-title">New building</h1>
-          <p className="admin-subtitle">Step 1 of 2: the details. Next: the floor plans.</p>
+          <h1 className="admin-title">מבנה חדש</h1>
+          <p className="admin-subtitle">שלב 1 מתוך 2: פרטי המבנה. אחר כך: תוכניות הקומות.</p>
         </div>
       </header>
 
@@ -63,14 +63,14 @@ function NewBuildingPage() {
           <div className="form-grid">
             <div className="form-wide">
               <label className="field-label" htmlFor="building-name">
-                Name
+                שם המבנה
               </label>
               <input
                 id="building-name"
                 className="field-input"
                 required
                 minLength={2}
-                placeholder="Sea Mall"
+                placeholder="קניון הים"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
               />
@@ -78,7 +78,7 @@ function NewBuildingPage() {
 
             <div>
               <label className="field-label" htmlFor="building-type">
-                Type
+                סוג המבנה
               </label>
               <select
                 id="building-type"
@@ -96,7 +96,7 @@ function NewBuildingPage() {
 
             <div>
               <label className="field-label" htmlFor="building-floors">
-                Number of floors
+                מספר הקומות
               </label>
               <input
                 id="building-floors"
@@ -112,14 +112,14 @@ function NewBuildingPage() {
 
             <div>
               <label className="field-label" htmlFor="building-address">
-                Street address
+                רחוב ומספר
               </label>
               <input
                 id="building-address"
                 className="field-input"
                 required
                 minLength={2}
-                placeholder="Herbert Samuel 1"
+                placeholder="הרברט סמואל 1"
                 value={address}
                 onChange={(event) => setAddress(event.target.value)}
               />
@@ -127,24 +127,24 @@ function NewBuildingPage() {
 
             <div>
               <label className="field-label" htmlFor="building-city">
-                City
+                עיר
               </label>
               <input
                 id="building-city"
                 className="field-input"
                 required
                 minLength={2}
-                placeholder="Tel Aviv"
+                placeholder="תל אביב"
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
               />
             </div>
 
             <div className="form-wide">
-              <p className="field-hint">We find the building on the map from the address and the city.</p>
+              <p className="field-hint">את המיקום במפה אנחנו מוצאים לפי הכתובת והעיר.</p>
 
               <label className="field-label" htmlFor="building-alert-area">
-                Alert area
+                אזור התרעה
               </label>
               <input
                 id="building-alert-area"
@@ -156,7 +156,7 @@ function NewBuildingPage() {
                 onChange={(event) => setAlertArea(event.target.value)}
               />
               <p className="field-hint">
-                The area name exactly as Pikud HaOref writes it. Red alerts for this area open the shelter screen.
+                שם האזור בדיוק כפי שפיקוד העורף כותב אותו. התרעת צבע אדום באזור הזה תפתח למבקרים את מסך המרחב המוגן.
               </p>
             </div>
           </div>
@@ -165,10 +165,10 @@ function NewBuildingPage() {
 
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save and add floors'}
+              {isSaving ? 'שומר...' : 'שמירה והמשך לקומות'}
             </button>
             <Link to="/admin" className="btn btn-outline">
-              Cancel
+              ביטול
             </Link>
           </div>
         </form>

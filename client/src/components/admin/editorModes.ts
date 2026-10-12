@@ -6,23 +6,23 @@ export type EditorMode = 'draw' | 'select' | 'block' | 'delete';
 export const EDITOR_MODES: { value: EditorMode; label: string; hint: string }[] = [
   {
     value: 'draw',
-    label: 'Draw',
-    hint: 'Click on the map to add points. Each new point is connected to the last one. Click an existing point to connect to it. Click the last point again, or press Esc, to stop.',
+    label: 'ציור',
+    hint: 'לחצו במפה כדי להוסיף נקודות. כל נקודה חדשה מתחברת לקודמת. לחיצה על נקודה קיימת מחברת אליה. כדי לעצור, לחצו שוב על הנקודה האחרונה או הקישו Esc.',
   },
   {
     value: 'select',
-    label: 'Edit',
-    hint: 'Click a point to change its type (QR code, stairs, elevator), its name, or to move it.',
+    label: 'עריכה',
+    hint: 'לחצו על נקודה כדי לשנות את הסוג שלה (קוד QR, מדרגות, מעלית), את השם שלה, או כדי להזיז אותה.',
   },
   {
     value: 'block',
-    label: 'Block',
-    hint: 'Click a walkway to block it (for example, closed for renovation). Click again to open it. Visitors are routed around blocked walkways.',
+    label: 'חסימה',
+    hint: 'לחצו על מעבר כדי לחסום אותו (למשל בזמן שיפוץ), ושוב כדי לפתוח אותו. המסלולים של המבקרים עוקפים מעברים חסומים.',
   },
   {
     value: 'delete',
-    label: 'Delete',
-    hint: 'Click a point or a walkway to delete it. The entrance of a place is deleted with the place, in the Places tab.',
+    label: 'מחיקה',
+    hint: 'לחצו על נקודה או על מעבר כדי למחוק אותם. כניסה של מקום נמחקת יחד עם המקום, בלשונית "מקומות".',
   },
 ];
 

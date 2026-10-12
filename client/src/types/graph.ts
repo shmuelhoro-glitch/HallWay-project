@@ -28,9 +28,9 @@ export interface Graph {
 }
 
 export const NODE_TYPE_LABELS: Record<NodeType, string> = {
-  corridor: 'Walkway point',
-  entrance: 'Entrance',
-  stairs: 'Stairs',
-  elevator: 'Elevator',
-  qr: 'QR code',
+  corridor: 'נקודת מעבר',
+  entrance: 'כניסה',
+  stairs: 'מדרגות',
+  elevator: 'מעלית',
+  qr: 'קוד QR',
 };

@@ -28,7 +28,7 @@ function AdminLayout() {
       .then(([data, myBuildings]) => {
         if (isCancelled) return;
         if (!myBuildings.some((item) => item.id === buildingId)) {
-          setError('You are not a manager of this building.');
+          setError('המבנה הזה לא בניהולכם.');
           return;
         }
         setBuilding(data);
@@ -36,7 +36,7 @@ function AdminLayout() {
       })
       .catch(() => {
         if (isCancelled) return;
-        setError('Could not load this building.');
+        setError('לא הצלחנו לטעון את המבנה.');
       });
 
     return () => {
@@ -50,7 +50,7 @@ function AdminLayout() {
         <div className="screen-message">
           <p>{error}</p>
           <Link to="/admin" className="btn btn-outline">
-            Back to buildings
+            חזרה למבנים
           </Link>
         </div>
       </div>
@@ -60,7 +60,7 @@ function AdminLayout() {
   if (!building) {
     return (
       <div className="admin-screen">
-        <div className="screen-message">Loading...</div>
+        <div className="screen-message">טוען...</div>
       </div>
     );
   }
@@ -70,12 +70,12 @@ function AdminLayout() {
     reloadBuilding: () => setLoadAttempt((current) => current + 1),
   };
 
-  const floorsText = building.floors.length === 1 ? '1 floor plan' : `${building.floors.length} floor plans`;
+  const floorsText = building.floors.length === 1 ? 'תוכנית קומה אחת' : `${building.floors.length} תוכניות קומה`;
 
   return (
     <div className="admin-screen">
       <header className="admin-topbar">
-        <Link to="/admin" className="icon-btn" aria-label="Back to buildings">
+        <Link to="/admin" className="icon-btn" aria-label="חזרה למבנים">
           <BackIcon />
         </Link>
         <div className="admin-topbar-titles">
@@ -85,23 +85,23 @@ function AdminLayout() {
           </p>
         </div>
         <Link to={`/b/${building.id}`} className="btn btn-small">
-          Open as visitor
+          תצוגת מבקר
         </Link>
         <UserMenu />
       </header>
 
-      <nav className="admin-tabs" aria-label="Building sections">
+      <nav className="admin-tabs" aria-label="חלקי המבנה">
         <NavLink to="floors" className="admin-tab">
-          Floors
+          קומות
         </NavLink>
         <NavLink to="places" className="admin-tab">
-          Places
+          מקומות
         </NavLink>
         <NavLink to="graph" className="admin-tab">
-          Walkways
+          מעברים
         </NavLink>
         <NavLink to="qr" className="admin-tab">
-          QR codes
+          קודי QR
         </NavLink>
       </nav>
 

@@ -60,7 +60,7 @@ function GraphEditorPage() {
       })
       .catch(() => {
         if (isCancelled) return;
-        setError('Could not load the walkways.');
+        setError('לא הצלחנו לטעון את המעברים.');
       })
       .finally(() => {
         if (isCancelled) return;
@@ -97,9 +97,9 @@ function GraphEditorPage() {
   if (floors.length === 0) {
     return (
       <div className="admin-empty">
-        <p>Upload a floor plan first. Walkways are drawn on the plan.</p>
+        <p>קודם צריך להעלות תוכנית קומה. את המעברים מציירים על גבי התוכנית.</p>
         <Link to="../floors" className="btn btn-primary">
-          Go to floors
+          מעבר לקומות
         </Link>
       </div>
     );
@@ -317,11 +317,14 @@ function GraphEditorPage() {
   let mapHint: string | null = null;
   if (mode === 'draw') {
     mapHint = activeNodeId
-      ? 'Click to add the next point. Click the last point again to stop.'
-      : 'Click on the map to start a walkway, or click a point to continue from it.';
+      ? 'לחצו כדי להוסיף את הנקודה הבאה. כדי לעצור, לחצו שוב על הנקודה האחרונה.'
+      : 'לחצו במפה כדי להתחיל מעבר, או על נקודה קיימת כדי להמשיך ממנה.';
   } else if (movingNodeId) {
-    mapHint = 'Click the new spot for this point.';
+    mapHint = 'לחצו על המיקום החדש של הנקודה.';
   }
+
+  // "נקודה אחת לא מחוברת" / "3 נקודות לא מחוברות"
+  const looseText = looseNodeIds.size === 1 ? 'נקודה אחת לא מחוברת' : `${looseNodeIds.size} נקודות לא מחוברות`;
 
   return (
     <div className="admin-split">
@@ -352,7 +355,7 @@ function GraphEditorPage() {
         <EditorToolbar mode={mode} onModeChange={changeMode} />
 
         {error && <p className="message-error">{error}</p>}
-        {isLoading && <p className="message-info">Loading...</p>}
+        {isLoading && <p className="message-info">טוען...</p>}
 
         {mode === 'select' && activeNode && (
           <NodeInspector
@@ -370,20 +373,20 @@ function GraphEditorPage() {
         )}
 
         <section className="admin-card">
-          <h2 className="admin-card-title">Check</h2>
+          <h2 className="admin-card-title">בדיקה</h2>
           <p className="admin-card-text">
-            {graph.nodes.length} points, {graph.edges.length} walkways on this floor.
+            בקומה הזאת: {graph.nodes.length} נקודות, {graph.edges.length} מעברים.
           </p>
 
           {looseNodeIds.size === 0 && graph.nodes.length > 0 && (
-            <p className="message-success">Every point is connected.</p>
+            <p className="message-success">כל הנקודות מחוברות.</p>
           )}
 
           {looseNodeIds.size > 0 && (
             <p className="message-error">
-              {looseNodeIds.size === 1 ? '1 point is' : `${looseNodeIds.size} points are`} not connected (red ring).
+              {looseText} (מסומן בטבעת אדומה).
               {unreachablePlaces.length > 0 &&
-                ` Visitors can't reach: ${unreachablePlaces.map((place) => place.name).join(', ')}.`}
+                ` מבקרים לא יכולים להגיע אל: ${unreachablePlaces.map((place) => place.name).join(', ')}.`}
             </p>
           )}
         </section>

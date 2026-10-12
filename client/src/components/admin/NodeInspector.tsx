@@ -58,18 +58,18 @@ function NodeInspector({
       <div className="sheet-header">
         <h2 className="admin-card-title">{NODE_TYPE_LABELS[node.type]}</h2>
         <button type="button" className="text-btn" onClick={onClose}>
-          Close
+          סגירה
         </button>
       </div>
 
       {placeName ? (
         <p className="admin-card-text">
-          The entrance of <strong>{placeName}</strong>. Connect it to a walkway. You can move it to the door.
+          הכניסה של <strong>{placeName}</strong>. חברו אותה למעבר. אפשר להזיז אותה אל הדלת.
         </p>
       ) : (
         <>
           <label className="field-label" htmlFor="node-type">
-            Type
+            סוג
           </label>
           <select
             id="node-type"
@@ -87,11 +87,11 @@ function NodeInspector({
           {isConnector && (
             <>
               <label className="field-label" htmlFor="node-connector">
-                Connector id
+                {type === 'elevator' ? 'מזהה המעלית' : 'מזהה המדרגות'}
               </label>
               <input
                 id="node-connector"
-                className="field-input"
+                className="field-input ltr-text"
                 required
                 maxLength={40}
                 list="connector-ids"
@@ -105,26 +105,26 @@ function NodeInspector({
                 ))}
               </datalist>
               <p className="field-hint">
-                Give the same {type === 'elevator' ? 'elevator' : 'stairs'} the same id on every floor. That is how
-                floors are connected.
+                {type === 'elevator' ? 'תנו לאותה מעלית' : 'תנו לאותן מדרגות'} את אותו מזהה בכל קומה. כך הקומות
+                מתחברות זו לזו.
               </p>
             </>
           )}
 
           <label className="field-label" htmlFor="node-label">
-            Name {type === 'qr' ? '' : '(optional)'}
+            שם {type === 'qr' ? '' : '(לא חובה)'}
           </label>
           <input
             id="node-label"
             className="field-input"
             maxLength={60}
             required={type === 'qr'}
-            placeholder={type === 'qr' ? 'North entrance' : ''}
+            placeholder={type === 'qr' ? 'כניסה צפונית' : ''}
             value={label}
             onChange={(event) => setLabel(event.target.value)}
           />
           {type === 'qr' && (
-            <p className="field-hint">Printed under the QR code, and shown as "You are here" after a scan.</p>
+            <p className="field-hint">השם מודפס מתחת לקוד ה-QR, ומוצג למבקר אחרי הסריקה כמיקום שלו.</p>
           )}
         </>
       )}
@@ -132,15 +132,15 @@ function NodeInspector({
       <div className="form-actions">
         {!placeName && (
           <button type="submit" className="btn btn-primary" disabled={isBusy}>
-            Save
+            שמירה
           </button>
         )}
         <button type="button" className="btn btn-outline" onClick={onMove} disabled={isBusy}>
-          {isMoving ? 'Click the new spot...' : 'Move'}
+          {isMoving ? 'לחצו על המיקום החדש...' : 'הזזה'}
         </button>
         {!placeName && (
           <button type="button" className="btn btn-danger" onClick={onDelete} disabled={isBusy}>
-            Delete
+            מחיקה
           </button>
         )}
       </div>

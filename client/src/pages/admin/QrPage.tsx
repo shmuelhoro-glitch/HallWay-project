@@ -28,7 +28,7 @@ function QrPage() {
       })
       .catch(() => {
         if (isCancelled) return;
-        setError('Could not load the QR points.');
+        setError('לא הצלחנו לטעון את נקודות ה-QR.');
       })
       .finally(() => {
         if (isCancelled) return;
@@ -41,7 +41,7 @@ function QrPage() {
   }, [building.id]);
 
   if (isLoading) {
-    return <p className="message-info">Loading...</p>;
+    return <p className="message-info">טוען...</p>;
   }
 
   if (error) {
@@ -52,11 +52,11 @@ function QrPage() {
     return (
       <div className="admin-empty">
         <p>
-          No QR points yet. In Walkways, pick Edit, click a point near an entrance or an elevator, and change its type
-          to “QR code”.
+          עדיין אין נקודות QR. בלשונית "מעברים" בחרו "עריכה", לחצו על נקודה ליד כניסה או מעלית, ושנו את הסוג שלה
+          ל"קוד QR".
         </p>
         <Link to="../graph" className="btn btn-primary">
-          Go to walkways
+          מעבר למעברים
         </Link>
       </div>
     );
@@ -66,28 +66,27 @@ function QrPage() {
     <div className="qr-page">
       <div className="qr-toolbar">
         <p className="admin-card-text">
-          {qrNodes.length === 1 ? '1 code' : `${qrNodes.length} codes`}. Print them and hang each one at its spot in the
-          building.
+          {qrNodes.length === 1 ? 'קוד אחד' : `${qrNodes.length} קודים`}. הדפיסו אותם ותלו כל אחד במקום שלו במבנה.
         </p>
         <button type="button" className="btn btn-primary qr-print" onClick={() => window.print()}>
           <PrinterIcon />
-          Print
+          הדפסה
         </button>
       </div>
 
       <div className="qr-grid">
         {qrNodes.map((node) => (
           <figure key={node.id} className="qr-card">
-            <img className="qr-image" src={getQrUrl(building.id, node.id)} alt={`QR code: ${node.label}`} />
+            <img className="qr-image" src={getQrUrl(building.id, node.id)} alt={`קוד QR: ${node.label}`} />
             <figcaption>
               <div className="qr-building">{building.name}</div>
-              <div className="qr-label">{node.label || 'QR point'}</div>
+              <div className="qr-label">{node.label || 'נקודת QR'}</div>
               <div className="qr-floor">{getFloorName(building.floors, node.floor)}</div>
-              <div className="qr-scan">Scan to find your way</div>
+              <div className="qr-scan">סרקו כדי לנווט</div>
             </figcaption>
             {/* For a quick test on the computer, without a phone */}
             <Link className="text-btn qr-test" to={`/b/${building.id}?node=${node.id}`}>
-              Test this code
+              בדיקת הקוד
             </Link>
           </figure>
         ))}

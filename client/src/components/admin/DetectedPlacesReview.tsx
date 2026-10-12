@@ -13,9 +13,9 @@ interface DetectedPlacesReviewProps {
 }
 
 const PLACE_TYPES: { value: PlaceType; label: string }[] = [
-  { value: 'store', label: 'Store' },
-  { value: 'service', label: 'Service' },
-  { value: 'shelter', label: 'Shelter' },
+  { value: 'store', label: 'חנות' },
+  { value: 'service', label: 'שירות' },
+  { value: 'shelter', label: 'מרחב מוגן' },
 ];
 
 // The list of stores found in the plan. Nothing is saved until the admin presses "Add".
@@ -41,11 +41,11 @@ function DetectedPlacesReview({
   return (
     <section className="admin-card review-card">
       <h2 className="admin-card-title">
-        Found on {floorName}: {rows.length}
+        נמצאו {rows.length} מקומות · {floorName}
       </h2>
       <p className="admin-card-text">
-        Each place gets its point in the middle of its shape (the numbers on the map). You can move a point later, for
-        example to a far door. Nothing is saved until you press Add.
+        כל מקום מקבל נקודה במרכז הצורה שלו (המספרים שבמפה). אפשר להזיז נקודה אחר כך, למשל אל דלת רחוקה. שום דבר לא
+        נשמר עד שלוחצים על "הוספה".
       </p>
 
       <div className="review-list">
@@ -64,7 +64,7 @@ function DetectedPlacesReview({
             <div className="review-fields">
               <input
                 className="field-input review-input"
-                aria-label={`Name of place ${row.key}`}
+                aria-label={`השם של מקום ${row.key}`}
                 maxLength={60}
                 disabled={isSaving || !row.include}
                 value={row.name}
@@ -73,7 +73,7 @@ function DetectedPlacesReview({
               <div className="review-second-line">
                 <input
                   className="field-input review-input"
-                  aria-label={`Category of place ${row.key}`}
+                  aria-label={`הקטגוריה של מקום ${row.key}`}
                   maxLength={40}
                   disabled={isSaving || !row.include}
                   value={row.category}
@@ -81,7 +81,7 @@ function DetectedPlacesReview({
                 />
                 <select
                   className="field-input review-input review-type"
-                  aria-label={`Type of place ${row.key}`}
+                  aria-label={`הסוג של מקום ${row.key}`}
                   disabled={isSaving || !row.include}
                   value={row.type}
                   onChange={(event) => updateRow(row.key, { type: event.target.value as PlaceType })}
@@ -93,16 +93,16 @@ function DetectedPlacesReview({
                   ))}
                 </select>
               </div>
-              {row.alreadyAdded && <p className="review-note">Already in Places</p>}
+              {row.alreadyAdded && <p className="review-note">כבר נמצא ברשימת המקומות</p>}
               {!row.alreadyAdded && !row.isSuggested && (
-                <p className="review-note">Usually not a destination (elevator, stairs, entrance...)</p>
+                <p className="review-note">בדרך כלל לא יעד לניווט (מעלית, מדרגות, כניסה...)</p>
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {hasEmptyField && <p className="message-error">Every place you add needs a name and a category.</p>}
+      {hasEmptyField && <p className="message-error">לכל מקום שמוסיפים צריך שם וקטגוריה.</p>}
       {error && <p className="message-error review-errors">{error}</p>}
       {progress && <p className="message-info">{progress}</p>}
 
@@ -113,10 +113,10 @@ function DetectedPlacesReview({
           disabled={isSaving || chosen.length === 0 || hasEmptyField}
           onClick={onAdd}
         >
-          {isSaving ? 'Adding...' : `Add ${chosen.length} ${chosen.length === 1 ? 'place' : 'places'}`}
+          {isSaving ? 'מוסיף...' : chosen.length === 1 ? 'הוספת מקום אחד' : `הוספת ${chosen.length} מקומות`}
         </button>
         <button type="button" className="btn btn-outline" disabled={isSaving} onClick={onCancel}>
-          Skip
+          דילוג
         </button>
       </div>
     </section>

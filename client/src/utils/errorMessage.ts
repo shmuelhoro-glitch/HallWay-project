@@ -3,7 +3,7 @@ import { ApiError } from '../api/client';
 // A message the user can read, from any error.
 // Our server already sends clear English messages, so we show them as they are.
 // For a validation error we show the first field that failed: "name: Name is required".
-export function getErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+export function getErrorMessage(error: unknown, fallback = 'משהו השתבש. נסו שוב.'): string {
   if (!(error instanceof ApiError)) {
     // fetch itself failed: no internet, or the server is down / waking up
     return fallback;

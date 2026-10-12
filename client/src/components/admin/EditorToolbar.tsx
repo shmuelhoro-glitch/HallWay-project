@@ -16,10 +16,10 @@ function EditorToolbar({ mode, onModeChange }: EditorToolbarProps) {
 
   return (
     <section className="admin-card">
-      <h2 className="admin-card-title">Walkways</h2>
-      <p className="admin-card-text">The paths visitors walk on. The route is calculated on them.</p>
+      <h2 className="admin-card-title">מעברים</h2>
+      <p className="admin-card-text">הדרכים שבהן המבקרים הולכים. המסלול מחושב לאורכן.</p>
 
-      <div className="segmented editor-modes" role="group" aria-label="Editor mode">
+      <div className="segmented editor-modes" role="group" aria-label="מצב העורך">
         {EDITOR_MODES.map((item) => (
           <button key={item.value} type="button" aria-pressed={mode === item.value} onClick={() => onModeChange(item.value)}>
             {item.label}
@@ -38,7 +38,7 @@ function EditorToolbar({ mode, onModeChange }: EditorToolbarProps) {
         ))}
         <span className="editor-legend-item">
           <span className="editor-legend-line is-blocked" />
-          Blocked
+          מעבר חסום
         </span>
       </div>
     </section>
