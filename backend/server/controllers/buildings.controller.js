@@ -67,12 +67,16 @@ export async function addFloor(req, res, next) {
     res.status(201).json({ floor, name, width, height });
   } catch (err) {
     next(err);
-  }
+  }}
 
 export async function getAllBuildings(req, res, next) {
-    const {city, type} = req.query
-    const data = await supabaseRepo.findMany("buildings", {city, type})
-    res.send(data)
+    try {
+        const {city, type} = req.query
+        const data = await supabaseRepo.findMany("buildings", {city, type})
+        res.send(data)
+    } catch (error) {
+        next(error)
+    }
 }
 
 
