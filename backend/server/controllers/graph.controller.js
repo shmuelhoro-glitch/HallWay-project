@@ -6,9 +6,9 @@ import {
   deleteEdgesOfNode,
   toEdgeResponse,
   toNodeResponse,
-  undo,
   updateEdgeLengths,
 } from "../services/graph.service.js";
+import { undo } from "../services/undo.js";
 
 // The walking graph of a building, for the admin editor.
 // The Python service reads the same collections on every route, so every change here

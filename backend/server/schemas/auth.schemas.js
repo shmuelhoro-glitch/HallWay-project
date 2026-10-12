@@ -13,6 +13,6 @@ export const registerSchema = {
       .string()
       .min(8, "A password must contain at least 8 characters.")
       .max(72, "A password can contain up to 72 characters."),
-    role: z.enum(["visitor", "admin"], { message: "תפקיד לא חוקי" }).default("visitor"),
+    // No role here on purpose: everyone signs up as a visitor (a role that is sent is dropped)
   }),
 };

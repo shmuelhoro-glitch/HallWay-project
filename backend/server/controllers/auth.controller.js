@@ -9,7 +9,10 @@ function createToken(userId, role) {
 
 export async function register(req, res, next) {
     try {
-        const { username, email, password, role } = req.body
+        const { username, email, password } = req.body
+
+        // Everyone signs up as a visitor. A building manager is added by us, by hand, in the users table.
+        const role = "visitor"
 
         const emailOwner = await supabaseRepo.findOne("users", { email })
         if (emailOwner) {

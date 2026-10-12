@@ -8,15 +8,10 @@ export function login(email: string, password: string): Promise<LoginResponse> {
   });
 }
 
-// role: 'visitor' for a regular user, 'admin' for someone who manages a building
-export function register(
-  username: string,
-  email: string,
-  password: string,
-  role: 'visitor' | 'admin',
-): Promise<unknown> {
+// Everyone signs up as a visitor. Building managers are added by the owners of the system.
+export function register(username: string, email: string, password: string): Promise<unknown> {
   return apiRequest<unknown>('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, email, password, role }),
+    body: JSON.stringify({ username, email, password }),
   });
 }

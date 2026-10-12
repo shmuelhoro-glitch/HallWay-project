@@ -5,7 +5,7 @@ import { BUILDING_ID, callController, useFakeRepos } from "./helpers.js";
 // Draw mode: every click adds a point and a walkway to the point before it.
 // These tests check that the two are saved together, or not at all.
 
-const { mongoRepo } = useFakeRepos();
+const { mongoRepo, resetData } = useFakeRepos();
 
 const { createNode } = await import("../controllers/graph.controller.js");
 
@@ -21,8 +21,8 @@ async function createFirstPoint(node = {}) {
   return String(id);
 }
 
-beforeEach(() => {
-  mongoRepo.reset();
+beforeEach(async () => {
+  await resetData();
   mock.method(console, "error", () => {});
 });
 

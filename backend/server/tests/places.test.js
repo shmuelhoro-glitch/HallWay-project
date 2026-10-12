@@ -5,7 +5,7 @@ import { BUILDING_ID, callController, useFakeRepos } from "./helpers.js";
 // A place and its entrance node are saved in two collections.
 // These tests check that they stay together, also when the database fails in the middle.
 
-const { mongoRepo } = useFakeRepos();
+const { mongoRepo, resetData } = useFakeRepos();
 
 const { createPlace, updatePlace, deletePlace } = await import("../controllers/places.controller.js");
 const { updateNode } = await import("../controllers/graph.controller.js");
@@ -46,8 +46,8 @@ function update(placeId, body) {
   return callController(updatePlace, { params: { buildingId: BUILDING_ID, placeId }, body });
 }
 
-beforeEach(() => {
-  mongoRepo.reset();
+beforeEach(async () => {
+  await resetData();
   mock.method(console, "error", () => {}); // the "could not undo" log is checked, not printed
 });
 

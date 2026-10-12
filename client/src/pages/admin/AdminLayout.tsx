@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useParams } from 'react-router-dom';
+import { getMyBuildings } from '../../api/admin';
 import { getBuildingById } from '../../api/buildings';
 import type { BuildingDetails } from '../../types/building';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
@@ -21,9 +22,15 @@ function AdminLayout() {
   useEffect(() => {
     let isCancelled = false;
 
-    getBuildingById(buildingId)
-      .then((data) => {
+    // The building itself is open to everyone, so we also ask which buildings this user manages.
+    // The server checks it again on every change - this is only to show a clear message.
+    Promise.all([getBuildingById(buildingId), getMyBuildings()])
+      .then(([data, myBuildings]) => {
         if (isCancelled) return;
+        if (!myBuildings.some((item) => item.id === buildingId)) {
+          setError('You are not a manager of this building.');
+          return;
+        }
         setBuilding(data);
         setError(null);
       })
