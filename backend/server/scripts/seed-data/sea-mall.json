@@ -1,0 +1,1967 @@
+{
+  "users": [
+    {
+      "username": "seamall_admin",
+      "email": "admin@example.com",
+      "role": "admin"
+    },
+    {
+      "username": "dana_levi",
+      "email": "dana@example.com",
+      "role": "visitor"
+    },
+    {
+      "username": "yossi_k",
+      "email": "yossi@example.com",
+      "role": "visitor"
+    },
+    {
+      "username": "noa_cohen",
+      "email": "noa@example.com",
+      "role": "visitor"
+    }
+  ],
+  "floors": [
+    {
+      "floor": 0,
+      "name": "Ground floor",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 1000\" width=\"640\" height=\"1000\" font-family=\"Arial, Helvetica, sans-serif\"><rect x=\"20\" y=\"20\" width=\"600\" height=\"960\" rx=\"18\" fill=\"#E9EDF1\" stroke=\"#8C96A3\" stroke-width=\"4\"/><rect x=\"282\" y=\"24\" width=\"76\" height=\"952\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"40\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"131.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Sea Fashion</text><rect x=\"266\" y=\"102.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"228\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"319.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Corner Cafe</text><rect x=\"266\" y=\"290.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"604\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"695.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Optics Center</text><rect x=\"266\" y=\"666.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"792\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"883.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Shoe Box</text><rect x=\"266\" y=\"854.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"40\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"131.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Books &amp; More</text><rect x=\"366\" y=\"102.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"228\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"319.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Sport Zone</text><rect x=\"366\" y=\"290.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"416\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#E3F1E9\" stroke=\"#7FB89A\" stroke-width=\"2\"/><text x=\"485.0\" y=\"507.0\" font-size=\"22\" fill=\"#1F6B4A\" font-weight=\"bold\" text-anchor=\"middle\">Protected space</text><rect x=\"366\" y=\"478.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"604\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"695.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Burger Bar</text><rect x=\"366\" y=\"666.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"792\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"883.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Phone Fix</text><rect x=\"366\" y=\"854.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"416\" width=\"230\" height=\"76\" rx=\"8\" fill=\"#E3EAF8\" stroke=\"#8FA8E0\" stroke-width=\"2\"/><text x=\"155\" y=\"460\" font-size=\"18\" fill=\"#1D4ED8\" font-weight=\"bold\" text-anchor=\"middle\">Elevator</text><rect x=\"40\" y=\"508\" width=\"230\" height=\"76\" rx=\"8\" fill=\"#EEF0F3\" stroke=\"#B5BDC6\" stroke-width=\"2\"/><line x1=\"60\" y1=\"516\" x2=\"60\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"82\" y1=\"516\" x2=\"82\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"104\" y1=\"516\" x2=\"104\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"126\" y1=\"516\" x2=\"126\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"148\" y1=\"516\" x2=\"148\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"170\" y1=\"516\" x2=\"170\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"212\" y=\"552\" font-size=\"18\" fill=\"#5B6470\" font-weight=\"bold\" text-anchor=\"middle\">Stairs</text><rect x=\"266\" y=\"432\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"266\" y=\"524\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"296\" y=\"14\" width=\"48\" height=\"14\" fill=\"#F8F9FA\"/><rect x=\"296\" y=\"972\" width=\"48\" height=\"14\" fill=\"#F8F9FA\"/><text x=\"410\" y=\"60\" font-size=\"16\" fill=\"#8C96A3\" font-weight=\"normal\" text-anchor=\"middle\">Entrance</text><text x=\"410\" y=\"940\" font-size=\"16\" fill=\"#8C96A3\" font-weight=\"normal\" text-anchor=\"middle\">Entrance</text></svg>",
+      "width": 640,
+      "height": 1000
+    },
+    {
+      "floor": 1,
+      "name": "Floor 1",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 1000\" width=\"640\" height=\"1000\" font-family=\"Arial, Helvetica, sans-serif\"><rect x=\"20\" y=\"20\" width=\"600\" height=\"960\" rx=\"18\" fill=\"#E9EDF1\" stroke=\"#8C96A3\" stroke-width=\"4\"/><rect x=\"282\" y=\"24\" width=\"76\" height=\"952\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"40\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"131.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Pharm Plus</text><rect x=\"266\" y=\"102.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"228\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"319.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Toy Planet</text><rect x=\"266\" y=\"290.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"604\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"695.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Home Style</text><rect x=\"266\" y=\"666.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"792\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"883.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Kids Wear</text><rect x=\"266\" y=\"854.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"40\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"131.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Beauty Corner</text><rect x=\"366\" y=\"102.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"228\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"319.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Tech Store</text><rect x=\"366\" y=\"290.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"416\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#E3F1E9\" stroke=\"#7FB89A\" stroke-width=\"2\"/><text x=\"485.0\" y=\"507.0\" font-size=\"22\" fill=\"#1F6B4A\" font-weight=\"bold\" text-anchor=\"middle\">Protected space</text><rect x=\"366\" y=\"478.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"604\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"695.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Gift Shop</text><rect x=\"366\" y=\"666.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"792\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"883.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Bank Branch</text><rect x=\"366\" y=\"854.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"416\" width=\"230\" height=\"76\" rx=\"8\" fill=\"#E3EAF8\" stroke=\"#8FA8E0\" stroke-width=\"2\"/><text x=\"155\" y=\"460\" font-size=\"18\" fill=\"#1D4ED8\" font-weight=\"bold\" text-anchor=\"middle\">Elevator</text><rect x=\"40\" y=\"508\" width=\"230\" height=\"76\" rx=\"8\" fill=\"#EEF0F3\" stroke=\"#B5BDC6\" stroke-width=\"2\"/><line x1=\"60\" y1=\"516\" x2=\"60\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"82\" y1=\"516\" x2=\"82\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"104\" y1=\"516\" x2=\"104\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"126\" y1=\"516\" x2=\"126\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"148\" y1=\"516\" x2=\"148\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"170\" y1=\"516\" x2=\"170\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"212\" y=\"552\" font-size=\"18\" fill=\"#5B6470\" font-weight=\"bold\" text-anchor=\"middle\">Stairs</text><rect x=\"266\" y=\"432\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"266\" y=\"524\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/></svg>",
+      "width": 640,
+      "height": 1000
+    },
+    {
+      "floor": 2,
+      "name": "Floor 2",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 1000\" width=\"640\" height=\"1000\" font-family=\"Arial, Helvetica, sans-serif\"><rect x=\"20\" y=\"20\" width=\"600\" height=\"960\" rx=\"18\" fill=\"#E9EDF1\" stroke=\"#8C96A3\" stroke-width=\"4\"/><rect x=\"282\" y=\"24\" width=\"76\" height=\"952\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"40\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"131.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Food Court</text><rect x=\"266\" y=\"102.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"228\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"319.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Sushi Spot</text><rect x=\"266\" y=\"290.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"604\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"695.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Cinema</text><rect x=\"266\" y=\"666.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"792\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"155.0\" y=\"883.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Game Zone</text><rect x=\"266\" y=\"854.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"40\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"131.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Pizza Place</text><rect x=\"366\" y=\"102.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"228\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"319.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Customer Service</text><rect x=\"366\" y=\"290.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"416\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#E3F1E9\" stroke=\"#7FB89A\" stroke-width=\"2\"/><text x=\"485.0\" y=\"507.0\" font-size=\"22\" fill=\"#1F6B4A\" font-weight=\"bold\" text-anchor=\"middle\">Protected space</text><rect x=\"366\" y=\"478.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"604\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"695.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Coffee Lab</text><rect x=\"366\" y=\"666.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"370\" y=\"792\" width=\"230\" height=\"168\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"485.0\" y=\"883.0\" font-size=\"22\" fill=\"#5B6470\" font-weight=\"normal\" text-anchor=\"middle\">Post Office</text><rect x=\"366\" y=\"854.0\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"40\" y=\"416\" width=\"230\" height=\"76\" rx=\"8\" fill=\"#E3EAF8\" stroke=\"#8FA8E0\" stroke-width=\"2\"/><text x=\"155\" y=\"460\" font-size=\"18\" fill=\"#1D4ED8\" font-weight=\"bold\" text-anchor=\"middle\">Elevator</text><rect x=\"40\" y=\"508\" width=\"230\" height=\"76\" rx=\"8\" fill=\"#EEF0F3\" stroke=\"#B5BDC6\" stroke-width=\"2\"/><line x1=\"60\" y1=\"516\" x2=\"60\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"82\" y1=\"516\" x2=\"82\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"104\" y1=\"516\" x2=\"104\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"126\" y1=\"516\" x2=\"126\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"148\" y1=\"516\" x2=\"148\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><line x1=\"170\" y1=\"516\" x2=\"170\" y2=\"576\" stroke=\"#C3CAD2\" stroke-width=\"2\"/><text x=\"212\" y=\"552\" font-size=\"18\" fill=\"#5B6470\" font-weight=\"bold\" text-anchor=\"middle\">Stairs</text><rect x=\"266\" y=\"432\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/><rect x=\"266\" y=\"524\" width=\"8\" height=\"44\" rx=\"2\" fill=\"#F8F9FA\"/></svg>",
+      "width": 640,
+      "height": 1000
+    }
+  ],
+  "nodes": [
+    {
+      "id": "660100000000000000000001",
+      "floor": 0,
+      "x": 320,
+      "y": 124,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000002",
+      "floor": 0,
+      "x": 320,
+      "y": 312,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000003",
+      "floor": 0,
+      "x": 320,
+      "y": 454,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000004",
+      "floor": 0,
+      "x": 320,
+      "y": 500,
+      "type": "qr",
+      "connectorId": null,
+      "label": "Ground floor lobby"
+    },
+    {
+      "id": "660100000000000000000005",
+      "floor": 0,
+      "x": 320,
+      "y": 546,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000006",
+      "floor": 0,
+      "x": 320,
+      "y": 688,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000007",
+      "floor": 0,
+      "x": 320,
+      "y": 876,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000008",
+      "floor": 0,
+      "x": 262,
+      "y": 454,
+      "type": "elevator",
+      "connectorId": "elevator-main",
+      "label": "Elevator"
+    },
+    {
+      "id": "660100000000000000000009",
+      "floor": 0,
+      "x": 262,
+      "y": 546,
+      "type": "stairs",
+      "connectorId": "stairs-main",
+      "label": "Stairs"
+    },
+    {
+      "id": "66010000000000000000000a",
+      "floor": 0,
+      "x": 320,
+      "y": 40,
+      "type": "qr",
+      "connectorId": null,
+      "label": "North entrance"
+    },
+    {
+      "id": "66010000000000000000000b",
+      "floor": 0,
+      "x": 320,
+      "y": 960,
+      "type": "qr",
+      "connectorId": null,
+      "label": "South entrance"
+    },
+    {
+      "id": "66010000000000000000000c",
+      "floor": 0,
+      "x": 262,
+      "y": 124.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Sea Fashion"
+    },
+    {
+      "id": "66010000000000000000000d",
+      "floor": 0,
+      "x": 262,
+      "y": 312.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Corner Cafe"
+    },
+    {
+      "id": "66010000000000000000000e",
+      "floor": 0,
+      "x": 262,
+      "y": 688.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Optics Center"
+    },
+    {
+      "id": "66010000000000000000000f",
+      "floor": 0,
+      "x": 262,
+      "y": 876.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Shoe Box"
+    },
+    {
+      "id": "660100000000000000000010",
+      "floor": 0,
+      "x": 378,
+      "y": 124.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Books & More"
+    },
+    {
+      "id": "660100000000000000000011",
+      "floor": 0,
+      "x": 378,
+      "y": 312.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Sport Zone"
+    },
+    {
+      "id": "660100000000000000000012",
+      "floor": 0,
+      "x": 378,
+      "y": 500.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Protected Space G"
+    },
+    {
+      "id": "660100000000000000000013",
+      "floor": 0,
+      "x": 378,
+      "y": 688.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Burger Bar"
+    },
+    {
+      "id": "660100000000000000000014",
+      "floor": 0,
+      "x": 378,
+      "y": 876.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Phone Fix"
+    },
+    {
+      "id": "660100000000000000000015",
+      "floor": 1,
+      "x": 320,
+      "y": 124,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000016",
+      "floor": 1,
+      "x": 320,
+      "y": 312,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000017",
+      "floor": 1,
+      "x": 320,
+      "y": 454,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000018",
+      "floor": 1,
+      "x": 320,
+      "y": 500,
+      "type": "qr",
+      "connectorId": null,
+      "label": "Floor 1 lobby"
+    },
+    {
+      "id": "660100000000000000000019",
+      "floor": 1,
+      "x": 320,
+      "y": 546,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000001a",
+      "floor": 1,
+      "x": 320,
+      "y": 688,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000001b",
+      "floor": 1,
+      "x": 320,
+      "y": 876,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000001c",
+      "floor": 1,
+      "x": 262,
+      "y": 454,
+      "type": "elevator",
+      "connectorId": "elevator-main",
+      "label": "Elevator"
+    },
+    {
+      "id": "66010000000000000000001d",
+      "floor": 1,
+      "x": 262,
+      "y": 546,
+      "type": "stairs",
+      "connectorId": "stairs-main",
+      "label": "Stairs"
+    },
+    {
+      "id": "66010000000000000000001e",
+      "floor": 1,
+      "x": 262,
+      "y": 124.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Pharm Plus"
+    },
+    {
+      "id": "66010000000000000000001f",
+      "floor": 1,
+      "x": 262,
+      "y": 312.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Toy Planet"
+    },
+    {
+      "id": "660100000000000000000020",
+      "floor": 1,
+      "x": 262,
+      "y": 688.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Home Style"
+    },
+    {
+      "id": "660100000000000000000021",
+      "floor": 1,
+      "x": 262,
+      "y": 876.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Kids Wear"
+    },
+    {
+      "id": "660100000000000000000022",
+      "floor": 1,
+      "x": 378,
+      "y": 124.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Beauty Corner"
+    },
+    {
+      "id": "660100000000000000000023",
+      "floor": 1,
+      "x": 378,
+      "y": 312.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Tech Store"
+    },
+    {
+      "id": "660100000000000000000024",
+      "floor": 1,
+      "x": 378,
+      "y": 500.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Protected Space 1"
+    },
+    {
+      "id": "660100000000000000000025",
+      "floor": 1,
+      "x": 378,
+      "y": 688.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Gift Shop"
+    },
+    {
+      "id": "660100000000000000000026",
+      "floor": 1,
+      "x": 378,
+      "y": 876.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Bank Branch"
+    },
+    {
+      "id": "660100000000000000000027",
+      "floor": 2,
+      "x": 320,
+      "y": 124,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000028",
+      "floor": 2,
+      "x": 320,
+      "y": 312,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "660100000000000000000029",
+      "floor": 2,
+      "x": 320,
+      "y": 454,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000002a",
+      "floor": 2,
+      "x": 320,
+      "y": 500,
+      "type": "qr",
+      "connectorId": null,
+      "label": "Floor 2 lobby"
+    },
+    {
+      "id": "66010000000000000000002b",
+      "floor": 2,
+      "x": 320,
+      "y": 546,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000002c",
+      "floor": 2,
+      "x": 320,
+      "y": 688,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000002d",
+      "floor": 2,
+      "x": 320,
+      "y": 876,
+      "type": "corridor",
+      "connectorId": null,
+      "label": null
+    },
+    {
+      "id": "66010000000000000000002e",
+      "floor": 2,
+      "x": 262,
+      "y": 454,
+      "type": "elevator",
+      "connectorId": "elevator-main",
+      "label": "Elevator"
+    },
+    {
+      "id": "66010000000000000000002f",
+      "floor": 2,
+      "x": 262,
+      "y": 546,
+      "type": "stairs",
+      "connectorId": "stairs-main",
+      "label": "Stairs"
+    },
+    {
+      "id": "660100000000000000000030",
+      "floor": 2,
+      "x": 262,
+      "y": 124.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Food Court"
+    },
+    {
+      "id": "660100000000000000000031",
+      "floor": 2,
+      "x": 262,
+      "y": 312.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Sushi Spot"
+    },
+    {
+      "id": "660100000000000000000032",
+      "floor": 2,
+      "x": 262,
+      "y": 688.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Cinema"
+    },
+    {
+      "id": "660100000000000000000033",
+      "floor": 2,
+      "x": 262,
+      "y": 876.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Game Zone"
+    },
+    {
+      "id": "660100000000000000000034",
+      "floor": 2,
+      "x": 378,
+      "y": 124.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Pizza Place"
+    },
+    {
+      "id": "660100000000000000000035",
+      "floor": 2,
+      "x": 378,
+      "y": 312.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Customer Service"
+    },
+    {
+      "id": "660100000000000000000036",
+      "floor": 2,
+      "x": 378,
+      "y": 500.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Protected Space 2"
+    },
+    {
+      "id": "660100000000000000000037",
+      "floor": 2,
+      "x": 378,
+      "y": 688.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Coffee Lab"
+    },
+    {
+      "id": "660100000000000000000038",
+      "floor": 2,
+      "x": 378,
+      "y": 876.0,
+      "type": "entrance",
+      "connectorId": null,
+      "label": "Post Office"
+    }
+  ],
+  "edges": [
+    {
+      "id": "660200000000000000000001",
+      "from": "660100000000000000000001",
+      "to": "660100000000000000000002",
+      "length": 188.0
+    },
+    {
+      "id": "660200000000000000000002",
+      "from": "660100000000000000000002",
+      "to": "660100000000000000000003",
+      "length": 142.0
+    },
+    {
+      "id": "660200000000000000000003",
+      "from": "660100000000000000000003",
+      "to": "660100000000000000000004",
+      "length": 46.0
+    },
+    {
+      "id": "660200000000000000000004",
+      "from": "660100000000000000000004",
+      "to": "660100000000000000000005",
+      "length": 46.0
+    },
+    {
+      "id": "660200000000000000000005",
+      "from": "660100000000000000000005",
+      "to": "660100000000000000000006",
+      "length": 142.0
+    },
+    {
+      "id": "660200000000000000000006",
+      "from": "660100000000000000000006",
+      "to": "660100000000000000000007",
+      "length": 188.0
+    },
+    {
+      "id": "660200000000000000000007",
+      "from": "660100000000000000000008",
+      "to": "660100000000000000000003",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000008",
+      "from": "660100000000000000000009",
+      "to": "660100000000000000000005",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000009",
+      "from": "66010000000000000000000a",
+      "to": "660100000000000000000001",
+      "length": 84.0
+    },
+    {
+      "id": "66020000000000000000000a",
+      "from": "66010000000000000000000b",
+      "to": "660100000000000000000007",
+      "length": 84.0
+    },
+    {
+      "id": "66020000000000000000000b",
+      "from": "66010000000000000000000c",
+      "to": "660100000000000000000001",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000000c",
+      "from": "66010000000000000000000d",
+      "to": "660100000000000000000002",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000000d",
+      "from": "66010000000000000000000e",
+      "to": "660100000000000000000006",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000000e",
+      "from": "66010000000000000000000f",
+      "to": "660100000000000000000007",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000000f",
+      "from": "660100000000000000000010",
+      "to": "660100000000000000000001",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000010",
+      "from": "660100000000000000000011",
+      "to": "660100000000000000000002",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000011",
+      "from": "660100000000000000000012",
+      "to": "660100000000000000000004",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000012",
+      "from": "660100000000000000000013",
+      "to": "660100000000000000000006",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000013",
+      "from": "660100000000000000000014",
+      "to": "660100000000000000000007",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000014",
+      "from": "660100000000000000000015",
+      "to": "660100000000000000000016",
+      "length": 188.0
+    },
+    {
+      "id": "660200000000000000000015",
+      "from": "660100000000000000000016",
+      "to": "660100000000000000000017",
+      "length": 142.0
+    },
+    {
+      "id": "660200000000000000000016",
+      "from": "660100000000000000000017",
+      "to": "660100000000000000000018",
+      "length": 46.0
+    },
+    {
+      "id": "660200000000000000000017",
+      "from": "660100000000000000000018",
+      "to": "660100000000000000000019",
+      "length": 46.0
+    },
+    {
+      "id": "660200000000000000000018",
+      "from": "660100000000000000000019",
+      "to": "66010000000000000000001a",
+      "length": 142.0
+    },
+    {
+      "id": "660200000000000000000019",
+      "from": "66010000000000000000001a",
+      "to": "66010000000000000000001b",
+      "length": 188.0
+    },
+    {
+      "id": "66020000000000000000001a",
+      "from": "66010000000000000000001c",
+      "to": "660100000000000000000017",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000001b",
+      "from": "66010000000000000000001d",
+      "to": "660100000000000000000019",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000001c",
+      "from": "66010000000000000000001e",
+      "to": "660100000000000000000015",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000001d",
+      "from": "66010000000000000000001f",
+      "to": "660100000000000000000016",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000001e",
+      "from": "660100000000000000000020",
+      "to": "66010000000000000000001a",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000001f",
+      "from": "660100000000000000000021",
+      "to": "66010000000000000000001b",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000020",
+      "from": "660100000000000000000022",
+      "to": "660100000000000000000015",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000021",
+      "from": "660100000000000000000023",
+      "to": "660100000000000000000016",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000022",
+      "from": "660100000000000000000024",
+      "to": "660100000000000000000018",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000023",
+      "from": "660100000000000000000025",
+      "to": "66010000000000000000001a",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000024",
+      "from": "660100000000000000000026",
+      "to": "66010000000000000000001b",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000025",
+      "from": "660100000000000000000027",
+      "to": "660100000000000000000028",
+      "length": 188.0
+    },
+    {
+      "id": "660200000000000000000026",
+      "from": "660100000000000000000028",
+      "to": "660100000000000000000029",
+      "length": 142.0
+    },
+    {
+      "id": "660200000000000000000027",
+      "from": "660100000000000000000029",
+      "to": "66010000000000000000002a",
+      "length": 46.0
+    },
+    {
+      "id": "660200000000000000000028",
+      "from": "66010000000000000000002a",
+      "to": "66010000000000000000002b",
+      "length": 46.0
+    },
+    {
+      "id": "660200000000000000000029",
+      "from": "66010000000000000000002b",
+      "to": "66010000000000000000002c",
+      "length": 142.0
+    },
+    {
+      "id": "66020000000000000000002a",
+      "from": "66010000000000000000002c",
+      "to": "66010000000000000000002d",
+      "length": 188.0
+    },
+    {
+      "id": "66020000000000000000002b",
+      "from": "66010000000000000000002e",
+      "to": "660100000000000000000029",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000002c",
+      "from": "66010000000000000000002f",
+      "to": "66010000000000000000002b",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000002d",
+      "from": "660100000000000000000030",
+      "to": "660100000000000000000027",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000002e",
+      "from": "660100000000000000000031",
+      "to": "660100000000000000000028",
+      "length": 58.0
+    },
+    {
+      "id": "66020000000000000000002f",
+      "from": "660100000000000000000032",
+      "to": "66010000000000000000002c",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000030",
+      "from": "660100000000000000000033",
+      "to": "66010000000000000000002d",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000031",
+      "from": "660100000000000000000034",
+      "to": "660100000000000000000027",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000032",
+      "from": "660100000000000000000035",
+      "to": "660100000000000000000028",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000033",
+      "from": "660100000000000000000036",
+      "to": "66010000000000000000002a",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000034",
+      "from": "660100000000000000000037",
+      "to": "66010000000000000000002c",
+      "length": 58.0
+    },
+    {
+      "id": "660200000000000000000035",
+      "from": "660100000000000000000038",
+      "to": "66010000000000000000002d",
+      "length": 58.0
+    }
+  ],
+  "places": [
+    {
+      "id": "660300000000000000000001",
+      "floor": 0,
+      "name": "Sea Fashion",
+      "type": "store",
+      "category": "Fashion",
+      "x": 262,
+      "y": 124.0,
+      "isLandmark": true,
+      "entryNodeId": "66010000000000000000000c",
+      "hours": "Sun-Thu 10:00-22:00, Fri 09:30-14:00",
+      "url": "https://example.com/sea-fashion"
+    },
+    {
+      "id": "660300000000000000000002",
+      "floor": 0,
+      "name": "Corner Cafe",
+      "type": "store",
+      "category": "Food",
+      "x": 262,
+      "y": 312.0,
+      "isLandmark": true,
+      "entryNodeId": "66010000000000000000000d",
+      "hours": "Every day 08:00-23:00"
+    },
+    {
+      "id": "660300000000000000000003",
+      "floor": 0,
+      "name": "Optics Center",
+      "type": "store",
+      "category": "Health",
+      "x": 262,
+      "y": 688.0,
+      "isLandmark": false,
+      "entryNodeId": "66010000000000000000000e",
+      "hours": "Sun-Thu 10:00-21:00"
+    },
+    {
+      "id": "660300000000000000000004",
+      "floor": 0,
+      "name": "Shoe Box",
+      "type": "store",
+      "category": "Shoes",
+      "x": 262,
+      "y": 876.0,
+      "isLandmark": false,
+      "entryNodeId": "66010000000000000000000f",
+      "hours": "Sun-Thu 10:00-22:00, Fri 09:30-14:00"
+    },
+    {
+      "id": "660300000000000000000005",
+      "floor": 0,
+      "name": "Books & More",
+      "type": "store",
+      "category": "Books",
+      "x": 378,
+      "y": 124.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000010",
+      "hours": "Sun-Thu 09:00-21:00",
+      "url": "https://example.com/books"
+    },
+    {
+      "id": "660300000000000000000006",
+      "floor": 0,
+      "name": "Sport Zone",
+      "type": "store",
+      "category": "Sports",
+      "x": 378,
+      "y": 312.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000011",
+      "hours": "Sun-Thu 10:00-22:00"
+    },
+    {
+      "id": "660300000000000000000007",
+      "floor": 0,
+      "name": "Protected Space G",
+      "type": "shelter",
+      "category": "Shelter",
+      "x": 378,
+      "y": 500.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000012",
+      "hours": "Open 24/7"
+    },
+    {
+      "id": "660300000000000000000008",
+      "floor": 0,
+      "name": "Burger Bar",
+      "type": "store",
+      "category": "Food",
+      "x": 378,
+      "y": 688.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000013",
+      "hours": "Every day 11:00-23:00"
+    },
+    {
+      "id": "660300000000000000000009",
+      "floor": 0,
+      "name": "Phone Fix",
+      "type": "service",
+      "category": "Electronics",
+      "x": 378,
+      "y": 876.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000014",
+      "hours": "Sun-Thu 10:00-20:00"
+    },
+    {
+      "id": "66030000000000000000000a",
+      "floor": 1,
+      "name": "Pharm Plus",
+      "type": "store",
+      "category": "Health",
+      "x": 262,
+      "y": 124.0,
+      "isLandmark": true,
+      "entryNodeId": "66010000000000000000001e",
+      "hours": "Sun-Thu 09:00-21:00, Fri 09:00-14:00",
+      "url": "https://example.com/pharm-plus"
+    },
+    {
+      "id": "66030000000000000000000b",
+      "floor": 1,
+      "name": "Toy Planet",
+      "type": "store",
+      "category": "Kids",
+      "x": 262,
+      "y": 312.0,
+      "isLandmark": true,
+      "entryNodeId": "66010000000000000000001f",
+      "hours": "Sun-Thu 10:00-21:00"
+    },
+    {
+      "id": "66030000000000000000000c",
+      "floor": 1,
+      "name": "Home Style",
+      "type": "store",
+      "category": "Home",
+      "x": 262,
+      "y": 688.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000020",
+      "hours": "Sun-Thu 10:00-21:00"
+    },
+    {
+      "id": "66030000000000000000000d",
+      "floor": 1,
+      "name": "Kids Wear",
+      "type": "store",
+      "category": "Fashion",
+      "x": 262,
+      "y": 876.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000021",
+      "hours": "Sun-Thu 10:00-22:00"
+    },
+    {
+      "id": "66030000000000000000000e",
+      "floor": 1,
+      "name": "Beauty Corner",
+      "type": "store",
+      "category": "Beauty",
+      "x": 378,
+      "y": 124.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000022",
+      "hours": "Sun-Thu 10:00-21:00"
+    },
+    {
+      "id": "66030000000000000000000f",
+      "floor": 1,
+      "name": "Tech Store",
+      "type": "store",
+      "category": "Electronics",
+      "x": 378,
+      "y": 312.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000023",
+      "hours": "Sun-Thu 10:00-22:00",
+      "url": "https://example.com/tech"
+    },
+    {
+      "id": "660300000000000000000010",
+      "floor": 1,
+      "name": "Protected Space 1",
+      "type": "shelter",
+      "category": "Shelter",
+      "x": 378,
+      "y": 500.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000024",
+      "hours": "Open 24/7"
+    },
+    {
+      "id": "660300000000000000000011",
+      "floor": 1,
+      "name": "Gift Shop",
+      "type": "store",
+      "category": "Gifts",
+      "x": 378,
+      "y": 688.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000025",
+      "hours": "Sun-Thu 10:00-21:00"
+    },
+    {
+      "id": "660300000000000000000012",
+      "floor": 1,
+      "name": "Bank Branch",
+      "type": "service",
+      "category": "Services",
+      "x": 378,
+      "y": 876.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000026",
+      "hours": "Sun-Thu 08:30-14:00"
+    },
+    {
+      "id": "660300000000000000000013",
+      "floor": 2,
+      "name": "Food Court",
+      "type": "store",
+      "category": "Food",
+      "x": 262,
+      "y": 124.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000030",
+      "hours": "Every day 11:00-23:00"
+    },
+    {
+      "id": "660300000000000000000014",
+      "floor": 2,
+      "name": "Sushi Spot",
+      "type": "store",
+      "category": "Food",
+      "x": 262,
+      "y": 312.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000031",
+      "hours": "Every day 12:00-23:00"
+    },
+    {
+      "id": "660300000000000000000015",
+      "floor": 2,
+      "name": "Cinema",
+      "type": "store",
+      "category": "Entertainment",
+      "x": 262,
+      "y": 688.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000032",
+      "hours": "Every day 10:00-01:00",
+      "url": "https://example.com/cinema"
+    },
+    {
+      "id": "660300000000000000000016",
+      "floor": 2,
+      "name": "Game Zone",
+      "type": "store",
+      "category": "Entertainment",
+      "x": 262,
+      "y": 876.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000033",
+      "hours": "Every day 10:00-23:00"
+    },
+    {
+      "id": "660300000000000000000017",
+      "floor": 2,
+      "name": "Pizza Place",
+      "type": "store",
+      "category": "Food",
+      "x": 378,
+      "y": 124.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000034",
+      "hours": "Every day 11:00-23:00"
+    },
+    {
+      "id": "660300000000000000000018",
+      "floor": 2,
+      "name": "Customer Service",
+      "type": "service",
+      "category": "Services",
+      "x": 378,
+      "y": 312.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000035",
+      "hours": "Sun-Thu 10:00-20:00"
+    },
+    {
+      "id": "660300000000000000000019",
+      "floor": 2,
+      "name": "Protected Space 2",
+      "type": "shelter",
+      "category": "Shelter",
+      "x": 378,
+      "y": 500.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000036",
+      "hours": "Open 24/7"
+    },
+    {
+      "id": "66030000000000000000001a",
+      "floor": 2,
+      "name": "Coffee Lab",
+      "type": "store",
+      "category": "Food",
+      "x": 378,
+      "y": 688.0,
+      "isLandmark": true,
+      "entryNodeId": "660100000000000000000037",
+      "hours": "Every day 08:00-22:00"
+    },
+    {
+      "id": "66030000000000000000001b",
+      "floor": 2,
+      "name": "Post Office",
+      "type": "service",
+      "category": "Services",
+      "x": 378,
+      "y": 876.0,
+      "isLandmark": false,
+      "entryNodeId": "660100000000000000000038",
+      "hours": "Sun-Thu 08:00-18:00"
+    }
+  ],
+  "messages": [
+    {
+      "username": "dana_levi",
+      "text": "Hi, is Pharm Plus on floor 1 open now?",
+      "minutesAgo": 95
+    },
+    {
+      "username": "yossi_k",
+      "text": "Yes, until 21:00. Take the elevator next to the stairs.",
+      "minutesAgo": 92
+    },
+    {
+      "username": "noa_cohen",
+      "text": "Anyone know where the restrooms are?",
+      "minutesAgo": 60
+    },
+    {
+      "username": "dana_levi",
+      "text": "Next to the lobby on every floor",
+      "minutesAgo": 58
+    },
+    {
+      "username": "yossi_k",
+      "text": "Food Court on floor 2 is pretty full right now",
+      "minutesAgo": 25
+    },
+    {
+      "username": "dana_levi",
+      "text": "Thanks! Coffee Lab is quieter",
+      "minutesAgo": 20
+    }
+  ],
+  "routeRequests": [
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "66010000000000000000001f",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "66010000000000000000001f"
+      ],
+      "searchQuery": "toy",
+      "daysAgo": 6,
+      "hour": 21,
+      "minute": 6
+    },
+    {
+      "fromNode": "660100000000000000000004",
+      "toNode": "660100000000000000000035",
+      "path": [
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000002e",
+        "660100000000000000000029",
+        "660100000000000000000028",
+        "660100000000000000000035"
+      ],
+      "searchQuery": "cus",
+      "daysAgo": 3,
+      "hour": 19,
+      "minute": 4
+    },
+    {
+      "fromNode": "66010000000000000000002a",
+      "toNode": "66010000000000000000001f",
+      "path": [
+        "66010000000000000000002a",
+        "660100000000000000000029",
+        "66010000000000000000002e",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "66010000000000000000001f"
+      ],
+      "searchQuery": null,
+      "daysAgo": 0,
+      "hour": 14,
+      "minute": 40
+    },
+    {
+      "fromNode": "660100000000000000000004",
+      "toNode": "660100000000000000000023",
+      "path": [
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000023"
+      ],
+      "searchQuery": "tec",
+      "daysAgo": 0,
+      "hour": 21,
+      "minute": 54
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "66010000000000000000000f",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "660100000000000000000009",
+        "660100000000000000000005",
+        "660100000000000000000006",
+        "660100000000000000000007",
+        "66010000000000000000000f"
+      ],
+      "searchQuery": "shoe",
+      "daysAgo": 4,
+      "hour": 13,
+      "minute": 6
+    },
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "66010000000000000000001e",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000015",
+        "66010000000000000000001e"
+      ],
+      "searchQuery": "pha",
+      "daysAgo": 4,
+      "hour": 11,
+      "minute": 39
+    },
+    {
+      "fromNode": "66010000000000000000002a",
+      "toNode": "66010000000000000000001f",
+      "path": [
+        "66010000000000000000002a",
+        "660100000000000000000029",
+        "66010000000000000000002e",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "66010000000000000000001f"
+      ],
+      "searchQuery": "toy",
+      "daysAgo": 4,
+      "hour": 19,
+      "minute": 23
+    },
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "660100000000000000000030",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000002e",
+        "660100000000000000000029",
+        "660100000000000000000028",
+        "660100000000000000000027",
+        "660100000000000000000030"
+      ],
+      "searchQuery": "food",
+      "daysAgo": 4,
+      "hour": 20,
+      "minute": 56
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "660100000000000000000013",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "660100000000000000000009",
+        "660100000000000000000005",
+        "660100000000000000000006",
+        "660100000000000000000013"
+      ],
+      "searchQuery": null,
+      "daysAgo": 0,
+      "hour": 20,
+      "minute": 26
+    },
+    {
+      "fromNode": "66010000000000000000000b",
+      "toNode": "660100000000000000000010",
+      "path": [
+        "66010000000000000000000b",
+        "660100000000000000000007",
+        "660100000000000000000006",
+        "660100000000000000000005",
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000002",
+        "660100000000000000000001",
+        "660100000000000000000010"
+      ],
+      "searchQuery": "boo",
+      "daysAgo": 5,
+      "hour": 12,
+      "minute": 48
+    },
+    {
+      "fromNode": "66010000000000000000000b",
+      "toNode": "66010000000000000000001e",
+      "path": [
+        "66010000000000000000000b",
+        "660100000000000000000007",
+        "660100000000000000000006",
+        "660100000000000000000005",
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000015",
+        "66010000000000000000001e"
+      ],
+      "searchQuery": "phar",
+      "daysAgo": 4,
+      "hour": 19,
+      "minute": 4
+    },
+    {
+      "fromNode": "660100000000000000000014",
+      "toNode": "660100000000000000000021",
+      "path": [
+        "660100000000000000000014",
+        "660100000000000000000007",
+        "660100000000000000000006",
+        "660100000000000000000005",
+        "660100000000000000000009",
+        "66010000000000000000001d",
+        "660100000000000000000019",
+        "66010000000000000000001a",
+        "66010000000000000000001b",
+        "660100000000000000000021"
+      ],
+      "searchQuery": null,
+      "daysAgo": 0,
+      "hour": 16,
+      "minute": 41
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "660100000000000000000013",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "660100000000000000000009",
+        "660100000000000000000005",
+        "660100000000000000000006",
+        "660100000000000000000013"
+      ],
+      "searchQuery": "burge",
+      "daysAgo": 0,
+      "hour": 19,
+      "minute": 22
+    },
+    {
+      "fromNode": "660100000000000000000004",
+      "toNode": "660100000000000000000022",
+      "path": [
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000015",
+        "660100000000000000000022"
+      ],
+      "searchQuery": "beaut",
+      "daysAgo": 1,
+      "hour": 14,
+      "minute": 25
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "66010000000000000000000d",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000017",
+        "66010000000000000000001c",
+        "660100000000000000000008",
+        "660100000000000000000003",
+        "660100000000000000000002",
+        "66010000000000000000000d"
+      ],
+      "searchQuery": "corne",
+      "daysAgo": 1,
+      "hour": 19,
+      "minute": 55
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "660100000000000000000038",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "66010000000000000000002f",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "66010000000000000000002d",
+        "660100000000000000000038"
+      ],
+      "searchQuery": null,
+      "daysAgo": 3,
+      "hour": 14,
+      "minute": 9
+    },
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "660100000000000000000011",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000011"
+      ],
+      "searchQuery": "spor",
+      "daysAgo": 6,
+      "hour": 13,
+      "minute": 16
+    },
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "66010000000000000000001f",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "66010000000000000000001f"
+      ],
+      "searchQuery": "toy",
+      "daysAgo": 4,
+      "hour": 17,
+      "minute": 8
+    },
+    {
+      "fromNode": "66010000000000000000002a",
+      "toNode": "660100000000000000000037",
+      "path": [
+        "66010000000000000000002a",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "660100000000000000000037"
+      ],
+      "searchQuery": null,
+      "daysAgo": 5,
+      "hour": 11,
+      "minute": 29
+    },
+    {
+      "fromNode": "660100000000000000000036",
+      "toNode": "660100000000000000000037",
+      "path": [
+        "660100000000000000000036",
+        "66010000000000000000002a",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "660100000000000000000037"
+      ],
+      "searchQuery": null,
+      "daysAgo": 4,
+      "hour": 18,
+      "minute": 25
+    },
+    {
+      "fromNode": "660100000000000000000004",
+      "toNode": "660100000000000000000022",
+      "path": [
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000015",
+        "660100000000000000000022"
+      ],
+      "searchQuery": "beau",
+      "daysAgo": 0,
+      "hour": 14,
+      "minute": 28
+    },
+    {
+      "fromNode": "66010000000000000000000b",
+      "toNode": "660100000000000000000025",
+      "path": [
+        "66010000000000000000000b",
+        "660100000000000000000007",
+        "660100000000000000000006",
+        "660100000000000000000005",
+        "660100000000000000000009",
+        "66010000000000000000001d",
+        "660100000000000000000019",
+        "66010000000000000000001a",
+        "660100000000000000000025"
+      ],
+      "searchQuery": "gif",
+      "daysAgo": 4,
+      "hour": 12,
+      "minute": 23
+    },
+    {
+      "fromNode": "660100000000000000000004",
+      "toNode": "660100000000000000000035",
+      "path": [
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000002e",
+        "660100000000000000000029",
+        "660100000000000000000028",
+        "660100000000000000000035"
+      ],
+      "searchQuery": null,
+      "daysAgo": 1,
+      "hour": 15,
+      "minute": 22
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "66010000000000000000000e",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "660100000000000000000009",
+        "660100000000000000000005",
+        "660100000000000000000006",
+        "66010000000000000000000e"
+      ],
+      "searchQuery": null,
+      "daysAgo": 3,
+      "hour": 20,
+      "minute": 30
+    },
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "66010000000000000000000d",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "66010000000000000000000d"
+      ],
+      "searchQuery": "corne",
+      "daysAgo": 3,
+      "hour": 13,
+      "minute": 33
+    },
+    {
+      "fromNode": "66010000000000000000002a",
+      "toNode": "66010000000000000000001e",
+      "path": [
+        "66010000000000000000002a",
+        "660100000000000000000029",
+        "66010000000000000000002e",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000015",
+        "66010000000000000000001e"
+      ],
+      "searchQuery": null,
+      "daysAgo": 0,
+      "hour": 20,
+      "minute": 19
+    },
+    {
+      "fromNode": "66010000000000000000000e",
+      "toNode": "660100000000000000000030",
+      "path": [
+        "66010000000000000000000e",
+        "660100000000000000000006",
+        "660100000000000000000005",
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000002e",
+        "660100000000000000000029",
+        "660100000000000000000028",
+        "660100000000000000000027",
+        "660100000000000000000030"
+      ],
+      "searchQuery": "food",
+      "daysAgo": 1,
+      "hour": 18,
+      "minute": 49
+    },
+    {
+      "fromNode": "66010000000000000000002a",
+      "toNode": "660100000000000000000032",
+      "path": [
+        "66010000000000000000002a",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "660100000000000000000032"
+      ],
+      "searchQuery": "cine",
+      "daysAgo": 4,
+      "hour": 14,
+      "minute": 51
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "660100000000000000000031",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000017",
+        "66010000000000000000001c",
+        "66010000000000000000002e",
+        "660100000000000000000029",
+        "660100000000000000000028",
+        "660100000000000000000031"
+      ],
+      "searchQuery": "sushi",
+      "daysAgo": 3,
+      "hour": 18,
+      "minute": 46
+    },
+    {
+      "fromNode": "660100000000000000000004",
+      "toNode": "660100000000000000000032",
+      "path": [
+        "660100000000000000000004",
+        "660100000000000000000005",
+        "660100000000000000000009",
+        "66010000000000000000002f",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "660100000000000000000032"
+      ],
+      "searchQuery": "cine",
+      "daysAgo": 5,
+      "hour": 18,
+      "minute": 28
+    },
+    {
+      "fromNode": "660100000000000000000035",
+      "toNode": "660100000000000000000038",
+      "path": [
+        "660100000000000000000035",
+        "660100000000000000000028",
+        "660100000000000000000029",
+        "66010000000000000000002a",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "66010000000000000000002d",
+        "660100000000000000000038"
+      ],
+      "searchQuery": null,
+      "daysAgo": 2,
+      "hour": 12,
+      "minute": 14
+    },
+    {
+      "fromNode": "660100000000000000000018",
+      "toNode": "660100000000000000000010",
+      "path": [
+        "660100000000000000000018",
+        "660100000000000000000017",
+        "66010000000000000000001c",
+        "660100000000000000000008",
+        "660100000000000000000003",
+        "660100000000000000000002",
+        "660100000000000000000001",
+        "660100000000000000000010"
+      ],
+      "searchQuery": "books",
+      "daysAgo": 4,
+      "hour": 10,
+      "minute": 30
+    },
+    {
+      "fromNode": "660100000000000000000020",
+      "toNode": "660100000000000000000033",
+      "path": [
+        "660100000000000000000020",
+        "66010000000000000000001a",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "66010000000000000000002f",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "66010000000000000000002d",
+        "660100000000000000000033"
+      ],
+      "searchQuery": "gam",
+      "daysAgo": 3,
+      "hour": 14,
+      "minute": 30
+    },
+    {
+      "fromNode": "660100000000000000000022",
+      "toNode": "660100000000000000000032",
+      "path": [
+        "660100000000000000000022",
+        "660100000000000000000015",
+        "660100000000000000000016",
+        "660100000000000000000017",
+        "660100000000000000000018",
+        "660100000000000000000019",
+        "66010000000000000000001d",
+        "66010000000000000000002f",
+        "66010000000000000000002b",
+        "66010000000000000000002c",
+        "660100000000000000000032"
+      ],
+      "searchQuery": "cinema",
+      "daysAgo": 3,
+      "hour": 18,
+      "minute": 47
+    },
+    {
+      "fromNode": "660100000000000000000035",
+      "toNode": "660100000000000000000010",
+      "path": [
+        "660100000000000000000035",
+        "660100000000000000000028",
+        "660100000000000000000029",
+        "66010000000000000000002e",
+        "660100000000000000000008",
+        "660100000000000000000003",
+        "660100000000000000000002",
+        "660100000000000000000001",
+        "660100000000000000000010"
+      ],
+      "searchQuery": null,
+      "daysAgo": 0,
+      "hour": 13,
+      "minute": 37
+    },
+    {
+      "fromNode": "660100000000000000000037",
+      "toNode": "660100000000000000000026",
+      "path": [
+        "660100000000000000000037",
+        "66010000000000000000002c",
+        "66010000000000000000002b",
+        "66010000000000000000002f",
+        "66010000000000000000001d",
+        "660100000000000000000019",
+        "66010000000000000000001a",
+        "66010000000000000000001b",
+        "660100000000000000000026"
+      ],
+      "searchQuery": null,
+      "daysAgo": 4,
+      "hour": 20,
+      "minute": 42
+    },
+    {
+      "fromNode": "660100000000000000000010",
+      "toNode": "660100000000000000000023",
+      "path": [
+        "660100000000000000000010",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000023"
+      ],
+      "searchQuery": "tec",
+      "daysAgo": 6,
+      "hour": 12,
+      "minute": 33
+    },
+    {
+      "fromNode": "660100000000000000000010",
+      "toNode": "66010000000000000000001f",
+      "path": [
+        "660100000000000000000010",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "66010000000000000000001f"
+      ],
+      "searchQuery": null,
+      "daysAgo": 6,
+      "hour": 14,
+      "minute": 1
+    },
+    {
+      "fromNode": "66010000000000000000000b",
+      "toNode": "660100000000000000000022",
+      "path": [
+        "66010000000000000000000b",
+        "660100000000000000000007",
+        "660100000000000000000006",
+        "660100000000000000000005",
+        "660100000000000000000004",
+        "660100000000000000000003",
+        "660100000000000000000008",
+        "66010000000000000000001c",
+        "660100000000000000000017",
+        "660100000000000000000016",
+        "660100000000000000000015",
+        "660100000000000000000022"
+      ],
+      "searchQuery": null,
+      "daysAgo": 2,
+      "hour": 15,
+      "minute": 34
+    },
+    {
+      "fromNode": "66010000000000000000000a",
+      "toNode": "66010000000000000000000d",
+      "path": [
+        "66010000000000000000000a",
+        "660100000000000000000001",
+        "660100000000000000000002",
+        "66010000000000000000000d"
+      ],
+      "searchQuery": null,
+      "daysAgo": 3,
+      "hour": 20,
+      "minute": 26
+    }
+  ],
+  "alerts": [
+    {
+      "title": "Rockets and missiles",
+      "category": "missiles",
+      "isSimulation": true,
+      "daysAgo": 2
+    },
+    {
+      "title": "Rockets and missiles",
+      "category": "missiles",
+      "isSimulation": false,
+      "daysAgo": 6
+    }
+  ]
+}
