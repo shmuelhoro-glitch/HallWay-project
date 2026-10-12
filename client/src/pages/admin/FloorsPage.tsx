@@ -1,16 +1,33 @@
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { uploadFloor } from '../../api/admin';
+import { createPlace, uploadFloor } from '../../api/admin';
 import { getPlanUrl } from '../../api/buildings';
+import { getPlaces } from '../../api/places';
 import type { Floor } from '../../types/building';
 import { getErrorMessage } from '../../utils/errorMessage';
 import { FloorFileError, floorFileToSvg } from '../../utils/floorFile';
+import { detectPlacesInPlan } from '../../utils/placeDetection';
+import type { ReviewRow } from '../../utils/placeDetection';
 import { useAdminBuilding } from './adminContext';
 import FloorMap from '../../components/map/FloorMap';
+import DetectedPointsLayer from '../../components/admin/DetectedPointsLayer';
+import DetectedPlacesReview from '../../components/admin/DetectedPlacesReview';
 import { UploadIcon } from '../../components/ui/Icons';
 
+// The places found in one floor plan, waiting for the admin's approval
+interface PlacesReview {
+  floor: number;
+  floorName: string;
+  rows: ReviewRow[];
+}
+
+function floorLabel(floorNumber: number, name: string): string {
+  return name ? name : `Floor ${floorNumber}`;
+}
+
 // The "Floors" tab: upload a plan for each floor, see it, replace it.
+// After an upload, the stores written in the plan are found and offered as places.
 function FloorsPage() {
   const { building, reloadBuilding } = useAdminBuilding();
   const floors = building.floors; // already sorted from the lowest floor up
@@ -30,7 +47,104 @@ function FloorsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Finding the stores in a plan, and adding them
+  const [review, setReview] = useState<PlacesReview | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [isAddingPlaces, setIsAddingPlaces] = useState(false);
+  const [addProgress, setAddProgress] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
+
   const shownFloor = floors.find((floor) => floor.floor === previewFloor) ?? floors[0] ?? null;
+
+  // Finds the stores written in the plan and opens the review list.
+  // svgText: the plan we just uploaded. Without it, the saved plan is downloaded from the server.
+  async function findPlaces(floorNumber: number, name: string, svgText?: string) {
+    setNotice(null);
+    setAddError(null);
+    setIsDetecting(true);
+
+    try {
+      const text = svgText ?? (await (await fetch(getPlanUrl(building.id, floorNumber))).text());
+      const detected = detectPlacesInPlan(text);
+
+      if (detected.length === 0) {
+        setReview(null);
+        setNotice(`No store names were found in the plan of ${floorLabel(floorNumber, name)}. You can add places by hand in the Places tab.`);
+        return;
+      }
+
+      // A name that is already on this floor is left out, so nothing is added twice
+      const existing = await getPlaces(building.id, { floor: floorNumber });
+      const existingNames = new Set(existing.map((place) => place.name.trim().toLowerCase()));
+
+      const rows: ReviewRow[] = detected.map((place) => {
+        const alreadyAdded = existingNames.has(place.name.trim().toLowerCase());
+        return { ...place, alreadyAdded, include: place.isSuggested && !alreadyAdded };
+      });
+
+      setReview({ floor: floorNumber, floorName: floorLabel(floorNumber, name), rows });
+      setPreviewFloor(floorNumber);
+    } catch {
+      setNotice('Could not read this plan. Please try again.');
+    } finally {
+      setIsDetecting(false);
+    }
+  }
+
+  // Adds the places the admin left checked, one by one, and reports each failure by name
+  async function addReviewedPlaces() {
+    if (!review) return;
+    const chosen = review.rows.filter((row) => row.include);
+
+    setIsAddingPlaces(true);
+    setAddError(null);
+
+    const addedKeys: number[] = [];
+    const failures: string[] = [];
+
+    for (let index = 0; index < chosen.length; index++) {
+      const row = chosen[index];
+      setAddProgress(`Adding ${index + 1} of ${chosen.length}...`);
+
+      try {
+        await createPlace(building.id, {
+          floor: review.floor,
+          name: row.name.trim(),
+          type: row.type,
+          category: row.category.trim(),
+          x: row.x,
+          y: row.y,
+          hours: '',
+          url: '',
+          isLandmark: false,
+        });
+        addedKeys.push(row.key);
+      } catch (placeError) {
+        failures.push(`${row.name}: ${getErrorMessage(placeError)}`);
+      }
+    }
+
+    setIsAddingPlaces(false);
+    setAddProgress(null);
+
+    if (failures.length === 0) {
+      setReview(null);
+      setSuccess(
+        `${addedKeys.length} ${addedKeys.length === 1 ? 'place was' : 'places were'} added to ${review.floorName}. Next: connect them to walkways.`,
+      );
+      return;
+    }
+
+    // Some failed: the ones that were added are marked, the failed ones stay checked to try again
+    setReview({
+      ...review,
+      rows: review.rows.map((row) =>
+        addedKeys.includes(row.key) ? { ...row, include: false, alreadyAdded: true } : row,
+      ),
+    });
+    setAddError(`Not added: ${failures.join(' · ')}`);
+  }
 
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,10 +168,14 @@ function FloorsPage() {
       setSuccess(`Floor ${number} was saved.`);
 
       // Ready for the next floor
+      const uploadedName = floorName.trim();
       setFloorNumber(String(number + 1));
       setFloorName('');
       setFile(null);
       setFileInputKey((current) => current + 1);
+
+      // The stores written in this plan, for the admin to approve
+      await findPlaces(number, uploadedName, svg);
     } catch (uploadError) {
       if (uploadError instanceof FloorFileError) {
         setError(uploadError.message);
@@ -87,13 +205,29 @@ function FloorsPage() {
             planUrl={`${getPlanUrl(building.id, shownFloor.floor)}?v=${planVersion}`}
             width={shownFloor.width}
             height={shownFloor.height}
-          />
+          >
+            {/* The numbered points only on the floor they were found on */}
+            {review && review.floor === shownFloor.floor && <DetectedPointsLayer rows={review.rows} />}
+          </FloorMap>
         ) : (
           <div className="screen-message">The plan you upload will show here.</div>
         )}
       </div>
 
       <div className="admin-panel">
+        {review && (
+          <DetectedPlacesReview
+            floorName={review.floorName}
+            rows={review.rows}
+            onRowsChange={(rows) => setReview({ ...review, rows })}
+            isSaving={isAddingPlaces}
+            progress={addProgress}
+            error={addError}
+            onAdd={addReviewedPlaces}
+            onCancel={() => setReview(null)}
+          />
+        )}
+
         <section className="admin-card">
           <h2 className="admin-card-title">Floor plans</h2>
           <p className="admin-card-text">
@@ -118,8 +252,19 @@ function FloorsPage() {
               <button type="button" className="text-btn" onClick={() => startReplace(floor)}>
                 Replace
               </button>
+              <button
+                type="button"
+                className="text-btn"
+                disabled={isDetecting || isAddingPlaces}
+                onClick={() => findPlaces(floor.floor, floor.name)}
+              >
+                Find places
+              </button>
             </div>
           ))}
+
+          {isDetecting && <p className="message-info">Looking for store names in the plan...</p>}
+          {notice && <p className="message-info">{notice}</p>}
 
           {floors.length > 0 && (
             <Link to="../places" className="btn btn-primary floors-next">
