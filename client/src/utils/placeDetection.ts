@@ -89,9 +89,9 @@ export function matchTextsToShapes(shapes: Box[], texts: PlanText[], planWidth: 
 
     let category = others.length > 0 ? others[0].text : '';
     if (category === '') {
-      if (type === 'shelter') category = 'Shelter';
-      else if (type === 'service') category = 'Services';
-      else category = 'Store';
+      if (type === 'shelter') category = 'מרחב מוגן';
+      else if (type === 'service') category = 'שירותים';
+      else category = 'חנויות';
     }
 
     const middle = centerOf(room);

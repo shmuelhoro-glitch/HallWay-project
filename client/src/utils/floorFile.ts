@@ -13,7 +13,7 @@ function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new FloorFileError('Could not read the file.'));
+    reader.onerror = () => reject(new FloorFileError('לא הצלחנו לקרוא את הקובץ.'));
     reader.readAsDataURL(file);
   });
 }
@@ -22,14 +22,14 @@ function getImageSize(dataUrl: string): Promise<{ width: number; height: number 
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
-    image.onerror = () => reject(new FloorFileError('This image could not be opened.'));
+    image.onerror = () => reject(new FloorFileError('לא הצלחנו לפתוח את התמונה.'));
     image.src = dataUrl;
   });
 }
 
 export async function floorFileToSvg(file: File): Promise<string> {
   if (file.size > MAX_FLOOR_FILE_BYTES) {
-    throw new FloorFileError('The file is too big. The limit is 3.5 MB.');
+    throw new FloorFileError('הקובץ גדול מדי. הגודל המרבי הוא 3.5MB.');
   }
 
   const fileName = file.name.toLowerCase();
@@ -49,5 +49,5 @@ export async function floorFileToSvg(file: File): Promise<string> {
     );
   }
 
-  throw new FloorFileError('Choose an SVG, PNG or JPG file.');
+  throw new FloorFileError('יש לבחור קובץ מסוג SVG, PNG או JPG.');
 }

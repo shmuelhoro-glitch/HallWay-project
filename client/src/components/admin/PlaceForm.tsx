@@ -3,9 +3,9 @@ import type { PlaceType } from '../../types/place';
 import type { PlaceFormValues } from './placeFormValues';
 
 const PLACE_TYPES: { value: PlaceType; label: string }[] = [
-  { value: 'store', label: 'Store' },
-  { value: 'service', label: 'Service' },
-  { value: 'shelter', label: 'Shelter' },
+  { value: 'store', label: 'חנות' },
+  { value: 'service', label: 'שירות' },
+  { value: 'shelter', label: 'מרחב מוגן' },
 ];
 
 interface PlaceFormProps {
@@ -35,13 +35,13 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
 
   return (
     <form className="admin-card" onSubmit={handleSubmit}>
-      <h2 className="admin-card-title">{isNew ? 'New place' : 'Edit place'}</h2>
+      <h2 className="admin-card-title">{isNew ? 'מקום חדש' : 'עריכת מקום'}</h2>
       <p className="admin-card-text">
-        {hasPoint ? 'Click on the map to move it.' : 'Click on the map where the place is.'}
+        {hasPoint ? 'לחצו במפה כדי להזיז אותו.' : 'לחצו במפה על המיקום של המקום.'}
       </p>
 
       <label className="field-label" htmlFor="place-name">
-        Name
+        שם
       </label>
       <input
         id="place-name"
@@ -52,8 +52,8 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
         onChange={(event) => setField('name', event.target.value)}
       />
 
-      <span className="field-label">Type</span>
-      <div className="segmented" role="group" aria-label="Place type">
+      <span className="field-label">סוג</span>
+      <div className="segmented" role="group" aria-label="סוג המקום">
         {PLACE_TYPES.map((option) => (
           <button
             key={option.value}
@@ -67,7 +67,7 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
       </div>
 
       <label className="field-label" htmlFor="place-category">
-        Category
+        קטגוריה
       </label>
       <input
         id="place-category"
@@ -75,7 +75,7 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
         required
         maxLength={40}
         list="place-categories"
-        placeholder="Food, Fashion, Health..."
+        placeholder="אוכל, אופנה, בריאות..."
         value={values.category}
         onChange={(event) => setField('category', event.target.value)}
       />
@@ -86,23 +86,23 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
       </datalist>
 
       <label className="field-label" htmlFor="place-hours">
-        Opening hours (optional)
+        שעות פתיחה (לא חובה)
       </label>
       <input
         id="place-hours"
         className="field-input"
         maxLength={80}
-        placeholder="Sun-Thu 10:00-22:00"
+        placeholder="א׳ עד ה׳, 10:00 עד 22:00"
         value={values.hours}
         onChange={(event) => setField('hours', event.target.value)}
       />
 
       <label className="field-label" htmlFor="place-url">
-        Website (optional)
+        אתר אינטרנט (לא חובה)
       </label>
       <input
         id="place-url"
-        className="field-input"
+        className="field-input ltr-text"
         type="url"
         placeholder="https://"
         value={values.url}
@@ -115,24 +115,24 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
           checked={values.isLandmark}
           onChange={(event) => setField('isLandmark', event.target.checked)}
         />
-        Landmark
+        נקודת ציון
       </label>
       <p className="field-hint">
-        Visitors pick a landmark to say where they are, for example during a red alert. Up to 5 on a floor.
+        מבקרים בוחרים נקודת ציון כדי לומר איפה הם נמצאים, למשל בזמן התרעת צבע אדום. עד 5 בכל קומה.
       </p>
 
       {error && <p className="message-error">{error}</p>}
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={isSaving || !hasPoint}>
-          {isSaving ? 'Saving...' : isNew ? 'Add place' : 'Save'}
+          {isSaving ? 'שומר...' : isNew ? 'הוספת המקום' : 'שמירה'}
         </button>
         <button type="button" className="btn btn-outline" onClick={onCancel}>
-          Cancel
+          ביטול
         </button>
         {!isNew && (
           <button type="button" className="btn btn-danger" onClick={onDelete} disabled={isSaving}>
-            Delete
+            מחיקה
           </button>
         )}
       </div>

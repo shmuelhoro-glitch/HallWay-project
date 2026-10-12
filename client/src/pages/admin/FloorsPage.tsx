@@ -7,6 +7,7 @@ import { getPlaces } from '../../api/places';
 import type { Floor } from '../../types/building';
 import { getErrorMessage } from '../../utils/errorMessage';
 import { FloorFileError, floorFileToSvg } from '../../utils/floorFile';
+import { getDefaultFloorName } from '../../utils/floors';
 import { detectPlacesInPlan } from '../../utils/placeDetection';
 import type { ReviewRow } from '../../utils/placeDetection';
 import { useAdminBuilding } from './adminContext';
@@ -23,7 +24,7 @@ interface PlacesReview {
 }
 
 function floorLabel(floorNumber: number, name: string): string {
-  return name ? name : `Floor ${floorNumber}`;
+  return name ? name : getDefaultFloorName(floorNumber);
 }
 
 // The "Floors" tab: upload a plan for each floor, see it, replace it.
@@ -70,7 +71,9 @@ function FloorsPage() {
 
       if (detected.length === 0) {
         setReview(null);
-        setNotice(`No store names were found in the plan of ${floorLabel(floorNumber, name)}. You can add places by hand in the Places tab.`);
+        setNotice(
+          `לא נמצאו שמות של חנויות בתוכנית של ${floorLabel(floorNumber, name)}. אפשר להוסיף מקומות ידנית בלשונית "מקומות".`,
+        );
         return;
       }
 
@@ -86,7 +89,7 @@ function FloorsPage() {
       setReview({ floor: floorNumber, floorName: floorLabel(floorNumber, name), rows });
       setPreviewFloor(floorNumber);
     } catch {
-      setNotice('Could not read this plan. Please try again.');
+      setNotice('לא הצלחנו לקרוא את התוכנית. נסו שוב.');
     } finally {
       setIsDetecting(false);
     }
@@ -105,7 +108,7 @@ function FloorsPage() {
 
     for (let index = 0; index < chosen.length; index++) {
       const row = chosen[index];
-      setAddProgress(`Adding ${index + 1} of ${chosen.length}...`);
+      setAddProgress(`מוסיף ${index + 1} מתוך ${chosen.length}...`);
 
       try {
         await createPlace(building.id, {
@@ -130,9 +133,8 @@ function FloorsPage() {
 
     if (failures.length === 0) {
       setReview(null);
-      setSuccess(
-        `${addedKeys.length} ${addedKeys.length === 1 ? 'place was' : 'places were'} added to ${review.floorName}. Next: connect them to walkways.`,
-      );
+      const added = addedKeys.length === 1 ? 'מקום אחד נוסף' : `${addedKeys.length} מקומות נוספו`;
+      setSuccess(`${added} אל ${review.floorName}. השלב הבא: לחבר אותם למעברים.`);
       return;
     }
 
@@ -143,13 +145,13 @@ function FloorsPage() {
         addedKeys.includes(row.key) ? { ...row, include: false, alreadyAdded: true } : row,
       ),
     });
-    setAddError(`Not added: ${failures.join(' · ')}`);
+    setAddError(`לא נוספו: ${failures.join(' · ')}`);
   }
 
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!file) {
-      setError('Choose a file first.');
+      setError('בחרו קובץ קודם.');
       return;
     }
 
@@ -165,7 +167,7 @@ function FloorsPage() {
       reloadBuilding(); // the floors list in the title and here
       setPreviewFloor(number);
       setPlanVersion((current) => current + 1);
-      setSuccess(`Floor ${number} was saved.`);
+      setSuccess(`התוכנית של ${floorLabel(number, floorName.trim())} נשמרה.`);
 
       // Ready for the next floor
       const uploadedName = floorName.trim();
@@ -180,7 +182,7 @@ function FloorsPage() {
       if (uploadError instanceof FloorFileError) {
         setError(uploadError.message);
       } else {
-        setError(getErrorMessage(uploadError, 'Could not upload the plan. Please try again.'));
+        setError(getErrorMessage(uploadError, 'לא הצלחנו להעלות את התוכנית. נסו שוב.'));
       }
     } finally {
       setIsUploading(false);
@@ -210,7 +212,7 @@ function FloorsPage() {
             {review && review.floor === shownFloor.floor && <DetectedPointsLayer rows={review.rows} />}
           </FloorMap>
         ) : (
-          <div className="screen-message">The plan you upload will show here.</div>
+          <div className="screen-message">התוכנית שתעלו תוצג כאן.</div>
         )}
       </div>
 
@@ -229,28 +231,31 @@ function FloorsPage() {
         )}
 
         <section className="admin-card">
-          <h2 className="admin-card-title">Floor plans</h2>
+          <h2 className="admin-card-title">תוכניות קומה</h2>
           <p className="admin-card-text">
-            {floors.length} of {building.floors_count} uploaded.
+            הועלו {floors.length} מתוך {building.floors_count}.
           </p>
 
           {floors.map((floor) => (
             <div key={floor.floor} className="admin-row">
               <div className="admin-row-main">
                 <div className="admin-row-name">
-                  Floor {floor.floor}
+                  {getDefaultFloorName(floor.floor)}
                   {floor.name ? ` · ${floor.name}` : ''}
                 </div>
                 <div className="admin-row-meta">
-                  {floor.width} × {floor.height}
-                  {shownFloor && shownFloor.floor === floor.floor ? ' · showing' : ''}
+                  {/* dir="ltr": the size is width × height, and must not be turned around in Hebrew text */}
+                  <span dir="ltr">
+                    {floor.width} × {floor.height}
+                  </span>
+                  {shownFloor && shownFloor.floor === floor.floor ? ' · מוצגת' : ''}
                 </div>
               </div>
               <button type="button" className="text-btn" onClick={() => setPreviewFloor(floor.floor)}>
-                Show
+                הצגה
               </button>
               <button type="button" className="text-btn" onClick={() => startReplace(floor)}>
-                Replace
+                החלפה
               </button>
               <button
                 type="button"
@@ -258,33 +263,33 @@ function FloorsPage() {
                 disabled={isDetecting || isAddingPlaces}
                 onClick={() => findPlaces(floor.floor, floor.name)}
               >
-                Find places
+                איתור מקומות
               </button>
             </div>
           ))}
 
-          {isDetecting && <p className="message-info">Looking for store names in the plan...</p>}
+          {isDetecting && <p className="message-info">מחפש שמות של חנויות בתוכנית...</p>}
           {notice && <p className="message-info">{notice}</p>}
 
           {floors.length > 0 && (
             <Link to="../places" className="btn btn-primary floors-next">
-              Next: add places
+              השלב הבא: הוספת מקומות
             </Link>
           )}
         </section>
 
         <form className="admin-card" onSubmit={handleUpload}>
-          <h2 className="admin-card-title">Upload a plan</h2>
-          <p className="admin-card-text">SVG, PNG or JPG. The same floor number again replaces its plan.</p>
+          <h2 className="admin-card-title">העלאת תוכנית</h2>
+          <p className="admin-card-text">SVG, PNG או JPG. העלאה לאותו מספר קומה מחליפה את התוכנית הקיימת.</p>
 
           <div className="form-grid">
             <div>
               <label className="field-label" htmlFor="floor-number">
-                Floor number
+                מספר הקומה
               </label>
               <input
                 id="floor-number"
-                className="field-input"
+                className="field-input ltr-text"
                 type="number"
                 required
                 step={1}
@@ -294,22 +299,22 @@ function FloorsPage() {
             </div>
             <div>
               <label className="field-label" htmlFor="floor-name">
-                Name (optional)
+                שם (לא חובה)
               </label>
               <input
                 id="floor-name"
                 className="field-input"
                 maxLength={50}
-                placeholder="Ground floor"
+                placeholder="קומת קרקע"
                 value={floorName}
                 onChange={(event) => setFloorName(event.target.value)}
               />
             </div>
-            <p className="field-hint form-wide">0 is the ground floor. Basements are -1, -2.</p>
+            <p className="field-hint form-wide">קומת הקרקע היא 0. למרתף מזינים מספר שלילי.</p>
 
             <div className="form-wide">
               <label className="field-label" htmlFor="floor-file">
-                Plan file
+                קובץ התוכנית
               </label>
               <input
                 key={fileInputKey}
@@ -329,7 +334,7 @@ function FloorsPage() {
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={isUploading}>
               <UploadIcon />
-              {isUploading ? 'Uploading...' : 'Upload'}
+              {isUploading ? 'מעלה...' : 'העלאה'}
             </button>
           </div>
         </form>

@@ -158,7 +158,7 @@
   margin: 0 0 14px;
 }
 
-/* ---------- Map on the left, panel on the right ---------- */
+/* ---------- The map first, the panel next to it (in Hebrew: map on the right, panel on the left) ---------- */
 
 .admin-split {
   display: grid;
@@ -334,7 +334,7 @@
   border-left: none;
   background: transparent;
   color: var(--ink);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 

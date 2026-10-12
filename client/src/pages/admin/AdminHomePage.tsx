@@ -25,7 +25,7 @@ function AdminHomePage() {
       })
       .catch(() => {
         if (isCancelled) return;
-        setError('Could not load buildings.');
+        setError('לא הצלחנו לטעון את המבנים.');
       })
       .finally(() => {
         if (isCancelled) return;
@@ -59,12 +59,12 @@ function AdminHomePage() {
       <div className="admin-content">
         <div className="admin-home-head">
           <div>
-            <h1 className="admin-title">Manage buildings</h1>
-            <p className="admin-subtitle">Pick a building to edit its floors, places and walkways.</p>
+            <h1 className="admin-title">ניהול מבנים</h1>
+            <p className="admin-subtitle">בחרו מבנה כדי לערוך את הקומות, המקומות והמעברים שלו.</p>
           </div>
           <Link to="/admin/new" className="btn btn-primary admin-home-new">
             <PlusIcon />
-            New building
+            מבנה חדש
           </Link>
         </div>
 
@@ -72,21 +72,21 @@ function AdminHomePage() {
           <SearchIcon />
           <input
             type="search"
-            placeholder="Search by name or city"
-            aria-label="Search buildings"
+            placeholder="חיפוש לפי שם או עיר"
+            aria-label="חיפוש מבנים"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
 
-        {isLoading && <p className="message-info">Loading buildings...</p>}
+        {isLoading && <p className="message-info">טוען מבנים...</p>}
         {error && <p className="message-error">{error}</p>}
 
         {!isLoading && !error && buildings.length === 0 && (
           <div className="admin-empty">
-            <p>No buildings yet.</p>
+            <p>עדיין אין לכם מבנים.</p>
             <Link to="/admin/new" className="btn btn-primary">
-              Add the first building
+              הוספת המבנה הראשון
             </Link>
           </div>
         )}
@@ -100,8 +100,8 @@ function AdminHomePage() {
               <span className="admin-building-text">
                 <span className="admin-row-name">{building.name}</span>
                 <span className="admin-row-meta">
-                  {BUILDING_TYPE_LABELS[building.type] ?? building.type} · {building.city} · {building.floors_count}{' '}
-                  {building.floors_count === 1 ? 'floor' : 'floors'}
+                  {BUILDING_TYPE_LABELS[building.type] ?? building.type} · {building.city} ·{' '}
+                  {building.floors_count === 1 ? 'קומה אחת' : `${building.floors_count} קומות`}
                 </span>
               </span>
               <ChevronIcon />
@@ -110,7 +110,7 @@ function AdminHomePage() {
         </div>
 
         {!isLoading && buildings.length > 0 && shownBuildings.length === 0 && (
-          <p className="message-info">No building matches “{search}”.</p>
+          <p className="message-info">אין מבנה שמתאים לחיפוש "{search}".</p>
         )}
       </div>
     </div>

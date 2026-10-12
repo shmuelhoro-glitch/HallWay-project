@@ -20,9 +20,9 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return (
       <div className="screen">
         <div className="screen-message">
-          <p>This area is for building managers.</p>
+          <p>האזור הזה מיועד למנהלי מבנים.</p>
           <Link to="/" className="btn btn-outline">
-            Back to the map
+            חזרה למפה
           </Link>
         </div>
       </div>

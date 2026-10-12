@@ -42,7 +42,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (!response.ok) {
     const body = data as ErrorBody | null;
     const code = body?.error?.code ?? 'UNKNOWN_ERROR';
-    const message = body?.error?.message ?? 'Something went wrong';
+    const message = body?.error?.message ?? 'משהו השתבש. נסו שוב.';
 
     // The saved token expired (after 24 hours) - log out, so the user is asked to log in again
     if (code === 'INVALID_TOKEN') {

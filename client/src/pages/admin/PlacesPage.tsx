@@ -18,7 +18,7 @@ import { EMPTY_PLACE_FORM } from '../../components/admin/placeFormValues';
 import type { PlaceFormValues } from '../../components/admin/placeFormValues';
 import { ChevronIcon, PlusIcon } from '../../components/ui/Icons';
 
-const PLACE_TYPE_LABELS = { store: 'Store', service: 'Service', shelter: 'Shelter' };
+const PLACE_TYPE_LABELS = { store: 'חנות', service: 'שירות', shelter: 'מרחב מוגן' };
 
 // Only the fields that really changed. Important: a place whose entrance was moved
 // in the walkways editor keeps it there, as long as the admin didn't move the place itself.
@@ -64,7 +64,7 @@ function PlacesPage() {
       })
       .catch(() => {
         if (isCancelled) return;
-        setLoadError('Could not load the places.');
+        setLoadError('לא הצלחנו לטעון את המקומות.');
       })
       .finally(() => {
         if (isCancelled) return;
@@ -89,9 +89,9 @@ function PlacesPage() {
   if (floors.length === 0) {
     return (
       <div className="admin-empty">
-        <p>Upload a floor plan first. Places are added on the plan.</p>
+        <p>קודם צריך להעלות תוכנית קומה. את המקומות מוסיפים על גבי התוכנית.</p>
         <Link to="../floors" className="btn btn-primary">
-          Go to floors
+          מעבר לקומות
         </Link>
       </div>
     );
@@ -182,7 +182,7 @@ function PlacesPage() {
       }
       closeForm();
     } catch (saveError) {
-      setFormError(getErrorMessage(saveError, 'Could not save the place. Please try again.'));
+      setFormError(getErrorMessage(saveError, 'לא הצלחנו לשמור את המקום. נסו שוב.'));
     } finally {
       setIsSaving(false);
     }
@@ -192,7 +192,7 @@ function PlacesPage() {
     const place = places.find((item) => item._id === editingId);
     if (!place) return;
 
-    const isSure = window.confirm(`Delete "${place.name}"? Its walkway connections are deleted too.`);
+    const isSure = window.confirm(`למחוק את "${place.name}"? גם החיבורים שלו למעברים יימחקו.`);
     if (!isSure) return;
 
     setIsSaving(true);
@@ -201,7 +201,7 @@ function PlacesPage() {
       setPlaces(places.filter((item) => item._id !== place._id));
       closeForm();
     } catch (deleteError) {
-      setFormError(getErrorMessage(deleteError, 'Could not delete the place. Please try again.'));
+      setFormError(getErrorMessage(deleteError, 'לא הצלחנו למחוק את המקום. נסו שוב.'));
     } finally {
       setIsSaving(false);
     }
@@ -229,7 +229,7 @@ function PlacesPage() {
           {form && form.x !== null && form.y !== null && <DraftPointLayer x={form.x} y={form.y} />}
         </FloorMap>
 
-        {form && <div className="admin-map-hint">Click on the map where the place is</div>}
+        {form && <div className="admin-map-hint">לחצו במפה על המיקום של המקום</div>}
         <FloorSwitcher floors={floors} currentFloor={currentFloor.floor} onChange={changeFloor} />
       </div>
 
@@ -252,17 +252,17 @@ function PlacesPage() {
               <div>
                 <h2 className="admin-card-title">{getFloorName(floors, currentFloor.floor)}</h2>
                 <p className="admin-card-text">
-                  {places.length === 1 ? '1 place' : `${places.length} places`}. Click a place to edit it.
+                  {places.length === 1 ? 'מקום אחד' : `${places.length} מקומות`}. לחצו על מקום כדי לערוך אותו.
                 </p>
               </div>
             </div>
 
             <button type="button" className="btn btn-primary places-add" onClick={startNew}>
               <PlusIcon />
-              Add place
+              הוספת מקום
             </button>
 
-            {isLoading && <p className="message-info">Loading...</p>}
+            {isLoading && <p className="message-info">טוען...</p>}
             {loadError && <p className="message-error">{loadError}</p>}
 
             {sortedPlaces.map((place) => (
@@ -271,7 +271,7 @@ function PlacesPage() {
                   <span className="admin-row-name">{place.name}</span>
                   <span className="admin-row-meta">
                     {PLACE_TYPE_LABELS[place.type]} · {place.category}
-                    {place.isLandmark ? ' · Landmark' : ''}
+                    {place.isLandmark ? ' · נקודת ציון' : ''}
                   </span>
                 </span>
                 <ChevronIcon />
@@ -280,8 +280,8 @@ function PlacesPage() {
 
             {places.length > 0 && (
               <p className="field-hint">
-                Next: connect each place's entrance to a walkway, in the Walkways tab. Without it, visitors can't
-                navigate there.
+                השלב הבא: לחבר את הכניסה של כל מקום למעבר, בלשונית "מעברים". בלי החיבור הזה מבקרים לא יוכלו לנווט
+                אליו.
               </p>
             )}
           </section>

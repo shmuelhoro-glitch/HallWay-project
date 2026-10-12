@@ -61,7 +61,7 @@ function EditorLayer({ nodes, edges, mode, activeNodeId, looseNodeIds, onNodeCli
                 onEdgeClick(edge);
               }}
             >
-              <title>{edge.blocked ? 'Blocked walkway' : `Walkway, ${Math.round(edge.length)} units`}</title>
+              <title>{edge.blocked ? 'מעבר חסום' : `מעבר, אורך ${Math.round(edge.length)}`}</title>
             </line>
           </g>
         );
