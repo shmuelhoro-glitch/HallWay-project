@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { verifyToken, requireRole } from "../middleware/authentication.js";
+import { verifyToken, requireBuildingAccess } from "../middleware/authentication.js";
 import { validateRequest } from "../middleware/validation.js";
 import { createPlaceSchema, updatePlaceSchema } from "../schemas/places.schemas.js";
 import { createPlace, deletePlace, getPlaces, updatePlace } from "../controllers/places.controller.js";
@@ -7,7 +7,8 @@ import { createPlace, deletePlace, getPlaces, updatePlace } from "../controllers
 // mergeParams: gives us :buildingId from the path in server.js
 const router = Router({ mergeParams: true })
 
-const adminOnly = [verifyToken, requireRole(["admin"])]
+// Only the managers of this building
+const adminOnly = [verifyToken, requireBuildingAccess]
 
 router.get("/", getPlaces);
 

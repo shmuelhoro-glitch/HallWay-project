@@ -1,26 +1,108 @@
 import { mock } from "node:test";
+import { randomUUID } from "node:crypto";
 import { ObjectId } from "mongodb";
 
 // Helpers for the tests. Nothing here touches a real database:
-// the controllers get a fake mongoRepo that keeps everything in memory.
+// the controllers get fake repositories that keep everything in memory.
 
 export const BUILDING_ID = "11111111-1111-4111-8111-111111111111";
 
 // Puts fake repositories in the place of the real ones. Call it BEFORE importing a controller:
 // the controllers import the repositories by themselves, and this way the real files
-// (which connect to the database) never run.
+// (which connect to the databases) never run.
 export function useFakeRepos() {
   const mongoRepo = createFakeMongoRepo();
-  const supabaseRepo = {
-    async findOne(table, query) {
-      return table === "buildings" && query.id === BUILDING_ID ? { id: BUILDING_ID } : null;
-    },
-  };
+  const supabaseRepo = createFakeSupabaseRepo();
 
   mock.module(new URL("../repositories/mongoRepo.js", import.meta.url).href, { namedExports: { mongoRepo } });
   mock.module(new URL("../repositories/sqlRepo.js", import.meta.url).href, { namedExports: { supabaseRepo } });
 
-  return { mongoRepo };
+  // Empty databases with one building in them. Call it before every test.
+  async function resetData() {
+    mongoRepo.reset();
+    supabaseRepo.reset();
+    await supabaseRepo.insertOne("buildings", { id: BUILDING_ID, name: "Sea Mall" });
+  }
+
+  return { mongoRepo, supabaseRepo, resetData };
+}
+
+// The same functions as repositories/sqlRepo.js, on arrays in memory.
+// A query matches like supabase's match(): equal values, and a value that was not sent is skipped.
+export function createFakeSupabaseRepo() {
+  const tables = new Map();
+  const plannedFailures = [];
+
+  function rowsOf(table) {
+    if (!tables.has(table)) {
+      tables.set(table, []);
+    }
+    return tables.get(table);
+  }
+
+  function matchesRow(row, query) {
+    return Object.entries(query).every(([key, value]) => value === undefined || row[key] === value);
+  }
+
+  function failIfPlanned(method, table) {
+    const index = plannedFailures.findIndex((item) => item.method === method && item.table === table);
+    if (index !== -1) {
+      plannedFailures.splice(index, 1);
+      throw new Error(`Fake database failure: ${method} ${table}`);
+    }
+  }
+
+  return {
+    async insertOne(table, newData) {
+      failIfPlanned("insertOne", table);
+      const row = { id: randomUUID(), ...newData };
+      rowsOf(table).push(row);
+      return { ...row };
+    },
+
+    async findOne(table, query) {
+      failIfPlanned("findOne", table);
+      const row = rowsOf(table).find((item) => matchesRow(item, query));
+      return row ? { ...row } : null;
+    },
+
+    async findMany(table, query = {}) {
+      failIfPlanned("findMany", table);
+      return rowsOf(table)
+        .filter((item) => matchesRow(item, query))
+        .map((item) => ({ ...item }));
+    },
+
+    async updateOne(table, query, updateData) {
+      failIfPlanned("updateOne", table);
+      const rows = rowsOf(table).filter((item) => matchesRow(item, query));
+      rows.forEach((row) => Object.assign(row, updateData));
+      return rows.map((row) => ({ ...row }));
+    },
+
+    async deleteOne(table, query) {
+      failIfPlanned("deleteOne", table);
+      const rows = rowsOf(table);
+      const deleted = rows.filter((item) => matchesRow(item, query));
+      tables.set(table, rows.filter((item) => !matchesRow(item, query)));
+      return deleted;
+    },
+
+    // ---------- Only for the tests ----------
+
+    failOn(method, table) {
+      plannedFailures.push({ method, table });
+    },
+
+    all(table) {
+      return rowsOf(table).map((item) => ({ ...item }));
+    },
+
+    reset() {
+      tables.clear();
+      plannedFailures.length = 0;
+    },
+  };
 }
 
 // Does a saved document match a query? Supports what the server really uses:

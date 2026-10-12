@@ -1,7 +1,8 @@
 import { ObjectId } from "mongodb";
 import { mongoRepo } from "../repositories/mongoRepo.js";
 import { supabaseRepo } from "../repositories/sqlRepo.js";
-import { deleteEdgesOfNode, undo, updateEdgeLengths } from "../services/graph.service.js";
+import { deleteEdgesOfNode, updateEdgeLengths } from "../services/graph.service.js";
+import { undo } from "../services/undo.js";
 
 // A visitor picks a landmark to say where he is, so the list must stay short
 const MAX_LANDMARKS_PER_FLOOR = 5;

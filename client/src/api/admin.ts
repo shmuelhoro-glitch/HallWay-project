@@ -7,6 +7,11 @@ import type { Graph, GraphEdge, GraphNode, NodeType } from '../types/graph';
 
 // ---------- Buildings and floors ----------
 
+// The buildings this user manages. The owners of the system (super) get all of them.
+export function getMyBuildings(): Promise<Building[]> {
+  return apiRequest<Building[]>('/api/buildings/mine');
+}
+
 export interface NewBuilding {
   name: string;
   type: BuildingType;

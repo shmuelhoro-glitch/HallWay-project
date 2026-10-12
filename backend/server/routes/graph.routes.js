@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyToken, requireRole } from "../middleware/authentication.js";
+import { verifyToken, requireBuildingAccess } from "../middleware/authentication.js";
 import { validateRequest } from "../middleware/validation.js";
 import {
   createEdgeSchema,
@@ -20,8 +20,8 @@ import {
 
 const router = Router({ mergeParams: true })
 
-// Everything here is for building managers only
-router.use(verifyToken, requireRole(["admin"]))
+// Everything here is for the managers of this building only
+router.use(verifyToken, requireBuildingAccess)
 
 router.get('/', validateRequest(graphQuerySchema), getGraph)
 

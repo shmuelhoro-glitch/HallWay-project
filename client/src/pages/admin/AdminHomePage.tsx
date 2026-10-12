@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getBuildings } from '../../api/buildings';
+import { getMyBuildings } from '../../api/admin';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
 import type { Building } from '../../types/building';
 import UserMenu from '../../components/home/UserMenu';
@@ -8,7 +8,7 @@ import { BuildingTypeIcon, ChevronIcon, Logo, PlusIcon, SearchIcon } from '../..
 import './Admin.css';
 import './AdminHomePage.css';
 
-// /admin - all the buildings. A building opens its admin screens.
+// /admin - the buildings this user manages. A building opens its admin screens.
 function AdminHomePage() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +18,7 @@ function AdminHomePage() {
   useEffect(() => {
     let isCancelled = false;
 
-    getBuildings()
+    getMyBuildings()
       .then((data) => {
         if (isCancelled) return;
         setBuildings(data);

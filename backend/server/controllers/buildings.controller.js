@@ -3,7 +3,10 @@ import { supabaseRepo } from "../repositories/sqlRepo.js";
 import { mongoRepo } from "../repositories/mongoRepo.js";
 import { readSvgSize } from "../services/buildings.service.js";
 import { wakeRoutingService } from "../services/routingClient.js";
+import { undo } from "../services/undo.js";
 
+// POST /api/buildings  (admin or super)
+// The building belongs to the manager who created it: it is added to his buildingIds.
 export async function createBuilding(req, res, next) {
   try {
     const { name, type, address, city, alert_area, floors_count } = req.body;
@@ -21,9 +24,40 @@ export async function createBuilding(req, res, next) {
       floors_count,
     });
 
+    // A super manages every building anyway
+    if (req.user.role !== "super") {
+      try {
+        await supabaseRepo.updateOne(
+          "users",
+          { id: req.user.userId },
+          { buildingIds: [...req.user.buildingIds, newBuilding.id] }
+        );
+      } catch (error) {
+        // A building that nobody can manage must not stay
+        await undo(`delete the new building ${newBuilding.id}`, () =>
+          supabaseRepo.deleteOne("buildings", { id: newBuilding.id })
+        );
+        throw error;
+      }
+    }
+
     res.status(201).json(newBuilding);
   } catch (err) {
     next(err);
+  }
+}
+
+// GET /api/buildings/mine  (admin or super) - the buildings this user manages
+export async function getMyBuildings(req, res, next) {
+  try {
+    const buildings = await supabaseRepo.findMany("buildings");
+
+    if (req.user.role === "super") {
+      return res.json(buildings);
+    }
+    res.json(buildings.filter((building) => req.user.buildingIds.includes(building.id)));
+  } catch (error) {
+    next(error);
   }
 }
 
