@@ -192,8 +192,8 @@ function BuildingsMap({
       <button
         type="button"
         className={locateClassNames.join(' ')}
-        aria-label="Show my location"
-        title="Show my location"
+        aria-label="הצגת המיקום שלי"
+        title="הצגת המיקום שלי"
         onClick={onLocate}
       >
         <LocateIcon size={22} />

@@ -23,10 +23,10 @@ interface BuildingSearchProps {
 }
 
 const TYPE_FILTERS: { value: BuildingType | null; label: string }[] = [
-  { value: null, label: 'All' },
-  { value: 'mall', label: 'Malls' },
-  { value: 'hospital', label: 'Hospitals' },
-  { value: 'campus', label: 'Campuses' },
+  { value: null, label: 'הכול' },
+  { value: 'mall', label: 'קניונים' },
+  { value: 'hospital', label: 'בתי חולים' },
+  { value: 'campus', label: 'קמפוסים' },
 ];
 
 const MAX_SUGGESTIONS = 6;
@@ -101,7 +101,7 @@ function BuildingSearch({
     <div className="building-search">
       <form role="search" onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="building-search-input">
-          Search a building, city or address
+          חיפוש מבנה, עיר או כתובת
         </label>
         <div className="search-field">
           <SearchIcon />
@@ -124,7 +124,7 @@ function BuildingSearch({
             }}
           />
           {text !== '' && (
-            <button type="button" className="icon-btn icon-btn-plain" aria-label="Clear search" onClick={handleClear}>
+            <button type="button" className="icon-btn icon-btn-plain" aria-label="ניקוי החיפוש" onClick={handleClear}>
               <CloseIcon />
             </button>
           )}
@@ -137,9 +137,9 @@ function BuildingSearch({
           {showRecent && (
             <>
               <div className="search-dropdown-header">
-                <span>Recently visited</span>
+                <span>ביקרתם לאחרונה</span>
                 <button type="button" className="text-btn" onClick={onClearRecent}>
-                  Clear
+                  ניקוי
                 </button>
               </div>
               {recent.map((item) => (
@@ -167,9 +167,9 @@ function BuildingSearch({
 
           {query !== '' && suggestions.length === 0 && (
             <p className="search-dropdown-empty">
-              No buildings match “{query}”.
+              לא נמצאו מבנים שמתאימים לחיפוש "{query}".
               <br />
-              Try a building name, a city or a street.
+              נסו שם של מבנה, עיר או רחוב.
             </p>
           )}
 
@@ -205,13 +205,13 @@ function BuildingSearch({
                 closeList();
               }}
             >
-              Show all {results.length} on the map
+              הצגת כל {results.length} התוצאות במפה
             </button>
           )}
         </div>
       )}
 
-      <div className="chip-row building-search-types" role="group" aria-label="Building type">
+      <div className="chip-row building-search-types" role="group" aria-label="סוג מבנה">
         {TYPE_FILTERS.map((filter) => (
           <button
             key={filter.label}

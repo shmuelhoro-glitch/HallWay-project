@@ -42,11 +42,11 @@
   color: var(--ink);
 }
 
-/* The small menu, under the avatar, aligned to its right side */
+/* The small menu, under the avatar, aligned to the edge of the screen the avatar is next to */
 .user-popover {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  inset-inline-end: 0;
   z-index: 800;
   width: 220px;
   padding: 12px 6px 6px;
@@ -73,6 +73,7 @@
   margin-top: 2px;
   color: var(--muted);
   font-size: 13px;
+  text-align: end; /* written left-to-right, but it stays on the side of the name */
 }
 
 .user-popover-role {

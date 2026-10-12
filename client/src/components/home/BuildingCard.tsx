@@ -19,7 +19,7 @@ function BuildingCard({ building, distanceKm, onEnter, onClose }: BuildingCardPr
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.lat},${point.lng}`;
 
   const typeLabel = BUILDING_TYPE_LABELS[building.type] ?? building.type;
-  const floorsText = building.floors_count === 1 ? '1 floor' : `${building.floors_count} floors`;
+  const floorsText = building.floors_count === 1 ? 'קומה אחת' : `${building.floors_count} קומות`;
 
   return (
     <>
@@ -35,23 +35,23 @@ function BuildingCard({ building, distanceKm, onEnter, onClose }: BuildingCardPr
             </p>
           </div>
         </div>
-        <button type="button" className="icon-btn icon-btn-plain" aria-label="Close" onClick={onClose}>
+        <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
           <CloseIcon />
         </button>
       </div>
 
       <div className="building-card-details">
         {building.address && <span className="building-card-address">{building.address}</span>}
-        {distanceKm !== null && <span className="badge badge-blue">{formatDistance(distanceKm)} away</span>}
+        {distanceKm !== null && <span className="badge badge-blue">במרחק {formatDistance(distanceKm)}</span>}
       </div>
 
       <div className="sheet-actions">
         <button type="button" className="btn btn-primary" onClick={onEnter}>
-          Enter building
+          כניסה למבנה
         </button>
         <a className="btn btn-outline" href={directionsUrl} target="_blank" rel="noreferrer">
           <DirectionsIcon />
-          Directions
+          הוראות הגעה
         </a>
       </div>
     </>

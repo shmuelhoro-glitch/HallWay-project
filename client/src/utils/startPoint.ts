@@ -19,6 +19,6 @@ export function nodeToStartPoint(node: MapNode): StartPoint {
     floor: node.floor,
     x: node.x,
     y: node.y,
-    label: node.label || 'QR code',
+    label: node.label || 'קוד QR',
   };
 }

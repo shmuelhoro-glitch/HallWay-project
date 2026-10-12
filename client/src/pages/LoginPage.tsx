@@ -17,11 +17,11 @@ function getRedirect(value: string | null): string {
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.code === 'INVALID_CREDENTIALS') return 'Wrong email or password.';
-    if (error.code === 'ACCOUNT_LOCKED') return 'Too many attempts. Try again later.';
-    if (error.code === 'VALIDATION_ERROR') return 'Please enter a valid email and password.';
+    if (error.code === 'INVALID_CREDENTIALS') return 'האימייל או הסיסמה שגויים.';
+    if (error.code === 'ACCOUNT_LOCKED') return 'יותר מדי ניסיונות. נסו שוב מאוחר יותר.';
+    if (error.code === 'VALIDATION_ERROR') return 'יש להזין אימייל וסיסמה תקינים.';
   }
-  return 'Could not log in. Please try again.';
+  return 'ההתחברות נכשלה. נסו שוב.';
 }
 
 function LoginPage() {
@@ -58,16 +58,16 @@ function LoginPage() {
         <span>InRoute</span>
       </Link>
 
-      <h1 className="auth-title">Log in</h1>
-      <p className="auth-subtitle">Log in to write in the building chat.</p>
+      <h1 className="auth-title">התחברות</h1>
+      <p className="auth-subtitle">התחברו כדי לכתוב בצ׳אט של המבנה.</p>
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="auth-label" htmlFor="login-email">
-          Email
+          אימייל
         </label>
         <input
           id="login-email"
-          className="auth-input"
+          className="auth-input ltr-text"
           type="email"
           autoComplete="email"
           required
@@ -76,11 +76,11 @@ function LoginPage() {
         />
 
         <label className="auth-label" htmlFor="login-password">
-          Password
+          סיסמה
         </label>
         <input
           id="login-password"
-          className="auth-input"
+          className="auth-input ltr-text"
           type="password"
           autoComplete="current-password"
           required
@@ -91,12 +91,12 @@ function LoginPage() {
         {error && <p className="message-error">{error}</p>}
 
         <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Logging in...' : 'Log in'}
+          {isSubmitting ? 'מתחבר...' : 'התחברות'}
         </button>
       </form>
 
       <p className="auth-switch">
-        No account yet? <Link to={`/register?redirect=${encodeURIComponent(redirect)}`}>Sign up</Link>
+        אין לכם חשבון? <Link to={`/register?redirect=${encodeURIComponent(redirect)}`}>הרשמה</Link>
       </p>
     </div>
   );

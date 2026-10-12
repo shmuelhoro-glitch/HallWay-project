@@ -18,7 +18,7 @@ interface ChatPanelProps {
 const MAX_MESSAGE_LENGTH = 500;
 
 function formatTime(isoDate: string): string {
-  return new Date(isoDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(isoDate).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 }
 
 function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps) {
@@ -40,7 +40,7 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
         );
         setMessages(sorted);
       })
-      .catch(() => setError('Could not load messages.'));
+      .catch(() => setError('לא הצלחנו לטעון את ההודעות.'));
   }, [buildingId]);
 
   // 2. New messages and errors in real time (Socket.IO)
@@ -87,30 +87,33 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
   return (
     <div className="overlay" onClick={onClose}>
       {/* stopPropagation: a click inside the panel must not close it */}
-      <div className="dialog chat-panel" role="dialog" aria-label="Building chat" onClick={(event) => event.stopPropagation()}>
+      <div className="dialog chat-panel" role="dialog" aria-label="הצ׳אט של המבנה" onClick={(event) => event.stopPropagation()}>
         <div className="sheet-header">
           <div>
-            <h2 className="sheet-title">Chat</h2>
-            <p className="sheet-text">Everyone in {buildingName}</p>
+            <h2 className="sheet-title">צ׳אט</h2>
+            <p className="sheet-text">שיחה פתוחה לכולם · {buildingName}</p>
           </div>
-          <button type="button" className="icon-btn icon-btn-plain" aria-label="Close chat" onClick={onClose}>
+          <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירת הצ׳אט" onClick={onClose}>
             <CloseIcon />
           </button>
         </div>
 
         <div className="chat-messages" ref={listRef}>
-          {messages.length === 0 && <p className="list-empty">No messages yet. Say hello!</p>}
+          {messages.length === 0 && <p className="list-empty">עדיין אין הודעות. אפשר לפתוח בשלום!</p>}
 
           {messages.map((message) => {
             const isMine = user !== null && message.userId === user.id;
             return (
               <div key={message._id} className={isMine ? 'chat-message is-mine' : 'chat-message'}>
                 <div className="chat-message-meta">
-                  <span className="chat-message-name">{isMine ? 'You' : message.username}</span>
+                  <span className="chat-message-name">{isMine ? 'אני' : message.username}</span>
                   <span>{formatTime(message.createdAt)}</span>
                 </div>
                 {/* Plain text only. Never dangerouslySetInnerHTML */}
-                <div className="chat-message-text">{message.text}</div>
+                {/* dir="auto": a message in English is written left-to-right, one in Hebrew right-to-left */}
+                <div className="chat-message-text" dir="auto">
+                  {message.text}
+                </div>
               </div>
             );
           })}
@@ -121,24 +124,25 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
         {user ? (
           <form className="chat-form" onSubmit={handleSend}>
             <label className="sr-only" htmlFor="chat-input">
-              Message
+              הודעה
             </label>
             <input
               id="chat-input"
               className="chat-input"
-              placeholder="Write a message"
+              dir="auto"
+              placeholder="כתיבת הודעה"
               autoComplete="off"
               maxLength={MAX_MESSAGE_LENGTH}
               value={text}
               onChange={(event) => setText(event.target.value)}
             />
-            <button type="submit" className="chat-send" aria-label="Send" disabled={text.trim() === ''}>
+            <button type="submit" className="chat-send" aria-label="שליחה" disabled={text.trim() === ''}>
               <SendIcon />
             </button>
           </form>
         ) : (
           <button type="button" className="btn btn-dark chat-login" onClick={handleLogin}>
-            Log in to write
+            התחברו כדי לכתוב
           </button>
         )}
       </div>

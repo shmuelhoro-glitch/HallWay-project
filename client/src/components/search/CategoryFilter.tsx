@@ -1,4 +1,5 @@
 import type { Floor } from '../../types/building';
+import { getDefaultFloorName } from '../../utils/floors';
 import './CategoryFilter.css';
 
 interface CategoryFilterProps {
@@ -21,7 +22,7 @@ function CategoryFilter({
   return (
     <div className="category-filter">
       <label className="sr-only" htmlFor="floor-filter">
-        Floor
+        קומה
       </label>
       <select
         id="floor-filter"
@@ -29,22 +30,22 @@ function CategoryFilter({
         value={selectedFloor === null ? '' : String(selectedFloor)}
         onChange={(event) => onFloorChange(event.target.value === '' ? null : Number(event.target.value))}
       >
-        <option value="">All floors</option>
+        <option value="">כל הקומות</option>
         {floors.map((floor) => (
           <option key={floor.floor} value={floor.floor}>
-            {floor.name || `Floor ${floor.floor}`}
+            {floor.name || getDefaultFloorName(floor.floor)}
           </option>
         ))}
       </select>
 
-      <div className="chip-row" role="group" aria-label="Category">
+      <div className="chip-row" role="group" aria-label="קטגוריה">
         <button
           type="button"
           className="chip"
           aria-pressed={selectedCategory === null}
           onClick={() => onCategoryChange(null)}
         >
-          All
+          הכול
         </button>
         {categories.map((category) => (
           <button

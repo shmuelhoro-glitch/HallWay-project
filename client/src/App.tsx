@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
 import BuildingPage from './pages/BuildingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -32,8 +33,8 @@ function App() {
         <Route path="qr" element={<QrPage />} />
       </Route>
 
-      {/* Any other address - back to the map */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Any other address - a clear "not found" message */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

@@ -16,13 +16,13 @@ function getRedirect(value: string | null): string {
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.code === 'EMAIL_TAKEN') return 'This email is already registered.';
-    if (error.code === 'USERNAME_TAKEN') return 'This username is taken.';
+    if (error.code === 'EMAIL_TAKEN') return 'האימייל הזה כבר רשום.';
+    if (error.code === 'USERNAME_TAKEN') return 'שם המשתמש הזה תפוס.';
     if (error.code === 'VALIDATION_ERROR') {
-      return 'Username: 3-30 letters, numbers or _. Password: 8-72 characters.';
+      return 'שם משתמש: 3 עד 30 אותיות באנגלית, ספרות או קו תחתון. סיסמה: 8 עד 72 תווים.';
     }
   }
-  return 'Could not sign up. Please try again.';
+  return 'ההרשמה נכשלה. נסו שוב.';
 }
 
 function RegisterPage() {
@@ -62,32 +62,32 @@ function RegisterPage() {
         <span>InRoute</span>
       </Link>
 
-      <h1 className="auth-title">Sign up</h1>
-      <p className="auth-subtitle">Create an account to chat with others in the building.</p>
+      <h1 className="auth-title">הרשמה</h1>
+      <p className="auth-subtitle">צרו חשבון כדי לשוחח עם אחרים במבנה.</p>
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="auth-label" htmlFor="register-username">
-          Username
+          שם משתמש
         </label>
         <input
           id="register-username"
-          className="auth-input"
+          className="auth-input ltr-text"
           autoComplete="username"
           required
           minLength={3}
           maxLength={30}
           pattern="[a-zA-Z0-9_]+"
-          title="Letters, numbers and _ only"
+          title="אותיות באנגלית, ספרות וקו תחתון בלבד"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
         />
 
         <label className="auth-label" htmlFor="register-email">
-          Email
+          אימייל
         </label>
         <input
           id="register-email"
-          className="auth-input"
+          className="auth-input ltr-text"
           type="email"
           autoComplete="email"
           required
@@ -96,11 +96,11 @@ function RegisterPage() {
         />
 
         <label className="auth-label" htmlFor="register-password">
-          Password
+          סיסמה
         </label>
         <input
           id="register-password"
-          className="auth-input"
+          className="auth-input ltr-text"
           type="password"
           autoComplete="new-password"
           required
@@ -113,12 +113,12 @@ function RegisterPage() {
         {error && <p className="message-error">{error}</p>}
 
         <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : 'Sign up'}
+          {isSubmitting ? 'יוצר חשבון...' : 'הרשמה'}
         </button>
       </form>
 
       <p className="auth-switch">
-        Already have an account? <Link to={`/login?redirect=${encodeURIComponent(redirect)}`}>Log in</Link>
+        כבר יש לכם חשבון? <Link to={`/login?redirect=${encodeURIComponent(redirect)}`}>התחברות</Link>
       </p>
     </div>
   );

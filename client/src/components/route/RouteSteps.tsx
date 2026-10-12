@@ -36,21 +36,22 @@ function RouteSteps({
   let title: string;
   let subtitle: string;
 
+  // The floor name is never glued to a Hebrew prefix ("ב...", "ל..."): the admin may have named it in English
   if (nextFloor === null) {
-    title = `Walk to ${destinationLabel}`;
-    subtitle = `Follow the blue line on ${getFloorName(floors, stepFloor)}.`;
+    title = `לכו אל ${destinationLabel}`;
+    subtitle = `עקבו אחרי הקו הכחול · ${getFloorName(floors, stepFloor)}`;
   } else {
-    const direction = nextFloor > stepFloor ? 'up' : 'down';
-    title = `Go ${direction} to ${getFloorName(floors, nextFloor)}`;
-    subtitle = 'Follow the blue line to the elevator or the stairs.';
+    const direction = nextFloor > stepFloor ? 'עלו' : 'רדו';
+    title = `${direction} אל ${getFloorName(floors, nextFloor)}`;
+    subtitle = 'עקבו אחרי הקו הכחול עד המעלית או המדרגות.';
   }
 
   let nextStepText: string | null = null;
   if (nextFloor !== null) {
     const isNextLast = stepIndex + 1 === segments.length - 1;
     nextStepText = isNextLast
-      ? `On ${getFloorName(floors, nextFloor)}, walk to ${destinationLabel}.`
-      : `On ${getFloorName(floors, nextFloor)}, keep following the line.`;
+      ? `${getFloorName(floors, nextFloor)}: לכו אל ${destinationLabel}.`
+      : `${getFloorName(floors, nextFloor)}: המשיכו לעקוב אחרי הקו.`;
   }
 
   let icon = <ElevatorIcon size={24} />;
@@ -62,7 +63,7 @@ function RouteSteps({
     <div className="route-steps">
       <div className="route-steps-progress">
         <span className="route-steps-count">
-          Step {stepIndex + 1} of {segments.length}
+          שלב {stepIndex + 1} מתוך {segments.length}
         </span>
         <div className="route-steps-bars">
           {segments.map((_, index) => (
@@ -89,16 +90,16 @@ function RouteSteps({
       <div className="sheet-actions">
         {nextFloor !== null ? (
           <button type="button" className="btn btn-primary" onClick={() => onStepChange(stepIndex + 1, nextFloor)}>
-            I'm on {getFloorName(floors, nextFloor)}
+            הגעתי אל {getFloorName(floors, nextFloor)}
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={onEnd}>
-            End route
+            סיום המסלול
           </button>
         )}
         <button type="button" className="btn btn-outline" onClick={onOpenChat}>
           <ChatIcon />
-          Chat
+          צ׳אט
         </button>
       </div>
     </div>
