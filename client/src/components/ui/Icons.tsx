@@ -167,6 +167,62 @@ export function CheckIcon({ size }: IconProps) {
   );
 }
 
+// "Find me" - a target, like in map apps
+export function LocateIcon({ size }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <circle cx="12" cy="12" r="7" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+    </BaseIcon>
+  );
+}
+
+export function DirectionsIcon({ size }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M12 2.5l9.5 9.5-9.5 9.5L2.5 12z" />
+      <path d="M9 14v-2.5a1.5 1.5 0 0 1 1.5-1.5H15" />
+      <path d="M13 8l2 2-2 2" />
+    </BaseIcon>
+  );
+}
+
+export function LogoutIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+      <path d="M10 8l-4 4 4 4" />
+      <path d="M6 12h10" />
+    </BaseIcon>
+  );
+}
+
+// The same drawings as the markers on the map
+export function BuildingTypeIcon({ type, size = 18 }: IconProps & { type: string }) {
+  if (type === 'hospital') {
+    return (
+      <BaseIcon size={size}>
+        <path d="M12 5v14M5 12h14" />
+      </BaseIcon>
+    );
+  }
+  if (type === 'campus') {
+    return (
+      <BaseIcon size={size}>
+        <path d="M3 9l9-5 9 5-9 5-9-5z" />
+        <path d="M7 11v5c3 2 7 2 10 0v-5" />
+      </BaseIcon>
+    );
+  }
+  return (
+    <BaseIcon size={size}>
+      <path d="M4 21V8l8-5 8 5v13" />
+      <path d="M9 21v-6h6v6" />
+    </BaseIcon>
+  );
+}
+
 export function Logo() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
