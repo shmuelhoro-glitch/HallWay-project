@@ -15,6 +15,35 @@ function placeNotFound() {
   return { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" };
 }
 
+// A place is saved in two collections (places + nodes), and MongoDB does not undo the first
+// write when the second one fails. So we undo it ourselves.
+// If the undo fails too, we can only write it in the log. The client still gets the first error.
+async function undo(description, step) {
+  try {
+    await step();
+  } catch (undoError) {
+    console.error(`Could not undo: ${description}`, undoError);
+  }
+}
+
+// The update that puts a document back as it was, for the fields that were changed
+function restoreUpdate(original, changedFields) {
+  const fieldsToSet = {};
+  const fieldsToRemove = {};
+  for (const key of changedFields) {
+    if (original[key] === undefined) {
+      fieldsToRemove[key] = "";
+    } else {
+      fieldsToSet[key] = original[key];
+    }
+  }
+
+  const update = {};
+  if (Object.keys(fieldsToSet).length > 0) update.$set = fieldsToSet;
+  if (Object.keys(fieldsToRemove).length > 0) update.$unset = fieldsToRemove;
+  return update;
+}
+
 // GET /api/buildings/:buildingId/places?q=&category=&floor=  (open to everyone)
 export async function getPlaces(req, res, next) {
   try {
@@ -100,7 +129,17 @@ export async function createPlace(req, res, next) {
       place.url = url;
     }
 
-    const placeId = await mongoRepo.insertOne("places", place);
+    let placeId;
+    try {
+      placeId = await mongoRepo.insertOne("places", place);
+    } catch (error) {
+      // The place was not saved - its entrance node must not stay alone on the map
+      await undo(`delete the entrance node ${nodeId} of "${name}"`, () =>
+        mongoRepo.deleteOne("nodes", { _id: nodeId })
+      );
+      throw error;
+    }
+
     res.status(201).json({ _id: placeId, ...place });
   } catch (error) {
     next(error);
@@ -119,16 +158,32 @@ async function syncEntryNode(place, changes) {
 
   if (Object.keys(nodeChanges).length === 0) return;
 
-  await mongoRepo.updateOne("nodes", { _id: new ObjectId(place.entryNodeId) }, { $set: nodeChanges });
+  const nodeId = new ObjectId(place.entryNodeId);
+  const node = await mongoRepo.findOne("nodes", { _id: nodeId });
+  if (!node) return;
 
   const floorChanged = changes.floor !== undefined && changes.floor !== place.floor;
   const moved = changes.x !== undefined || changes.y !== undefined;
 
-  if (floorChanged) {
-    // Its walkways belong to the old floor - remove them. The admin connects it again on the new floor.
-    await deleteEdgesOfNode(place.entryNodeId);
-  } else if (moved) {
-    await updateEdgeLengths(place.entryNodeId);
+  try {
+    await mongoRepo.updateOne("nodes", { _id: nodeId }, { $set: nodeChanges });
+
+    if (floorChanged) {
+      // Its walkways belong to the old floor - remove them. The admin connects it again on the new floor.
+      await deleteEdgesOfNode(place.entryNodeId);
+    } else if (moved) {
+      await updateEdgeLengths(place.entryNodeId);
+    }
+  } catch (error) {
+    // Put the node back. A node that moved to another floor and kept its walkways
+    // would give visitors a route that jumps between floors.
+    await undo(`restore the entrance node ${place.entryNodeId} of "${place.name}"`, async () => {
+      await mongoRepo.updateOne("nodes", { _id: nodeId }, restoreUpdate(node, Object.keys(nodeChanges)));
+      if (moved) {
+        await updateEdgeLengths(place.entryNodeId);
+      }
+    });
+    throw error;
   }
 }
 
@@ -175,7 +230,15 @@ export async function updatePlace(req, res, next) {
       await mongoRepo.updateOne("places", { _id }, update);
     }
 
-    await syncEntryNode(place, changes);
+    try {
+      await syncEntryNode(place, changes);
+    } catch (error) {
+      // The entrance did not follow - the place goes back to what it was
+      await undo(`restore the place "${place.name}" (${placeId})`, () =>
+        mongoRepo.updateOne("places", { _id }, restoreUpdate(place, Object.keys(changes)))
+      );
+      throw error;
+    }
 
     const updatedPlace = await mongoRepo.findOne("places", { _id });
     res.json(updatedPlace);
