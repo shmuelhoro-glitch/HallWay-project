@@ -81,10 +81,45 @@ export async function getAllBuildings(req, res, next) {
 
 
 export async function getBuildingById(req, res, next) {
-    const { buildingId } = req.params
-    const data = await supabaseRepo.findOne("buildings", {id: buildingId})
-    if (!data) {
-        return res.status(404).send("empty")
+  try {
+    const { buildingId } = req.params;
+
+    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
+    if (!building) {
+      throw { status: 404, message: "Building not found" };
     }
-    res.send(data)
+
+    const floorDocs = await mongoRepo.findMany("floors", { buildingId });
+
+    // Only what the map needs, without the svg itself, from the lowest floor up
+    const floors = floorDocs
+      .map((floorDoc) => ({
+        floor: floorDoc.floor,
+        name: floorDoc.name,
+        width: floorDoc.width,
+        height: floorDoc.height,
+      }))
+      .sort((a, b) => a.floor - b.floor);
+
+    res.json({ ...building, floors });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getFloorPlan(req, res, next) {
+  try {
+    const { buildingId, floor } = req.params;
+
+    const floorDoc = await mongoRepo.findOne("floors", { buildingId, floor: Number(floor) });
+    if (!floorDoc) {
+      throw { status: 404, message: "Floor not found" };
+    }
+
+    // Someone who opens the file directly in the browser won't run scripts hidden in it
+    res.set("Content-Security-Policy", "script-src 'none'");
+    res.type("image/svg+xml").send(floorDoc.svg);
+  } catch (error) {
+    next(error);
+  }
 }
