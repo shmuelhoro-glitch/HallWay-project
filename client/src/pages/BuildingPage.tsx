@@ -28,7 +28,8 @@ import AlertBanner from '../components/alert/AlertBanner';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
 import ShareLocationButton from '../components/share/ShareLocationButton';
-import { AccessibleIcon, BackIcon, ChatIcon, PencilIcon } from '../components/ui/Icons';
+import { AccessibleIcon, BackIcon, ChatIcon, PencilIcon, SirenIcon } from '../components/ui/Icons';
+import { simulateAlert, stopAlert } from '../api/alerts';
 import './BuildingPage.css';
 
 interface BuildingPageProps {
@@ -271,6 +272,18 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     }
   }
 
+  async function handleToggleAlertSimulation() {
+    try {
+      if (alertStatus === 'active') {
+        await stopAlert(buildingId);
+      } else {
+        await simulateAlert({ buildingId, countdown: 60 });
+      }
+    } catch (err) {
+      console.error('Failed to toggle alert simulation:', err);
+    }
+  }
+
   function handleRetry() {
     if (!start || !destination) return;
 
@@ -490,6 +503,15 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
             <PencilIcon size={20} />
           </Link>
         )}
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label={alertStatus === 'active' ? 'עצירת התרעת בדיקה' : 'סימולציית צבע אדום'}
+          title={alertStatus === 'active' ? 'עצירת התרעת בדיקה' : 'סימולציית צבע אדום'}
+          onClick={handleToggleAlertSimulation}
+        >
+          <SirenIcon size={20} />
+        </button>
         <ShareLocationButton
           buildingId={buildingId}
           start={start}
