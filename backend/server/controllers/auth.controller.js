@@ -1,6 +1,7 @@
 import { supabaseRepo } from "../repositories/sqlRepo.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import { recordFailedAttempt, resetFailedAttempts, getClientIp } from "../middleware/loginRateLimiter.js"
 
 // The same token in register and login: { userId, role }
 function createToken(userId, role) {
@@ -38,17 +39,22 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
     try {
         const { email, password } = req.body
+        const clientIp = getClientIp(req)
 
         // The same answer for "no such user" and "wrong password", so nobody can check who is registered
         const user = await supabaseRepo.findOne("users", { email })
         if (!user) {
+            recordFailedAttempt(clientIp)
             throw { status: 401, code: "INVALID_CREDENTIALS", message: "Invalid email or password" }
         }
 
         const isMatch = await bcrypt.compare(password, user.hashPassword)
         if (!isMatch) {
+            recordFailedAttempt(clientIp)
             throw { status: 401, code: "INVALID_CREDENTIALS", message: "Invalid email or password" }
         }
+
+        resetFailedAttempts(clientIp)
 
         const token = createToken(user.id, user.role)
 
