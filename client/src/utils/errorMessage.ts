@@ -23,6 +23,11 @@ const MESSAGES: Record<string, string> = {
   ADDRESS_NOT_FOUND: 'לא מצאנו את הכתובת במפה. בדקו את הרחוב ואת העיר.',
   GEOCODING_UNAVAILABLE: 'שירות איתור הכתובות לא זמין כרגע. נסו שוב בעוד רגע.',
 
+  // The chat
+  CHAT_TEXT_INVALID: 'הודעה צריכה להכיל בין תו אחד ל-500 תווים.',
+  CHAT_TOO_FAST: 'שלחתם יותר מדי הודעות. חכו כמה שניות ונסו שוב.',
+  CHAT_BANNED: 'אין לכם אפשרות לכתוב בצ׳אט של המבנה הזה.',
+
   // Asking to manage a building
   REQUEST_EXISTS: 'כבר שלחתם פנייה, והיא ממתינה לטיפול.',
   REQUEST_NOT_FOUND: 'הפנייה לא נמצאה.',
