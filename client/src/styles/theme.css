@@ -68,6 +68,151 @@
   --transition: 120ms ease;
 }
 
+[data-theme='dark'] {
+  --ink: #f8fafc;
+  --ink-soft: #cbd5e1;
+  --muted: #94a3b8;
+  --line: #334155;
+  --line-soft: #1e293b;
+  --bg: #0f172a;
+  --bg-outside: #090d16;
+  --surface: #1e293b;
+  --surface-soft: #334155;
+  --map-bg: #0b1120;
+
+  --yellow: #ffc93c;
+  --yellow-hover: #f5bc24;
+  --blue: #38bdf8;
+  --blue-dark: #0284c7;
+  --blue-soft: rgba(56, 189, 248, 0.18);
+  --green: #10b981;
+  --green-soft: rgba(16, 185, 129, 0.18);
+  --red: #f87171;
+  --red-soft: rgba(248, 113, 113, 0.18);
+
+  --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode specific component adjustments */
+[data-theme='dark'] .building-topbar-floating {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark'] .building-title-pill,
+[data-theme='dark'] .building-icon-pill {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .building-title-name {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .building-floating-search-wrap .search-field {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .sheet.sheet-floating-card {
+  background: rgba(15, 23, 42, 0.98);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark'] .floor-switcher,
+[data-theme='dark'] .map-zoom-controls {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme='dark'] .floor-switcher button,
+[data-theme='dark'] .map-zoom-btn {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .floor-switcher button:hover,
+[data-theme='dark'] .map-zoom-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .bottom-navbar-dock {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme='dark'] .store-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .store-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .store-card-name {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .store-meta-badge.is-cat {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .store-btn {
+  background: #334155;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .stores-directory-search {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .stores-search-input {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .stores-floor-tabs {
+  background: #1e293b;
+}
+
+[data-theme='dark'] .stores-floor-tabs button[aria-pressed='true'] {
+  background: #334155;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .nearby-card,
+[data-theme='dark'] .nearby-list-item {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .nearby-card-name,
+[data-theme='dark'] .nearby-list-name {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .favorites-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .favorites-tabs {
+  background: #1e293b;
+}
+
+[data-theme='dark'] .favorites-tabs button[aria-selected='true'] {
+  background: #334155;
+  color: #f8fafc;
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --transition: 0ms;
@@ -463,7 +608,7 @@ a:hover {
   z-index: 500; /* above the Leaflet map layers (400) */
   max-height: 62dvh;
   margin-top: -24px;
-  padding: 12px 20px 24px;
+  padding: 12px 20px 84px;
   overflow-y: auto;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   background: var(--surface);

@@ -2,16 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useFavoritesStore } from '../store/favoritesStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { getBuildings } from '../api/buildings';
 import type { Building } from '../types/building';
 import { BUILDING_TYPE_LABELS } from '../types/building';
 import { getDefaultFloorName } from '../utils/floors';
 import {
+  AccessibleIcon,
   BackIcon,
   BuildingTypeIcon,
   ChevronIcon,
+  MoonIcon,
   StarIcon,
+  SunIcon,
 } from '../components/ui/Icons';
+import BottomNavbar from '../components/navigation/BottomNavbar';
 import './FavoritesPage.css';
 
 type TabType = 'all' | 'buildings' | 'places';
@@ -22,6 +27,11 @@ function FavoritesPage() {
   const favorites = useFavoritesStore((state) => state.favorites);
   const toggleBuilding = useFavoritesStore((state) => state.toggleBuildingFavorite);
   const togglePlace = useFavoritesStore((state) => state.togglePlaceFavorite);
+
+  const theme = useSettingsStore((state) => state.theme);
+  const toggleTheme = useSettingsStore((state) => state.toggleTheme);
+  const accessibleDefault = useSettingsStore((state) => state.accessibleDefault);
+  const toggleAccessibleDefault = useSettingsStore((state) => state.toggleAccessibleDefault);
 
   const [allBuildings, setAllBuildings] = useState<Building[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('all');
@@ -98,6 +108,7 @@ function FavoritesPage() {
             </button>
           </div>
         </div>
+        <BottomNavbar activeTab="favorites" />
       </div>
     );
   }
@@ -110,9 +121,55 @@ function FavoritesPage() {
         </button>
         <div>
           <h1 className="favorites-title">האזור האישי</h1>
-          <p className="favorites-subtitle">המועדפים של {user.username}</p>
+          <p className="favorites-subtitle">המועדפים וההגדרות של {user.username}</p>
         </div>
       </header>
+
+      {/* Settings & Preferences */}
+      <section className="favorites-settings-card" aria-label="הגדרות והעדפות">
+        <h2 className="favorites-settings-title">העדפות שימוש</h2>
+        <div className="favorites-settings-row">
+          <div className="favorites-settings-info">
+            <span className="favorites-settings-label">
+              <AccessibleIcon size={18} />
+              <span>ניווט נגיש כברירת מחדל</span>
+            </span>
+            <span className="favorites-settings-desc">
+              תמיד להעדיף מעליות ולמנוע מסלולים הכוללים מדרגות
+            </span>
+          </div>
+          <button
+            type="button"
+            className={`toggle-switch ${accessibleDefault ? 'is-active' : ''}`}
+            onClick={toggleAccessibleDefault}
+            aria-pressed={accessibleDefault}
+            aria-label="הפעלת ניווט נגיש כברירת מחדל"
+          >
+            <span className="toggle-switch-slider" />
+          </button>
+        </div>
+
+        <div className="favorites-settings-row">
+          <div className="favorites-settings-info">
+            <span className="favorites-settings-label">
+              {theme === 'dark' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
+              <span>ערכת נושא</span>
+            </span>
+            <span className="favorites-settings-desc">
+              {theme === 'dark' ? 'מצב כהה (Dark Mode) פעיל' : 'מצב מואר (Light Mode) פעיל'}
+            </span>
+          </div>
+          <button
+            type="button"
+            className={`toggle-switch ${theme === 'dark' ? 'is-active' : ''}`}
+            onClick={toggleTheme}
+            aria-pressed={theme === 'dark'}
+            aria-label="מעבר בין מצב כהה למצב מואר"
+          >
+            <span className="toggle-switch-slider" />
+          </button>
+        </div>
+      </section>
 
       {/* Tabs */}
       <div className="segmented favorites-tabs" role="tablist">
@@ -289,6 +346,7 @@ function FavoritesPage() {
           </section>
         )}
       </main>
+      <BottomNavbar activeTab="favorites" />
     </div>
   );
 }

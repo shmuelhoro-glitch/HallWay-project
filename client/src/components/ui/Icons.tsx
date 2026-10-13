@@ -33,6 +33,44 @@ function BaseIcon({ size = 20, isDirectional = false, children }: BaseIconProps)
   );
 }
 
+export function HomeIcon({ size }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </BaseIcon>
+  );
+}
+
+export function MapIcon({ size }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+      <line x1="8" y1="2" x2="8" y2="18" />
+      <line x1="16" y1="6" x2="16" y2="22" />
+    </BaseIcon>
+  );
+}
+
+export function UserIcon({ size }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </BaseIcon>
+  );
+}
+
+export function StoreIcon({ size }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M3 9l2-5h14l2 5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
+      <path d="M3 9h18" />
+      <path d="M9 22V12h6v10" />
+    </BaseIcon>
+  );
+}
+
 export function SearchIcon({ size }: IconProps) {
   return (
     <BaseIcon size={size}>
@@ -336,3 +374,38 @@ export function StarIcon({ size = 20, filled = false }: IconProps & { filled?: b
     </svg>
   );
 }
+
+export function MinusIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M5 12h14" />
+    </BaseIcon>
+  );
+}
+
+export function FitScreenIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+    </BaseIcon>
+  );
+}
+
+export function SunIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </BaseIcon>
+  );
+}
+
+export function MoonIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </BaseIcon>
+  );
+}
+
+

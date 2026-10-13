@@ -1,18 +1,82 @@
 .floor-map {
   position: absolute;
   inset: 0;
-  background: var(--map-bg);
+  background: var(--map-bg, #f4f6f8);
+  overflow: hidden;
 }
 
 .floor-map-svg {
   display: block;
   width: 100%;
   height: 100%;
-  touch-action: none; /* we handle drag and pinch ourselves */
-  cursor: grab;
+  touch-action: none;
+  cursor: default;
   user-select: none;
 }
 
-.floor-map-svg:active {
+.floor-map-svg.is-draggable {
+  cursor: grab;
+}
+
+.floor-map-svg.is-draggable:active {
   cursor: grabbing;
+}
+
+/* Floating Zoom & Fit Controls */
+.map-zoom-controls {
+  position: absolute;
+  bottom: 96px;
+  left: 16px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 12px 28px -4px rgba(15, 23, 42, 0.14),
+    0 4px 10px -2px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  user-select: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.map-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 19px;
+  background: transparent;
+  color: var(--ink, #0f172a);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-zoom-btn:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.08);
+  transform: scale(1.06);
+}
+
+.map-zoom-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.map-zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.map-zoom-btn.is-fit {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  margin-top: 2px;
+  padding-top: 2px;
+  border-radius: 0 0 19px 19px;
 }

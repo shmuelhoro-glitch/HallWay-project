@@ -29,9 +29,11 @@ import AlertBanner from '../components/alert/AlertBanner';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
 import ShareLocationButton from '../components/share/ShareLocationButton';
-import { AccessibleIcon, BackIcon, ChatIcon, PencilIcon, SirenIcon, StarIcon } from '../components/ui/Icons';
+import StoresDirectory from '../components/places/StoresDirectory';
+import { BackIcon, ChatIcon, MapIcon, MoonIcon, PencilIcon, SirenIcon, StarIcon, StoreIcon, SunIcon } from '../components/ui/Icons';
 import { simulateAlert, stopAlert } from '../api/alerts';
 import { useFavoritesStore } from '../store/favoritesStore';
+import { useSettingsStore } from '../store/settingsStore';
 import LoginPromptModal from '../components/favorites/LoginPromptModal';
 import './BuildingPage.css';
 
@@ -93,11 +95,17 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const [routeStatus, setRouteStatus] = useState<RouteStatus>('idle');
   const [stepIndex, setStepIndex] = useState(0);
   const [isShelterRoute, setIsShelterRoute] = useState(false);
-  const [accessible, setAccessible] = useState(false);
+  const theme = useSettingsStore((state) => state.theme);
+  const toggleTheme = useSettingsStore((state) => state.toggleTheme);
+  const accessibleDefault = useSettingsStore((state) => state.accessibleDefault);
+
+  const [accessible, setAccessible] = useState(accessibleDefault);
+  // View mode switcher: map view vs stores directory
+  const [activeView, setActiveView] = useState<'map' | 'stores'>('map');
   // The same value, for startRoute. If startRoute itself depended on "accessible" it would be a new
   // function after every press, the ?node= effect would run again, and the visitor would jump back
   // to the QR point he came from.
-  const accessibleRef = useRef(false);
+  const accessibleRef = useRef(accessibleDefault);
 
   // ---------- Open panels ----------
   // A visitor first looks around: the map and the search come before any question.
@@ -105,6 +113,25 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const [isPickerOpen, setIsPickerOpen] = useState(nodeParam === null && targetParam !== null);
   const [scanPurpose, setScanPurpose] = useState<'start' | 'shelter' | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
+
+  // Track unread chat messages when chat panel is closed
+  useEffect(() => {
+    function handleChatMessage() {
+      if (!isChatOpen) {
+        setHasUnreadChat(true);
+      }
+    }
+    socket.on('chat:message', handleChatMessage);
+    return () => {
+      socket.off('chat:message', handleChatMessage);
+    };
+  }, [socket, isChatOpen]);
+
+  function handleOpenChat() {
+    setIsChatOpen(true);
+    setHasUnreadChat(false);
+  }
 
   // Load the building (with its floors) and all of its places
   useEffect(() => {
@@ -241,6 +268,18 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     setSelectedPlace(place);
     setFloorChoice(place.floor);
     setIsPickerOpen(false);
+  }
+
+  function handleDirectoryNavigate(place: Place) {
+    setFloorChoice(place.floor);
+    setActiveView('map');
+    handleNavigate(place);
+  }
+
+  function handleDirectoryShowOnMap(place: Place) {
+    setFloorChoice(place.floor);
+    setSelectedPlace(place);
+    setActiveView('map');
   }
 
   function handleEndRoute() {
@@ -437,7 +476,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   }
 
   const chatButton = (
-    <button type="button" className="btn btn-outline" onClick={() => setIsChatOpen(true)}>
+    <button type="button" className="btn btn-outline" onClick={handleOpenChat}>
       <ChatIcon />
       צ׳אט
     </button>
@@ -473,7 +512,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
             setFloorChoice(floor);
           }}
           onEnd={handleEndRoute}
-          onOpenChat={() => setIsChatOpen(true)}
+          onOpenChat={handleOpenChat}
         />
       );
     }
@@ -486,9 +525,10 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           floorName={getFloorName(floors, selectedPlace.floor)}
           routeStatus={isThisDestination ? routeStatus : 'idle'}
           accessible={accessible}
+          onToggleAccessible={handleToggleAccessible}
           onNavigate={() => handleNavigate(selectedPlace)}
           onClose={() => setSelectedPlace(null)}
-          onOpenChat={() => setIsChatOpen(true)}
+          onOpenChat={handleOpenChat}
         />
       );
     }
@@ -515,35 +555,37 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
     const canRetry = start !== null && (routeStatus === 'no-route' || routeStatus === 'error');
 
-    return (
-      <>
-        <div className="sheet-header">
-          <div>
-            <h2 className="sheet-title">{title}</h2>
-            <p className="sheet-text">{text}</p>
-          </div>
-          {destination && (
+    if (destination) {
+      return (
+        <div className="building-quick-sheet">
+          <div className="sheet-header" style={{ padding: 0 }}>
+            <div>
+              <h2 className="sheet-title">{title}</h2>
+              <p className="sheet-text">{text}</p>
+            </div>
             <button type="button" className="text-btn" onClick={handleEndRoute}>
               ביטול
             </button>
-          )}
-        </div>
+          </div>
 
-        <div className="sheet-actions">
-          {!start && (
-            <button type="button" className="btn btn-primary" onClick={() => setIsPickerOpen(true)}>
-              קביעת המיקום שלי
-            </button>
-          )}
-          {canRetry && (
-            <button type="button" className="btn btn-primary" onClick={handleRetry}>
-              נסו שוב
-            </button>
-          )}
-          {chatButton}
+          <div className="sheet-actions">
+            {!start && (
+              <button type="button" className="btn btn-primary" onClick={() => setIsPickerOpen(true)}>
+                קביעת המיקום שלי
+              </button>
+            )}
+            {canRetry && (
+              <button type="button" className="btn btn-primary" onClick={handleRetry}>
+                נסו שוב
+              </button>
+            )}
+            {chatButton}
+          </div>
         </div>
-      </>
-    );
+      );
+    }
+
+    return null;
   }
 
   // Tapping anywhere on the floor map selects the closest place on the current floor (Snap-to-Nearest)
@@ -606,108 +648,171 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         </div>
       )}
 
-      <header className="building-topbar">
-        <button type="button" className="icon-btn" aria-label="חזרה למפה" onClick={() => navigate('/')}>
+      <header className="building-topbar-floating">
+        <button
+          type="button"
+          className="building-round-btn"
+          aria-label="חזרה למפה הראשית"
+          onClick={() => navigate('/')}
+        >
           <BackIcon />
         </button>
-        <div className="building-heading">
-          <div className="building-name">{building.name}</div>
-          <div className="building-subtitle">{subtitle}</div>
+
+        <div className="building-title-pill">
+          <span className="building-title-name">{building.name}</span>
+          <span className="building-title-sep">·</span>
+          <span className="building-title-floor">{subtitle}</span>
         </div>
-        {/* Only a building manager sees the edit button */}
-        {isAdmin && (
-          <Link to={`/admin/${buildingId}/places`} className="icon-btn" aria-label="עריכת המבנה" title="עריכת המבנה">
-            <PencilIcon size={20} />
-          </Link>
-        )}
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={isBuildingFav ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
-          title={isBuildingFav ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
-          onClick={handleToggleBuildingFavorite}
-        >
-          <StarIcon size={20} filled={isBuildingFav} />
-        </button>
-        {isSuper && (
+
+        <div className="building-topbar-actions">
           <button
             type="button"
-            className="icon-btn"
-            aria-label={alertStatus === 'active' ? 'עצירת התרגיל' : 'תרגיל צבע אדום'}
-            title={alertStatus === 'active' ? 'עצירת התרגיל' : 'תרגיל צבע אדום'}
-            onClick={handleToggleAlertSimulation}
+            className="building-icon-pill"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'מעבר למצב מואר' : 'מעבר למצב כהה'}
+            title={theme === 'dark' ? 'מצב מואר' : 'מצב כהה'}
           >
-            <SirenIcon size={20} />
+            {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
           </button>
-        )}
-        <ShareLocationButton
-          buildingId={buildingId}
-          start={start}
-          floorName={start ? getFloorName(floors, start.floor) : ''}
-          onNeedLocation={() => setIsPickerOpen(true)}
-        />
+
+          <button
+            type="button"
+            className={`building-icon-pill ${isBuildingFav ? 'is-active' : ''}`}
+            aria-label={isBuildingFav ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+            title={isBuildingFav ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+            onClick={handleToggleBuildingFavorite}
+          >
+            <StarIcon size={18} filled={isBuildingFav} />
+          </button>
+
+          <button
+            type="button"
+            className="building-icon-pill has-badge"
+            aria-label="צ׳אט המבנה"
+            title="צ׳אט המבנה"
+            onClick={handleOpenChat}
+          >
+            <ChatIcon size={18} />
+            {hasUnreadChat && <span className="chat-unread-dot" aria-label="הודעה חדשה בצ'אט" />}
+          </button>
+
+          {isAdmin && (
+            <Link to={`/admin/${buildingId}/places`} className="building-icon-pill" aria-label="עריכת המבנה" title="עריכת המבנה">
+              <PencilIcon size={18} />
+            </Link>
+          )}
+
+          {isSuper && (
+            <button
+              type="button"
+              className="building-icon-pill"
+              aria-label={alertStatus === 'active' ? 'עצירת התרגיל' : 'תרגיל צבע אדום'}
+              title={alertStatus === 'active' ? 'עצירת התרגיל' : 'תרגיל צבע אדום'}
+              onClick={handleToggleAlertSimulation}
+            >
+              <SirenIcon size={18} />
+            </button>
+          )}
+
+          <ShareLocationButton
+            buildingId={buildingId}
+            start={start}
+            floorName={start ? getFloorName(floors, start.floor) : ''}
+            onNeedLocation={() => setIsPickerOpen(true)}
+          />
+        </div>
       </header>
 
-      <div className="building-search">
-        <SearchBar
-          buildingId={buildingId}
-          categories={categories}
-          floors={floors}
-          onSelectPlace={handleSearchSelect}
-        />
-      </div>
+      {activeView === 'map' && (
+        <div className="building-floating-search-wrap">
+          <div className="building-search-field">
+            <SearchBar
+              buildingId={buildingId}
+              categories={categories}
+              floors={floors}
+              onSelectPlace={handleSearchSelect}
+            />
+          </div>
+          <button
+            type="button"
+            className={`building-icon-pill ${favoritesOnly ? 'is-active' : ''}`}
+            onClick={handleToggleFavoritesFilter}
+            aria-pressed={favoritesOnly}
+            title={favoritesOnly ? 'הצגת כל המקומות' : 'הצגת מקומות מועדפים בלבד'}
+          >
+            <StarIcon size={18} filled={favoritesOnly} />
+          </button>
+        </div>
+      )}
 
-      <div className="building-accessibility-bar" style={{ gap: '8px' }}>
-        <button
-          type="button"
-          className={`accessibility-toggle-btn ${accessible ? 'is-active' : ''}`}
-          onClick={handleToggleAccessible}
-          aria-pressed={accessible}
-          title="מסלול נגיש / מעליות בלבד"
-        >
-          <AccessibleIcon size={18} />
-          <span>מסלול נגיש / מעליות בלבד</span>
-        </button>
-
-        <button
-          type="button"
-          className={`accessibility-toggle-btn ${favoritesOnly ? 'is-active' : ''}`}
-          onClick={handleToggleFavoritesFilter}
-          aria-pressed={favoritesOnly}
-          title="הצגת מקומות מועדפים בלבד"
-        >
-          <StarIcon size={16} filled={favoritesOnly} />
-          <span>מועדפים</span>
-        </button>
-      </div>
-
-      <div className="building-map">
-        {/* key: a new floor = a fresh map, so zoom and position reset */}
-        <FloorMap
-          key={planUrl}
-          planUrl={planUrl}
-          width={currentFloor.width}
-          height={currentFloor.height}
-          onMapClick={handleMapClick}
-        >
-          <PlacesLayer
-            places={floorPlaces}
-            selectedPlaceId={selectedPlace ? selectedPlace._id : null}
-            highlightShelters={alertStatus === 'active'}
-            onSelect={handleMapPlaceClick}
+      {activeView === 'stores' ? (
+        <div className="building-stores-screen">
+          <StoresDirectory
+            places={places}
+            floors={floors}
+            currentFloor={currentFloor.floor}
+            onSelectPlace={handleDirectoryShowOnMap}
+            onNavigateToPlace={handleDirectoryNavigate}
+            onShowOnMap={handleDirectoryShowOnMap}
+            onPromptLogin={() => setIsLoginPromptOpen(true)}
           />
-          {route && <RouteLayer path={route} currentFloor={currentFloor.floor} />}
-          {start && start.floor === currentFloor.floor && <LocationMarker x={start.x} y={start.y} />}
-        </FloorMap>
+        </div>
+      ) : (
+        <div className="building-map full-screen">
+          <FloorMap
+            key={planUrl}
+            planUrl={planUrl}
+            width={currentFloor.width}
+            height={currentFloor.height}
+            onMapClick={handleMapClick}
+          >
+            <PlacesLayer
+              places={floorPlaces}
+              selectedPlaceId={selectedPlace ? selectedPlace._id : null}
+              highlightShelters={alertStatus === 'active'}
+              onSelect={handleMapPlaceClick}
+            />
+            {route && <RouteLayer path={route} currentFloor={currentFloor.floor} />}
+            {start && start.floor === currentFloor.floor && <LocationMarker x={start.x} y={start.y} />}
+          </FloorMap>
 
-        <div className="building-floor-badge">{floorBadge}</div>
-        <FloorSwitcher floors={floors} currentFloor={currentFloor.floor} onChange={setFloorChoice} />
-      </div>
+          <FloorSwitcher floors={floors} currentFloor={currentFloor.floor} onChange={setFloorChoice} />
+        </div>
+      )}
 
-      <div className="sheet">
-        <div className="sheet-handle" />
-        {renderSheetContent()}
-      </div>
+      {/* Floating Sheet Card for Active Selection */}
+      {(selectedPlace || (route && destination) || isPickerOpen || destination) && activeView === 'map' && (
+        <div className="sheet sheet-floating-card" role="dialog" aria-modal="true">
+          <div className="sheet-handle" />
+          {renderSheetContent()}
+        </div>
+      )}
+
+      {/* Option 3 Hero Component: Floating Mode Switcher Dock */}
+      {!selectedPlace && !(route && destination) && !isPickerOpen && !destination && (
+        <div className="floating-mode-dock" role="tablist" aria-label="מעבר בין תצוגות">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'map'}
+            className={`floating-dock-pill ${activeView === 'map' ? 'is-active' : ''}`}
+            onClick={() => setActiveView('map')}
+          >
+            <MapIcon size={18} />
+            <span>מפה מלאה</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'stores'}
+            className={`floating-dock-pill ${activeView === 'stores' ? 'is-active' : ''}`}
+            onClick={() => setActiveView('stores')}
+          >
+            <StoreIcon size={18} />
+            <span>קטלוג חנויות ({places.length})</span>
+          </button>
+        </div>
+      )}
 
       {isChatOpen && (
         <ChatPanel

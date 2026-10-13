@@ -1,0 +1,283 @@
+/* StoresDirectory - Rich Store Cards and Index */
+
+.stores-directory {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0 32px;
+}
+
+/* Search bar */
+.stores-directory-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 48px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #64748b;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s ease;
+}
+
+.stores-directory-search:focus-within {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(255, 201, 60, 0.3);
+  color: #0f172a;
+}
+
+.stores-search-input {
+  flex: 1;
+  height: 100%;
+  margin-right: 8px;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+}
+
+.stores-search-clear {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stores-search-clear:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Floor segmented tabs */
+.stores-floor-tabs {
+  margin-top: 2px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+}
+
+.stores-floor-tabs button {
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.stores-floor-tabs button[aria-pressed='true'] {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.stores-category-chips {
+  margin-top: 2px;
+}
+
+/* Stores List */
+.stores-directory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.stores-empty-state {
+  padding: 40px 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* Store Card - Premium Polish */
+.store-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  outline: none;
+}
+
+.store-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 23, 42, 0.16);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.store-card:active {
+  transform: scale(0.99);
+}
+
+.store-card-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.store-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #fef3c7;
+  color: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.store-card-icon.is-shelter {
+  background: #ecfdf5;
+  color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.store-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.store-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.store-card-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-landmark-tag {
+  font-size: 13px;
+}
+
+.store-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.store-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.store-meta-badge.is-cat {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.store-meta-badge.is-floor {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.store-meta-hours {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.store-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.store-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.store-btn:hover {
+  background: #f8fafc;
+  border-color: #0f172a;
+}
+
+.store-btn.is-nav {
+  background: var(--yellow, #ffc93c);
+  border-color: #f59e0b;
+  color: #0f172a;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(255, 201, 60, 0.35);
+}
+
+.store-btn.is-nav:hover {
+  background: #f59e0b;
+  border-color: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+}
+
+.store-btn.is-map {
+  padding: 7px 10px;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+.store-btn.is-map:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.store-btn.is-fav {
+  padding: 7px 8px;
+  border-color: transparent;
+  color: #94a3b8;
+  border-radius: 50%;
+}
+
+.store-btn.is-fav:hover,
+.store-btn.is-fav.is-active {
+  color: var(--yellow, #ffc93c);
+  background: #fffbeb;
+  transform: scale(1.1);
+}

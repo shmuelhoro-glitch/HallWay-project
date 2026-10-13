@@ -18,7 +18,9 @@ import UserMenu from '../components/home/UserMenu';
 import LoginPromptModal from '../components/favorites/LoginPromptModal';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
-import { ChevronDownIcon, ChevronUpIcon, Logo, QrIcon } from '../components/ui/Icons';
+import { ChevronDownIcon, ChevronUpIcon, Logo, MoonIcon, QrIcon, SunIcon } from '../components/ui/Icons';
+import { useSettingsStore } from '../store/settingsStore';
+import BottomNavbar, { type NavTabId } from '../components/navigation/BottomNavbar';
 import './HomePage.css';
 
 const MAX_AUTO_ENTER_ACCURACY_M = 100;
@@ -57,6 +59,9 @@ function HomePage() {
   const favoriteBuildings = useFavoritesStore((state) => state.favorites?.buildings ?? []);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+
+  const theme = useSettingsStore((state) => state.theme);
+  const toggleTheme = useSettingsStore((state) => state.toggleTheme);
 
   // All the buildings come from the server once.
   // The search runs here in the browser, so results show up while typing.
@@ -170,6 +175,34 @@ function HomePage() {
     navigate(`/b/${result.buildingId}?node=${result.nodeId}`);
   }
 
+  function handleNavTabSelect(tab: NavTabId) {
+    if (tab === 'home') {
+      setSearchText('');
+      setType(null);
+      setFavoritesOnly(false);
+      setSelectedId(null);
+      setIsSheetExpanded(false);
+    } else if (tab === 'map') {
+      setSelectedId(null);
+      setIsSheetExpanded(false);
+      showResultsOnMap();
+    } else if (tab === 'search') {
+      setIsSheetExpanded(true);
+      const searchInput = document.querySelector('.search-input') as HTMLInputElement | null;
+      if (searchInput) {
+        searchInput.focus();
+      }
+    } else if (tab === 'favorites') {
+      navigate('/favorites');
+    } else if (tab === 'profile') {
+      if (user) {
+        navigate('/favorites');
+      } else {
+        navigate('/login');
+      }
+    }
+  }
+
   function handleRetryLoad() {
     setIsLoading(true);
     setError(null);
@@ -280,7 +313,18 @@ function HomePage() {
           <Logo />
           <span>InRoute</span>
         </div>
-        <UserMenu />
+        <div className="home-header-actions">
+          <button
+            type="button"
+            className="home-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'מעבר למצב מואר' : 'מעבר למצב כהה'}
+            title={theme === 'dark' ? 'מצב מואר' : 'מצב כהה'}
+          >
+            {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+          </button>
+          <UserMenu />
+        </div>
       </header>
 
       <h1 className="sr-only">חיפוש מבנה</h1>
@@ -341,6 +385,11 @@ function HomePage() {
         isOpen={isLoginPromptOpen}
         onClose={() => setIsLoginPromptOpen(false)}
         title="רוצים לראות מועדפים?"
+      />
+
+      <BottomNavbar
+        activeTab={favoritesOnly ? 'favorites' : isSheetExpanded ? 'search' : 'home'}
+        onTabSelect={handleNavTabSelect}
       />
     </div>
   );
