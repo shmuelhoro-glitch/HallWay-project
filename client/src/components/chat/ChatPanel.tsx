@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Socket } from 'socket.io-client';
 import { getMessages } from '../../api/chat';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useAuthStore } from '../../store/authStore';
 import type { ChatErrorPayload, ChatMessage } from '../../types/chat';
 import { getMessageForCode } from '../../utils/errorMessage';
@@ -31,6 +32,8 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(onClose);
 
   // 1. The last messages from the server (REST)
   useEffect(() => {
@@ -121,7 +124,7 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
           })}
         </div>
 
-        {error && <p className="message-error">{error}</p>}
+        {error && <p className="message-error" role="alert">{error}</p>}
 
         {user ? (
           <form className="chat-form" onSubmit={handleSend}>

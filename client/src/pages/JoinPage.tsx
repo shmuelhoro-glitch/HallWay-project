@@ -108,7 +108,7 @@ function JoinPage() {
     }
 
     if (myRequest === undefined) {
-      return <p className="message-info">טוען...</p>;
+      return <p className="message-info is-loading" role="status">טוען...</p>;
     }
 
     // An open request: nothing more to do but wait
@@ -222,7 +222,7 @@ function JoinPage() {
           onChange={(event) => setMessage(event.target.value)}
         />
 
-        {error && <p className="message-error">{error}</p>}
+        {error && <p className="message-error" role="alert">{error}</p>}
 
         <button type="submit" className="btn btn-primary auth-submit" disabled={isSending}>
           {isSending ? 'שולח...' : 'שליחת הפנייה'}

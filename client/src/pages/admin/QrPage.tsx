@@ -41,11 +41,11 @@ function QrPage() {
   }, [building.id]);
 
   if (isLoading) {
-    return <p className="message-info">טוען...</p>;
+    return <p className="message-info is-loading" role="status">טוען...</p>;
   }
 
   if (error) {
-    return <p className="message-error">{error}</p>;
+    return <p className="message-error" role="alert">{error}</p>;
   }
 
   if (qrNodes.length === 0) {

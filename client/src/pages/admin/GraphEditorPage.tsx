@@ -712,8 +712,8 @@ function GraphEditorPage() {
           onSnapChange={setIsSnapOn}
         />
 
-        {error && <p className="message-error">{error}</p>}
-        {isLoading && <p className="message-info">טוען...</p>}
+        {error && <p className="message-error" role="alert">{error}</p>}
+        {isLoading && <p className="message-info is-loading" role="status">טוען...</p>}
 
         {mode === 'select' && activeNode && (
           <NodeInspector
@@ -733,15 +733,17 @@ function GraphEditorPage() {
         <section className="admin-card">
           <h2 className="admin-card-title">בדיקה</h2>
           <p className="admin-card-text">
-            בקומה הזאת: {graph.nodes.length} נקודות, {graph.edges.length} מעברים.
+            {graph.nodes.length === 0 && !isLoading
+              ? 'עדיין אין מעברים בקומה הזאת. במצב ציור, לחצו במפה כדי להניח את הנקודה הראשונה, והמשיכו ללחוץ לאורך המסדרון.'
+              : `בקומה הזאת: ${graph.nodes.length} נקודות, ${graph.edges.length} מעברים.`}
           </p>
 
           {looseNodeIds.size === 0 && graph.nodes.length > 0 && (
-            <p className="message-success">כל הנקודות מחוברות.</p>
+            <p className="message-success" role="status">כל הנקודות מחוברות.</p>
           )}
 
           {looseNodeIds.size > 0 && (
-            <p className="message-error">
+            <p className="message-error" role="alert">
               {looseText} (מסומן בטבעת אדומה).
               {unreachablePlaces.length > 0 &&
                 ` מבקרים לא יכולים להגיע אל: ${unreachablePlaces.map((place) => place.name).join(', ')}.`}

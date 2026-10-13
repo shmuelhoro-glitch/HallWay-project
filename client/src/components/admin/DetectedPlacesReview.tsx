@@ -102,8 +102,8 @@ function DetectedPlacesReview({
         ))}
       </div>
 
-      {hasEmptyField && <p className="message-error">לכל מקום שמוסיפים צריך שם וקטגוריה.</p>}
-      {error && <p className="message-error review-errors">{error}</p>}
+      {hasEmptyField && <p className="message-error" role="alert">לכל מקום שמוסיפים צריך שם וקטגוריה.</p>}
+      {error && <p className="message-error review-errors" role="alert">{error}</p>}
       {progress && <p className="message-info">{progress}</p>}
 
       <div className="form-actions">

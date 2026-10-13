@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { CloseIcon } from '../ui/Icons';
 import './QrScanner.css';
 
@@ -34,6 +35,8 @@ function parseQrText(text: string): QrResult | null {
 // Works only on https or localhost, because the browser asks for the camera
 function QrScanner({ onScan, onClose }: QrScannerProps) {
   const [error, setError] = useState<string | null>(null);
+
+  useEscapeKey(onClose);
 
   // Always call the newest onScan, without restarting the camera
   const onScanRef = useRef(onScan);
@@ -101,7 +104,7 @@ function QrScanner({ onScan, onClose }: QrScannerProps) {
 
         <div id={READER_ID} className="qr-reader" />
 
-        {error && <p className="message-error">{error}</p>}
+        {error && <p className="message-error" role="alert">{error}</p>}
       </div>
     </div>
   );

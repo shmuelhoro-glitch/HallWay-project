@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import type { StartPoint } from '../../types/navigation';
 import { ShareIcon } from '../ui/Icons';
 import './ShareLocationButton.css';
@@ -14,6 +15,8 @@ interface ShareLocationButtonProps {
 function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: ShareLocationButtonProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEscapeKey(() => setIsConfirmOpen(false), isConfirmOpen);
 
   function showToast(message: string) {
     setToast(message);

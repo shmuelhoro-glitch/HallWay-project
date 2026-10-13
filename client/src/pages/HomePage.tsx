@@ -178,10 +178,10 @@ function HomePage() {
           </p>
         )}
 
-        {isLoading && <p className="message-info">טוען מבנים...</p>}
+        {isLoading && <p className="message-info is-loading" role="status">טוען מבנים...</p>}
 
         {error && (
-          <p className="message-error">
+          <p className="message-error" role="alert">
             {error}{' '}
             <button type="button" className="text-btn home-retry" onClick={handleRetryLoad}>
               נסו שוב

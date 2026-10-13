@@ -291,6 +291,51 @@ a:hover {
   color: var(--ink);
 }
 
+/* Big enough for a finger, also when the words are short */
+.text-btn {
+  min-height: 40px;
+}
+
+/* "Try again" inside a message is part of the sentence: no extra height, the color of the message */
+.message-error .text-btn,
+.message-info .text-btn {
+  min-height: 0;
+  padding: 0;
+  color: inherit;
+}
+
+/* ---------- Loading ---------- */
+/* "טוען..." with a small turning ring before it */
+
+.is-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.is-loading::before {
+  content: '';
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--line);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: loading-turn 0.8s linear infinite;
+}
+
+@keyframes loading-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-loading::before {
+    animation: none;
+  }
+}
+
 /* ---------- Text fields ---------- */
 /* One look for every field of the app: the login pages (.auth-input), the admin forms
    (.field-input) and the chat (.chat-input). 16px text: a smaller one makes iPhones zoom in on focus. */

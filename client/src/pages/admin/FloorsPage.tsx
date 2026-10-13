@@ -277,7 +277,7 @@ function FloorsPage() {
             </div>
           ))}
 
-          {isDetecting && <p className="message-info">מחפש שמות של חנויות בתוכנית...</p>}
+          {isDetecting && <p className="message-info is-loading" role="status">מחפש שמות של חנויות בתוכנית...</p>}
           {notice && <p className="message-info">{notice}</p>}
 
           {floors.length > 0 && (
@@ -337,8 +337,8 @@ function FloorsPage() {
             </div>
           </div>
 
-          {error && <p className="message-error">{error}</p>}
-          {success && <p className="message-success">{success}</p>}
+          {error && <p className="message-error" role="alert">{error}</p>}
+          {success && <p className="message-success" role="status">{success}</p>}
 
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={isUploading}>
