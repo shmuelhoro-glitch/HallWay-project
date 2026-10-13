@@ -175,6 +175,15 @@ export function createFakeMongoRepo() {
       return newData._id;
     },
 
+    async insertMany(collection, newData) {
+      failIfPlanned("insertMany", collection);
+      for (const doc of newData) {
+        doc._id = doc._id ?? new ObjectId();
+        docsOf(collection).push({ ...doc });
+      }
+      return newData.length;
+    },
+
     async findOne(collection, query) {
       failIfPlanned("findOne", collection);
       const doc = docsOf(collection).find((item) => matches(item, query));
