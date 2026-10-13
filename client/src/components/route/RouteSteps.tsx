@@ -2,7 +2,7 @@ import type { Floor } from '../../types/building';
 import type { RouteNode } from '../../types/navigation';
 import { getFloorName } from '../../utils/floors';
 import { splitPathByFloor } from '../../utils/route';
-import { ChatIcon, ElevatorIcon, FlagIcon, ShieldIcon } from '../ui/Icons';
+import { AccessibleIcon, ChatIcon, ElevatorIcon, FlagIcon, ShieldIcon } from '../ui/Icons';
 import './RouteSteps.css';
 
 interface RouteStepsProps {
@@ -11,6 +11,8 @@ interface RouteStepsProps {
   destinationLabel: string;
   stepIndex: number;
   isShelterRoute: boolean;
+  accessible?: boolean;
+  onToggleAccessible?: () => void;
   onStepChange: (stepIndex: number, floor: number) => void;
   onEnd: () => void;
   onOpenChat: () => void;
@@ -23,6 +25,8 @@ function RouteSteps({
   destinationLabel,
   stepIndex,
   isShelterRoute,
+  accessible = false,
+  onToggleAccessible,
   onStepChange,
   onEnd,
   onOpenChat,
@@ -43,7 +47,9 @@ function RouteSteps({
   } else {
     const direction = nextFloor > stepFloor ? 'עלו' : 'רדו';
     title = `${direction} אל ${getFloorName(floors, nextFloor)}`;
-    subtitle = 'עקבו אחרי הקו הכחול עד המעלית או המדרגות.';
+    subtitle = accessible
+      ? 'עקבו אחרי הקו הכחול עד המעלית.'
+      : 'עקבו אחרי הקו הכחול עד המעלית או המדרגות.';
   }
 
   let nextStepText: string | null = null;
@@ -65,6 +71,18 @@ function RouteSteps({
         <span className="route-steps-count">
           שלב {stepIndex + 1} מתוך {segments.length}
         </span>
+        {onToggleAccessible && (
+          <button
+            type="button"
+            className={`route-accessible-toggle ${accessible ? 'is-active' : ''}`}
+            onClick={onToggleAccessible}
+            aria-pressed={accessible}
+            title={accessible ? 'מסלול נגיש (מעליות בלבד)' : 'החלף למסלול נגיש (מעליות בלבד)'}
+          >
+            <AccessibleIcon size={16} />
+            <span>{accessible ? 'מסלול נגיש' : 'מסלול רגיל'}</span>
+          </button>
+        )}
         <div className="route-steps-bars">
           {segments.map((_, index) => (
             <span key={index} className={index <= stepIndex ? 'is-done' : ''} />

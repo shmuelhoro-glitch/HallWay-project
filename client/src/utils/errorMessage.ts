@@ -9,6 +9,7 @@ const MESSAGES: Record<string, string> = {
   INVALID_TOKEN: 'פג תוקף ההתחברות. התחברו מחדש.',
   FORBIDDEN: 'אין לכם הרשאה לבצע את הפעולה הזאת.',
   INVALID_CREDENTIALS: 'האימייל או הסיסמה שגויים.',
+  ACCOUNT_LOCKED: 'יותר מדי ניסיונות התחברות. נסו שוב בעוד 15 שניות.',
   EMAIL_TAKEN: 'האימייל הזה כבר רשום.',
   USERNAME_TAKEN: 'שם המשתמש הזה תפוס.',
 

@@ -6,7 +6,10 @@ export async function getRoute(request: RouteRequest): Promise<RouteNode[] | nul
   try {
     const result = await apiRequest<RouteResult>('/api/navigation/route', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        ...request,
+        accessible: Boolean(request.accessible),
+      }),
     });
 
     if (!result.path || result.path.length === 0) {
@@ -25,7 +28,10 @@ export async function getNearestShelter(request: ShelterRequest): Promise<RouteN
   try {
     const result = await apiRequest<RouteResult>('/api/navigation/nearest-shelter', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        ...request,
+        accessible: Boolean(request.accessible),
+      }),
     });
 
     if (!result.path || result.path.length === 0) {

@@ -7,6 +7,7 @@ interface PlaceDetailsProps {
   place: Place;
   floorName: string;
   routeStatus: RouteStatus;
+  accessible?: boolean;
   onNavigate: () => void;
   onClose: () => void;
   onOpenChat: () => void;
@@ -17,7 +18,7 @@ function isWebLink(url: string | undefined): url is string {
   return url !== undefined && (url.startsWith('https://') || url.startsWith('http://'));
 }
 
-function PlaceDetails({ place, floorName, routeStatus, onNavigate, onClose, onOpenChat }: PlaceDetailsProps) {
+function PlaceDetails({ place, floorName, routeStatus, accessible = false, onNavigate, onClose, onOpenChat }: PlaceDetailsProps) {
   const isLoading = routeStatus === 'loading';
 
   return (
@@ -51,7 +52,13 @@ function PlaceDetails({ place, floorName, routeStatus, onNavigate, onClose, onOp
         )}
       </div>
 
-      {routeStatus === 'no-route' && <p className="message-error" role="alert">לא נמצא מסלול. ייתכן שמעבר חסום כרגע.</p>}
+      {routeStatus === 'no-route' && (
+        <p className="message-error" role="alert">
+          {accessible
+            ? 'לא נמצא מסלול נגיש (ללא מדרגות). ייתכן שאין מעלית לקומה המבוקשת או שמעבר חסום כרגע.'
+            : 'לא נמצא מסלול. ייתכן שמעבר חסום כרגע.'}
+        </p>
+      )}
       {routeStatus === 'error' && <p className="message-error" role="alert">משהו השתבש. נסו שוב.</p>}
 
       <div className="sheet-actions">

@@ -281,6 +281,17 @@ export function BuildingTypeIcon({ type, size = 18 }: IconProps & { type: string
   );
 }
 
+export function AccessibleIcon({ size = 20 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <circle cx="12" cy="4.5" r="2" />
+      <path d="M12 7.5v4.5l3.5 2" />
+      <path d="M9 18a4.5 4.5 0 1 0 4.5-4.5" />
+      <path d="M15.5 14h3" />
+    </BaseIcon>
+  );
+}
+
 export function Logo() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">

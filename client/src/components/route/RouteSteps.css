@@ -10,9 +10,37 @@
   font-weight: 500;
 }
 
+.route-accessible-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.route-accessible-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.route-accessible-toggle.is-active {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #7dd3fc;
+  font-weight: 600;
+}
+
 .route-steps-bars {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .route-steps-bars span {

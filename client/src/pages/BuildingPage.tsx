@@ -28,7 +28,7 @@ import AlertBanner from '../components/alert/AlertBanner';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
 import ShareLocationButton from '../components/share/ShareLocationButton';
-import { BackIcon, ChatIcon, PencilIcon } from '../components/ui/Icons';
+import { AccessibleIcon, BackIcon, ChatIcon, PencilIcon } from '../components/ui/Icons';
 import './BuildingPage.css';
 
 interface BuildingPageProps {
@@ -69,6 +69,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const [routeStatus, setRouteStatus] = useState<RouteStatus>('idle');
   const [stepIndex, setStepIndex] = useState(0);
   const [isShelterRoute, setIsShelterRoute] = useState(false);
+  const [accessible, setAccessible] = useState(false);
 
   // ---------- Open panels ----------
   // A visitor first looks around: the map and the search come before any question.
@@ -107,7 +108,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   // Ask the server for a route and show it
   const startRoute = useCallback(
-    async (from: StartPoint, to: Destination) => {
+    async (from: StartPoint, to: Destination, isAccessible?: boolean) => {
+      const useAccessible = isAccessible ?? accessible;
       setDestination(to);
       setRoute(null);
       setIsShelterRoute(false);
@@ -119,6 +121,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           fromNodeId: from.nodeId,
           toPlaceId: to.placeId,
           toNodeId: to.nodeId,
+          accessible: useAccessible,
         });
 
         if (!path) {
@@ -134,7 +137,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         setRouteStatus('error');
       }
     },
-    [buildingId],
+    [buildingId, accessible],
   );
 
   // ?node= from a QR code: that node is the starting point
@@ -214,7 +217,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   }
 
   // Red alert: route from where the visitor is to the nearest protected space
-  async function findShelterRoute(from: StartPoint) {
+  async function findShelterRoute(from: StartPoint, isAccessible?: boolean) {
+    const useAccessible = isAccessible ?? accessible;
     setStart(from);
     setFloorChoice(from.floor);
     setIsPickerOpen(false);
@@ -227,7 +231,11 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     setRouteStatus('loading');
 
     try {
-      const path = await getNearestShelter({ buildingId, fromNodeId: from.nodeId });
+      const path = await getNearestShelter({
+        buildingId,
+        fromNodeId: from.nodeId,
+        accessible: useAccessible,
+      });
 
       if (!path) {
         setRouteStatus('no-route');
@@ -247,6 +255,19 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       setRouteStatus('idle');
     } catch {
       setRouteStatus('error');
+    }
+  }
+
+  function handleToggleAccessible() {
+    const nextAccessible = !accessible;
+    setAccessible(nextAccessible);
+
+    if (start && destination) {
+      if (isShelterRoute) {
+        findShelterRoute(start, nextAccessible);
+      } else {
+        startRoute(start, destination, nextAccessible);
+      }
     }
   }
 
@@ -371,6 +392,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           destinationLabel={destination.label}
           stepIndex={stepIndex}
           isShelterRoute={isShelterRoute}
+          accessible={accessible}
+          onToggleAccessible={handleToggleAccessible}
           onStepChange={(nextIndex, floor) => {
             setStepIndex(nextIndex);
             setFloorChoice(floor);
@@ -388,6 +411,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           place={selectedPlace}
           floorName={getFloorName(floors, selectedPlace.floor)}
           routeStatus={isThisDestination ? routeStatus : 'idle'}
+          accessible={accessible}
           onNavigate={() => handleNavigate(selectedPlace)}
           onClose={() => setSelectedPlace(null)}
           onOpenChat={() => setIsChatOpen(true)}
@@ -405,7 +429,9 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       if (routeStatus === 'loading') {
         text = 'מחפשים את המסלול הטוב ביותר...';
       } else if (routeStatus === 'no-route') {
-        text = 'לא נמצא מסלול. ייתכן שמעבר חסום כרגע.';
+        text = accessible
+          ? 'לא נמצא מסלול נגיש (ללא מדרגות). ייתכן שאין מעלית בבניין או שמעבר חסום כרגע.'
+          : 'לא נמצא מסלול. ייתכן שמעבר חסום כרגע.';
       } else if (routeStatus === 'error') {
         text = 'משהו השתבש. נסו שוב.';
       } else if (!start) {
@@ -479,6 +505,19 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           floors={floors}
           onSelectPlace={handleSearchSelect}
         />
+      </div>
+
+      <div className="building-accessibility-bar">
+        <button
+          type="button"
+          className={`accessibility-toggle-btn ${accessible ? 'is-active' : ''}`}
+          onClick={handleToggleAccessible}
+          aria-pressed={accessible}
+          title="מסלול נגיש / מעליות בלבד"
+        >
+          <AccessibleIcon size={18} />
+          <span>מסלול נגיש / מעליות בלבד</span>
+        </button>
       </div>
 
       <div className="building-map">

@@ -99,7 +99,7 @@ test("allows requests when failed attempts are fewer than MAX_ATTEMPTS (5)", () 
   assert.equal(res.statusCode, 200);
 });
 
-test("locks out an IP after 5 failed attempts in 15 minutes with 429 and Retry-After", () => {
+test("locks out an IP after 5 failed attempts in 15 seconds with 429 and Retry-After", () => {
   const ip = "10.0.0.2";
   const baseTime = Date.now();
 
@@ -116,11 +116,11 @@ test("locks out an IP after 5 failed attempts in 15 minutes with 429 and Retry-A
   assert.equal(res.statusCode, 429);
   assert.equal(res.body.code, "ACCOUNT_LOCKED");
   assert.equal(res.body.error.code, "ACCOUNT_LOCKED");
-  assert.equal(res.body.message, "Too many failed login attempts. Please try again later.");
+  assert.equal(res.body.message, "Too many failed login attempts. Please try again in 15 seconds.");
   assert.ok(res.headers["retry-after"], "Retry-After header must be set");
 
   const retryAfter = Number(res.headers["retry-after"]);
-  assert.ok(retryAfter > 0 && retryAfter <= 900, "Retry-After should be within 15 minutes");
+  assert.ok(retryAfter > 0 && retryAfter <= 15, "Retry-After should be within 15 seconds");
 });
 
 test("different IPs have independent attempt counts", () => {
@@ -144,7 +144,7 @@ test("different IPs have independent attempt counts", () => {
   assert.equal(resB.statusCode, 200);
 });
 
-test("attempts older than 15 minutes expire and do not lock out the IP", () => {
+test("attempts older than 15 seconds expire and do not lock out the IP", () => {
   const ip = "10.0.0.5";
   const t0 = 1000000;
 
@@ -153,7 +153,7 @@ test("attempts older than 15 minutes expire and do not lock out the IP", () => {
     recordFailedAttempt(ip, t0);
   }
 
-  // 15 minutes + 1 second later
+  // 15 seconds + 1 second later
   const tLater = t0 + WINDOW_MS + 1000;
   // 5th attempt much later
   recordFailedAttempt(ip, tLater);
@@ -265,23 +265,23 @@ test("calculates exact remaining seconds when more than 5 attempts occur", () =>
   const ip = "10.0.0.99";
   const baseTime = 1000000;
 
-  // 6 attempts at intervals of 10 seconds:
-  // t0=1000000, t1=1000010, t2=1000020, t3=1000030, t4=1000040, t5=1000050
+  // 6 attempts at intervals of 1 second:
+  // t0=1000000, t1=1001000, t2=1002000, t3=1003000, t4=1004000, t5=1005000
   for (let i = 0; i < 6; i++) {
-    recordFailedAttempt(ip, baseTime + i * 10000);
+    recordFailedAttempt(ip, baseTime + i * 1000);
   }
 
-  // At now = baseTime + 60000:
-  // With 6 attempts, unlocking occurs when attempt 1 (t1=1010000) expires,
+  // At now = baseTime + 6000 (6 seconds later):
+  // With 6 attempts, unlocking occurs when attempt 1 (t1=1001000) expires,
   // because after attempt 0 expires, 5 attempts remain (still locked).
-  // Unlock time = 1010000 + 900000 = 1910000.
-  // Remaining ms = 1910000 - 1060000 = 850000 ms -> 850 seconds.
-  const now = baseTime + 60000;
+  // Unlock time = 1001000 + 15000 = 1016000.
+  // Remaining ms = 1016000 - 1006000 = 10000 ms -> 10 seconds.
+  const now = baseTime + 6000;
   assert.equal(isLocked(ip, now), true);
-  assert.equal(getRemainingSeconds(ip, now), 850);
+  assert.equal(getRemainingSeconds(ip, now), 10);
 });
 
-test("checkLoginRateLimit unlocks IP and allows request when 15-minute window expires", () => {
+test("checkLoginRateLimit unlocks IP and allows request when 15-second window expires", () => {
   const ip = "10.0.0.88";
   const baseTime = 2000000;
 
@@ -291,12 +291,12 @@ test("checkLoginRateLimit unlocks IP and allows request when 15-minute window ex
 
   assert.equal(isLocked(ip, baseTime), true);
 
-  // Still locked at baseTime + 899 seconds (899000 ms)
+  // Still locked at baseTime + 14 seconds (14000 ms)
   const stillLockedRes = callMiddleware(
     (req, res, next) => {
       // Mock Date.now inside check
       const origNow = Date.now;
-      Date.now = () => baseTime + 899000;
+      Date.now = () => baseTime + 14000;
       try {
         checkLoginRateLimit(req, res, next);
       } finally {
@@ -308,7 +308,7 @@ test("checkLoginRateLimit unlocks IP and allows request when 15-minute window ex
   assert.equal(stillLockedRes.statusCode, 429);
   assert.equal(stillLockedRes.calledNext, false);
 
-  // Unlocked at baseTime + WINDOW_MS + 1ms (expired)
+  // Unlocked at baseTime + WINDOW_MS + 1000 ms (expired)
   const unlockedRes = callMiddleware(
     (req, res, next) => {
       const origNow = Date.now;

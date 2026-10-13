@@ -49,19 +49,24 @@ async function saveRouteRequest(buildingId, path) {
 // POST /api/navigation/route  { buildingId, fromNodeId, toPlaceId } or { buildingId, fromNodeId, toNodeId }
 export async function getRoute(req, res, next) {
     try {
-        const { buildingId, fromNodeId, toPlaceId } = req.body
+        const { buildingId, fromNodeId, toPlaceId, accessible } = req.body
         let toNodeId = req.body.toNodeId
 
         // Going to a place = going to its entrance node
         if (toPlaceId) {
             const place = await mongoRepo.findOne("places", { _id: new ObjectId(toPlaceId), buildingId })
-            if (!place) {
+            if (!place || !place.entryNodeId) {
                 throw { status: 404, code: "PLACE_NOT_FOUND", message: "Place not found" }
             }
             toNodeId = place.entryNodeId
         }
 
-        const result = await callRoutingService("/route", { buildingId, fromNodeId, toNodeId })
+        const result = await callRoutingService("/route", {
+            buildingId,
+            fromNodeId,
+            toNodeId,
+            accessible: Boolean(accessible),
+        })
 
         if (!result.path) {
             throw { status: 404, code: "NO_ROUTE", message: "No route found" }
@@ -77,9 +82,13 @@ export async function getRoute(req, res, next) {
 // POST /api/navigation/nearest-shelter  { buildingId, fromNodeId }
 export async function getNearestShelter(req, res, next) {
     try {
-        const { buildingId, fromNodeId } = req.body
+        const { buildingId, fromNodeId, accessible } = req.body
 
-        const result = await callRoutingService("/nearest-shelter", { buildingId, fromNodeId })
+        const result = await callRoutingService("/nearest-shelter", {
+            buildingId,
+            fromNodeId,
+            accessible: Boolean(accessible),
+        })
 
         if (!result.path) {
             throw { status: 404, code: "NO_ROUTE", message: "No route found" }

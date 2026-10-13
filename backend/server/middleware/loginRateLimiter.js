@@ -1,9 +1,9 @@
 // In-memory rate limiting for login attempts.
-// Locks an IP out after 5 failed login attempts within a 15-minute window.
+// Locks an IP out after 5 failed login attempts within a 15-second window.
 
-export const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+export const WINDOW_MS = 15 * 1000; // 15 seconds
 export const MAX_ATTEMPTS = 5;
-export const CLEANUP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+export const CLEANUP_INTERVAL_MS = 15 * 1000; // 15 seconds
 
 // IP -> { count: number, firstAttempt: number, lastAttempt: number, timestamp: number, resetTime: number, timestamps: number[] }
 const attempts = new Map();
@@ -38,7 +38,7 @@ export function recordFailedAttempt(ipOrReq, now = Date.now()) {
     return newEntry;
   }
 
-  // Filter existing timestamps within the 15-minute window
+  // Filter existing timestamps within the 15-second window
   const recent = entry.timestamps.filter((time) => now - time < WINDOW_MS);
   recent.push(now);
   recent.sort((a, b) => a - b);
@@ -134,7 +134,7 @@ export function stopCleanupTimer() {
   }
 }
 
-// Middleware: blocks login requests if the client IP has >= 5 failed attempts in 15 minutes
+// Middleware: blocks login requests if the client IP has >= 5 failed attempts in 15 seconds
 export function checkLoginRateLimit(req, res, next) {
   const ip = getClientIp(req);
   const now = Date.now();
@@ -176,10 +176,10 @@ export function checkLoginRateLimit(req, res, next) {
   return res.status(429).json({
     status: 429,
     code: "ACCOUNT_LOCKED",
-    message: "Too many failed login attempts. Please try again later.",
+    message: "Too many failed login attempts. Please try again in 15 seconds.",
     error: {
       code: "ACCOUNT_LOCKED",
-      message: "Too many failed login attempts. Please try again later.",
+      message: "Too many failed login attempts. Please try again in 15 seconds.",
     },
   });
 }

@@ -33,6 +33,40 @@
   padding: 4px 16px 0;
 }
 
+.building-accessibility-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 16px 0;
+}
+
+.accessibility-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.accessibility-toggle-btn:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.accessibility-toggle-btn.is-active {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #7dd3fc;
+  font-weight: 600;
+}
+
 .building-map {
   position: relative;
   flex: 1;

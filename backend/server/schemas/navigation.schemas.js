@@ -10,6 +10,7 @@ export const routeSchema = {
       fromNodeId: mongoId,
       toPlaceId: mongoId.optional(),
       toNodeId: mongoId.optional(),
+      accessible: z.boolean().default(false),
     })
     .refine((body) => body.toPlaceId || body.toNodeId, "toPlaceId or toNodeId is required"),
 };
@@ -18,5 +19,6 @@ export const shelterSchema = {
   body: z.object({
     buildingId: z.string().uuid(),
     fromNodeId: mongoId,
+    accessible: z.boolean().default(false),
   }),
 };
