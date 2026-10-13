@@ -18,7 +18,7 @@ function getRedirect(value: string | null): string {
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === 'INVALID_CREDENTIALS') return 'האימייל או הסיסמה שגויים.';
-    if (error.code === 'ACCOUNT_LOCKED') return 'יותר מדי ניסיונות. נסו שוב מאוחר יותר.';
+    if (error.code === 'ACCOUNT_LOCKED') return 'יותר מדי ניסיונות. נסו שוב בעוד 15 שניות.';
     if (error.code === 'VALIDATION_ERROR') return 'יש להזין אימייל וסיסמה תקינים.';
   }
   return 'ההתחברות נכשלה. נסו שוב.';

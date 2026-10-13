@@ -53,10 +53,12 @@ def empty_database():
     fake_db.places.docs = []
 
 
-def add_node(node_id, floor, x, y, connector_id=None, building=BUILDING):
+def add_node(node_id, floor, x, y, connector_id=None, building=BUILDING, node_type=None):
     node = {"_id": node_id, "buildingId": building, "floor": floor, "x": x, "y": y}
     if connector_id is not None:
         node["connectorId"] = connector_id
+    if node_type is not None:
+        node["type"] = node_type
     fake_db.nodes.docs.append(node)
 
 
@@ -290,3 +292,145 @@ def test_the_closest_shelter_is_found_on_another_floor():
 
     # GOAL: 100 + the floor change + 100. FAR: 900.
     assert path == ["START", "E0", "E1", "GOAL"]
+
+
+# ---------- Accessibility Mode ----------
+
+
+def test_accessible_mode_filters_out_stairs_nodes():
+    add_node("C0", 0, 0, 0, node_type="corridor")
+    add_node("S0", 0, 10, 10, connector_id="stairs-main", node_type="stairs")
+    add_node("E0", 0, 20, 20, connector_id="elevator-main", node_type="elevator")
+
+    nodes, _ = load_graph(BUILDING, accessible=True)
+
+    assert "C0" in nodes
+    assert "E0" in nodes
+    assert "S0" not in nodes
+
+
+def test_non_accessible_mode_includes_stairs_nodes():
+    add_node("C0", 0, 0, 0, node_type="corridor")
+    add_node("S0", 0, 10, 10, connector_id="stairs-main", node_type="stairs")
+    add_node("E0", 0, 20, 20, connector_id="elevator-main", node_type="elevator")
+
+    nodes, _ = load_graph(BUILDING, accessible=False)
+
+    assert "C0" in nodes
+    assert "E0" in nodes
+    assert "S0" in nodes
+
+
+def test_accessible_mode_does_not_connect_stairs_across_floors():
+    add_node("S0", 0, 0, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("S1", 1, 0, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("E0", 0, 50, 50, connector_id="elevator-main", node_type="elevator")
+    add_node("E1", 1, 50, 50, connector_id="elevator-main", node_type="elevator")
+
+    _, adjacency = load_graph(BUILDING, accessible=True)
+
+    assert "S0" not in adjacency
+    assert "S1" not in adjacency
+    assert neighbors(adjacency, "E0") == {"E1": FLOOR_CHANGE_COST}
+    assert neighbors(adjacency, "E1") == {"E0": FLOOR_CHANGE_COST}
+
+
+def test_accessible_route_uses_elevator_when_stairs_is_shorter():
+    # Floor 0: START is closer to stairs (S0, dist 10) than elevator (E0, dist 50)
+    add_node("START", 0, 0, 0)
+    add_node("S0", 0, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("S1", 1, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("E0", 0, 50, 0, connector_id="elevator-main", node_type="elevator")
+    add_node("E1", 1, 50, 0, connector_id="elevator-main", node_type="elevator")
+    add_node("GOAL", 1, 60, 0)
+
+    add_edge("START", "S0")
+    add_edge("START", "E0")
+    add_edge("S1", "GOAL")
+    add_edge("E1", "GOAL")
+
+    # In regular mode, takes the shorter stairs
+    nodes_normal, adj_normal = load_graph(BUILDING, accessible=False)
+    normal_route = astar(nodes_normal, adj_normal, "START", "GOAL")
+    assert normal_route == ["START", "S0", "S1", "GOAL"]
+
+    # In accessible mode, stairs are excluded, takes elevator
+    nodes_acc, adj_acc = load_graph(BUILDING, accessible=True)
+    acc_route = astar(nodes_acc, adj_acc, "START", "GOAL")
+    assert acc_route == ["START", "E0", "E1", "GOAL"]
+
+
+def test_accessible_route_returns_none_when_only_stairs_available():
+    add_node("START", 0, 0, 0)
+    add_node("S0", 0, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("S1", 1, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("GOAL", 1, 20, 0)
+
+    add_edge("START", "S0")
+    add_edge("S1", "GOAL")
+
+    # Regular mode has a route via stairs
+    nodes_normal, adj_normal = load_graph(BUILDING, accessible=False)
+    assert astar(nodes_normal, adj_normal, "START", "GOAL") == ["START", "S0", "S1", "GOAL"]
+
+    # Accessible mode returns None because only stairs connect the floors
+    nodes_acc, adj_acc = load_graph(BUILDING, accessible=True)
+    assert astar(nodes_acc, adj_acc, "START", "GOAL") is None
+
+
+def test_accessible_shelter_route_uses_elevator_when_available():
+    add_node("START", 0, 0, 0)
+    add_node("S0", 0, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("S1", 1, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("E0", 0, 50, 0, connector_id="elevator-main", node_type="elevator")
+    add_node("E1", 1, 50, 0, connector_id="elevator-main", node_type="elevator")
+    add_node("SHELTER", 1, 100, 0)
+
+    add_edge("START", "S0")
+    add_edge("START", "E0")
+    add_edge("S1", "SHELTER")
+    add_edge("E1", "SHELTER")
+
+    fake_db.places.docs = [{"buildingId": BUILDING, "type": "shelter", "entryNodeId": "SHELTER"}]
+
+    nodes_acc, adj_acc = load_graph(BUILDING, accessible=True)
+    targets = {node_id for node_id in load_shelter_nodes(BUILDING) if node_id in nodes_acc}
+    path = dijkstra(adj_acc, "START", targets)
+    assert path == ["START", "E0", "E1", "SHELTER"]
+
+
+def test_accessible_shelter_route_returns_none_when_only_stairs_available():
+    add_node("START", 0, 0, 0)
+    add_node("S0", 0, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("S1", 1, 10, 0, connector_id="stairs-main", node_type="stairs")
+    add_node("SHELTER", 1, 100, 0)
+
+    add_edge("START", "S0")
+    add_edge("S1", "SHELTER")
+
+    fake_db.places.docs = [{"buildingId": BUILDING, "type": "shelter", "entryNodeId": "SHELTER"}]
+
+    nodes_acc, adj_acc = load_graph(BUILDING, accessible=True)
+    targets = {node_id for node_id in load_shelter_nodes(BUILDING) if node_id in nodes_acc}
+    path = dijkstra(adj_acc, "START", targets)
+    assert path is None
+
+
+def test_accessible_mode_filters_out_stairs_connector_even_if_node_type_is_corridor():
+    add_node("C_STAIR", 0, 10, 10, connector_id="staircase-north", node_type="corridor")
+    add_node("REGULAR", 0, 20, 20, node_type="corridor")
+
+    nodes, _ = load_graph(BUILDING, accessible=True)
+    assert "C_STAIR" not in nodes
+    assert "REGULAR" in nodes
+
+
+def test_accessible_mode_filters_out_stairs_connector_with_stair_in_name_and_no_type():
+    add_node("S_NOTYPE", 0, 10, 10, connector_id="stair-1")
+    add_node("REGULAR", 0, 20, 20, node_type="corridor")
+
+    nodes, _ = load_graph(BUILDING, accessible=True)
+    assert "S_NOTYPE" not in nodes
+    assert "REGULAR" in nodes
+
+

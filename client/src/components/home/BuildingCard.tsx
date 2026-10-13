@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
 import type { Building } from '../../types/building';
 import { formatDistance, getBuildingPoint } from '../../utils/distance';
-import { BuildingTypeIcon, CloseIcon, DirectionsIcon } from '../ui/Icons';
+import { BuildingTypeIcon, CloseIcon, DirectionsIcon, StarIcon } from '../ui/Icons';
+import { useFavoritesStore } from '../../store/favoritesStore';
+import LoginPromptModal from '../favorites/LoginPromptModal';
 import './BuildingCard.css';
 
 interface BuildingCardProps {
@@ -13,6 +16,10 @@ interface BuildingCardProps {
 
 // The details of the selected building, inside the bottom sheet
 function BuildingCard({ building, distanceKm, onEnter, onClose }: BuildingCardProps) {
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+  const isFavorite = useFavoritesStore((state) => state.isBuildingFavorite(building.id));
+  const toggleBuilding = useFavoritesStore((state) => state.toggleBuildingFavorite);
+
   const point = getBuildingPoint(building);
 
   // Opens Google Maps (the app on a phone) with driving directions to the building
@@ -20,6 +27,13 @@ function BuildingCard({ building, distanceKm, onEnter, onClose }: BuildingCardPr
 
   const typeLabel = BUILDING_TYPE_LABELS[building.type] ?? building.type;
   const floorsText = building.floors_count === 1 ? 'קומה אחת' : `${building.floors_count} קומות`;
+
+  function handleToggleFavorite() {
+    const success = toggleBuilding(building.id);
+    if (!success) {
+      setIsPromptOpen(true);
+    }
+  }
 
   return (
     <>
@@ -35,9 +49,20 @@ function BuildingCard({ building, distanceKm, onEnter, onClose }: BuildingCardPr
             </p>
           </div>
         </div>
-        <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
-          <CloseIcon />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            type="button"
+            className="icon-btn icon-btn-plain"
+            aria-label={isFavorite ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+            title={isFavorite ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+            onClick={handleToggleFavorite}
+          >
+            <StarIcon size={22} filled={isFavorite} />
+          </button>
+          <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </div>
       </div>
 
       <div className="building-card-details">
@@ -54,6 +79,12 @@ function BuildingCard({ building, distanceKm, onEnter, onClose }: BuildingCardPr
           הוראות הגעה
         </a>
       </div>
+
+      <LoginPromptModal
+        isOpen={isPromptOpen}
+        onClose={() => setIsPromptOpen(false)}
+        title="רוצים לשמור את המבנה?"
+      />
     </>
   );
 }

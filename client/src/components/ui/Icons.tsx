@@ -58,6 +58,22 @@ export function ChevronIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function ChevronUpIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M18 15l-6-6-6 6" />
+    </BaseIcon>
+  );
+}
+
+export function ChevronDownIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M6 9l6 6 6-6" />
+    </BaseIcon>
+  );
+}
+
 export function CloseIcon({ size }: IconProps) {
   return (
     <BaseIcon size={size}>
@@ -281,6 +297,17 @@ export function BuildingTypeIcon({ type, size = 18 }: IconProps & { type: string
   );
 }
 
+export function AccessibleIcon({ size = 20 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <circle cx="12" cy="4.5" r="2" />
+      <path d="M12 7.5v4.5l3.5 2" />
+      <path d="M9 18a4.5 4.5 0 1 0 4.5-4.5" />
+      <path d="M15.5 14h3" />
+    </BaseIcon>
+  );
+}
+
 export function Logo() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
@@ -288,6 +315,24 @@ export function Logo() {
       <path d="M10 22c0-6 12-3 12-10" fill="none" stroke="#FFC93C" strokeWidth="3" strokeLinecap="round" />
       <circle cx="10" cy="22" r="3" fill="#FFC93C" />
       <circle cx="22" cy="11" r="3" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+export function StarIcon({ size = 20, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? '#FFC93C' : 'none'}
+      stroke={filled ? '#FFC93C' : 'currentColor'}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
 }

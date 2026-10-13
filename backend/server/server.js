@@ -15,6 +15,7 @@ import chatRoutes from './routes/chat.routes.js';
 import navigationRoutes from './routes/navigation.routes.js';
 import alertsRoutes from './routes/alerts.routes.js';
 import ownerRequestsRoutes from './routes/ownerRequests.routes.js';
+import { startAlertPoller } from './services/alerts.service.js';
 
 
 
@@ -56,4 +57,5 @@ setupChatSocket(io)
 
 httpServer.listen(process.env.PORT, () => {
     console.log(`server is listening on port ${process.env.PORT}`)
+    startAlertPoller()
 })

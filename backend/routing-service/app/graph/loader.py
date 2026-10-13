@@ -11,16 +11,29 @@ FLOOR_CHANGE_COST = 30
 # Returns two dictionaries:
 #   nodes:     id -> { "id", "floor", "x", "y" }
 #   adjacency: id -> [(neighbor_id, weight), ...]
-def load_graph(building_id):
+def load_graph(building_id, accessible=False):
     nodes = {}
-    for node in db.nodes.find({"buildingId": building_id}):
+    query = {"buildingId": building_id}
+    if accessible:
+        query["type"] = {"$ne": "stairs"}
+
+    for node in db.nodes.find(query):
         node_id = str(node["_id"])
+        node_type = node.get("type")
+        connector_id = node.get("connectorId")
+        is_stairs = (str(node_type).lower() == "stairs") if node_type else False
+        if connector_id and "stair" in str(connector_id).lower():
+            is_stairs = True
+        if accessible and is_stairs:
+            continue
+
         nodes[node_id] = {
             "id": node_id,
             "floor": node["floor"],
             "x": node["x"],
             "y": node["y"],
-            "connectorId": node.get("connectorId"),
+            "type": node_type,
+            "connectorId": connector_id,
         }
 
     adjacency = {node_id: [] for node_id in nodes}
@@ -52,6 +65,15 @@ def load_graph(building_id):
             for j in range(i + 1, len(group)):
                 a = group[i]
                 b = group[j]
+                if accessible:
+                    is_stairs_conn = (
+                        (str(a.get("type", "")).lower() == "stairs")
+                        or (str(b.get("type", "")).lower() == "stairs")
+                        or ("stair" in str(a.get("connectorId", "")).lower())
+                        or ("stair" in str(b.get("connectorId", "")).lower())
+                    )
+                    if is_stairs_conn:
+                        continue
                 if a["floor"] != b["floor"]:
                     # Never less than the straight line, so the A* guess stays correct
                     weight = max(FLOOR_CHANGE_COST, distance(a, b))

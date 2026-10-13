@@ -5,18 +5,20 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useRecentStore } from '../store/recentStore';
 import { useAuthStore } from '../store/authStore';
+import { useFavoritesStore } from '../store/favoritesStore';
 import type { Building, BuildingType } from '../types/building';
 import { searchBuildings } from '../utils/buildingSearch';
-import { getBuildingPoint, getDistanceKm } from '../utils/distance';
+import { findClosestBuildingWithinRadius, getBuildingPoint, getDistanceKm } from '../utils/distance';
 import BuildingsMap from '../components/home/BuildingsMap';
 import type { MapFocus } from '../components/home/BuildingsMap';
 import BuildingSearch from '../components/home/BuildingSearch';
 import NearbyBuildings from '../components/home/NearbyBuildings';
 import BuildingCard from '../components/home/BuildingCard';
 import UserMenu from '../components/home/UserMenu';
+import LoginPromptModal from '../components/favorites/LoginPromptModal';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
-import { Logo, QrIcon } from '../components/ui/Icons';
+import { ChevronDownIcon, ChevronUpIcon, Logo, QrIcon } from '../components/ui/Icons';
 import './HomePage.css';
 
 const BUILDING_ZOOM = 16; // close enough to see the building and the streets around it
@@ -49,6 +51,11 @@ function HomePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+
+  const isBuildingFavorite = useFavoritesStore((state) => state.isBuildingFavorite);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
 
   // All the buildings come from the server once.
   // The search runs here in the browser, so results show up while typing.
@@ -78,7 +85,10 @@ function HomePage() {
   const userPoint = userPosition ? { lat: userPosition.lat, lng: userPosition.lng } : null;
 
   // What the map, the list and the search show: filtered by text and type, best first
-  const results = searchBuildings(buildings, searchText, type, userPoint);
+  const baseResults = searchBuildings(buildings, searchText, type, userPoint);
+  const results = favoritesOnly
+    ? baseResults.filter(({ building }) => isBuildingFavorite(building.id))
+    : baseResults;
 
   const selectedBuilding = buildings.find((building) => building.id === selectedId) ?? null;
   const selectedDistance =
@@ -89,9 +99,35 @@ function HomePage() {
 
   // ---------- Actions ----------
 
+  // Auto-enter closest building if user is within 150m (and has not already exited/entered in this session)
+  useEffect(() => {
+    if (!userPoint || buildings.length === 0 || isLoading) return;
+
+    const hasAutoEntered = sessionStorage.getItem('inroute_auto_entered');
+    if (hasAutoEntered) return;
+
+    const match = findClosestBuildingWithinRadius(userPoint, buildings);
+    if (match) {
+      sessionStorage.setItem('inroute_auto_entered', match.building.id);
+      addRecent(match.building);
+      navigate(`/b/${match.building.id}`, {
+        state: { autoEntered: true, buildingName: match.building.name },
+      });
+    }
+  }, [userPoint, buildings, isLoading, addRecent, navigate]);
+
+  function handleToggleFavorites() {
+    if (!user) {
+      setIsLoginPromptOpen(true);
+      return;
+    }
+    setFavoritesOnly(!favoritesOnly);
+  }
+
   function selectBuilding(building: Building) {
     const point = getBuildingPoint(building);
     setSelectedId(building.id);
+    setIsSheetExpanded(false);
     setMapFocus({ kind: 'point', lat: point.lat, lng: point.lng, zoom: BUILDING_ZOOM });
   }
 
@@ -114,12 +150,14 @@ function HomePage() {
   }
 
   function enterBuilding(building: Building) {
+    sessionStorage.setItem('inroute_auto_entered', building.id);
     addRecent(building);
     navigate(`/b/${building.id}`);
   }
 
   function handleScan(result: QrResult) {
     setIsScannerOpen(false);
+    sessionStorage.setItem('inroute_auto_entered', result.buildingId);
 
     const scannedBuilding = buildings.find((building) => building.id === result.buildingId);
     if (scannedBuilding) {
@@ -163,11 +201,33 @@ function HomePage() {
     return (
       <>
         <div className="sheet-header">
-          <h2 className="sheet-title">{title}</h2>
-          {!isLoading && !error && <span className="home-count">{results.length}</span>}
+          <div className="sheet-title-group">
+            <h2 className="sheet-title">{title}</h2>
+            {!isLoading && !error && <span className="home-count">{results.length}</span>}
+          </div>
+          {!isLoading && !error && results.length > 0 && (
+            <button
+              type="button"
+              className="sheet-toggle-expand-btn"
+              onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+              aria-expanded={isSheetExpanded}
+            >
+              {isSheetExpanded ? (
+                <>
+                  <span>חזרה למפה</span>
+                  <ChevronDownIcon size={16} />
+                </>
+              ) : (
+                <>
+                  <span>הצג הכול</span>
+                  <ChevronUpIcon size={16} />
+                </>
+              )}
+            </button>
+          )}
         </div>
 
-        {locationMessage && (
+        {locationMessage && !isSheetExpanded && (
           <p className="sheet-text">
             {locationMessage}
             {locationStatus === 'unavailable' && (
@@ -191,7 +251,14 @@ function HomePage() {
 
         {!isLoading && !error && results.length === 0 && <p className="message-info">לא נמצאו מבנים.</p>}
 
-        {results.length > 0 && <NearbyBuildings results={results} onPick={selectBuilding} />}
+        {results.length > 0 && (
+          <NearbyBuildings
+            results={results}
+            onPick={selectBuilding}
+            isExpanded={isSheetExpanded}
+            onPromptLogin={() => setIsLoginPromptOpen(true)}
+          />
+        )}
 
         <div className="sheet-actions">
           <button type="button" className="btn btn-outline home-scan-wide" onClick={() => setIsScannerOpen(true)}>
@@ -219,12 +286,20 @@ function HomePage() {
         text={searchText}
         onTextChange={setSearchText}
         type={type}
-        onTypeChange={handleTypeChange}
+        onTypeChange={(newType) => {
+          setFavoritesOnly(false);
+          handleTypeChange(newType);
+        }}
+        favoritesOnly={favoritesOnly}
+        onToggleFavorites={handleToggleFavorites}
         results={results}
         onPick={selectBuilding}
         onShowAll={showResultsOnMap}
         recent={recent}
-        onPickRecent={(buildingId) => navigate(`/b/${buildingId}`)}
+        onPickRecent={(buildingId) => {
+          sessionStorage.setItem('inroute_auto_entered', buildingId);
+          navigate(`/b/${buildingId}`);
+        }}
         onClearRecent={clearRecent}
         placeholder={searchPlaceholder}
       />
@@ -241,12 +316,29 @@ function HomePage() {
         />
       </div>
 
-      <div className="sheet">
-        <div className="sheet-handle" />
+      <div className={`sheet${isSheetExpanded ? ' is-expanded' : ''}`}>
+        <button
+          type="button"
+          className="sheet-handle-btn"
+          onClick={() => {
+            if (!selectedBuilding) {
+              setIsSheetExpanded(!isSheetExpanded);
+            }
+          }}
+          aria-label={isSheetExpanded ? 'כיווץ המגירה למפה' : 'הרחבת המגירה לרשימה מלאה'}
+        >
+          <div className="sheet-handle" />
+        </button>
         {renderSheetContent()}
       </div>
 
       {isScannerOpen && <QrScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
+
+      <LoginPromptModal
+        isOpen={isLoginPromptOpen}
+        onClose={() => setIsLoginPromptOpen(false)}
+        title="רוצים לראות מועדפים?"
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getBuildingById, getPlanUrl } from '../api/buildings';
 import { getPlaces } from '../api/places';
 import { getNearestShelter, getNode, getRoute } from '../api/navigation';
@@ -28,7 +28,10 @@ import AlertBanner from '../components/alert/AlertBanner';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
 import ShareLocationButton from '../components/share/ShareLocationButton';
-import { BackIcon, ChatIcon, PencilIcon } from '../components/ui/Icons';
+import { AccessibleIcon, BackIcon, ChatIcon, PencilIcon, SirenIcon, StarIcon } from '../components/ui/Icons';
+import { simulateAlert, stopAlert } from '../api/alerts';
+import { useFavoritesStore } from '../store/favoritesStore';
+import LoginPromptModal from '../components/favorites/LoginPromptModal';
 import './BuildingPage.css';
 
 interface BuildingPageProps {
@@ -42,7 +45,19 @@ const MEETING_POINT_LABEL = 'נקודת המפגש';
 
 function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const socket = useBuildingRoom(buildingId);
+
+  const [showAutoEnterToast, setShowAutoEnterToast] = useState(Boolean(location.state?.autoEntered));
+
+  useEffect(() => {
+    if (showAutoEnterToast) {
+      const timer = setTimeout(() => {
+        setShowAutoEnterToast(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAutoEnterToast]);
 
   const start = useLocationStore((state) => state.start);
   const setStart = useLocationStore((state) => state.setStart);
@@ -53,6 +68,13 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   const user = useAuthStore((state) => state.user);
   const isAdmin = user !== null && (user.role === 'admin' || user.role === 'super');
+
+  const isBuildingFav = useFavoritesStore((state) => state.isBuildingFavorite(buildingId));
+  const toggleBuildingFav = useFavoritesStore((state) => state.toggleBuildingFavorite);
+  const isPlaceFavorite = useFavoritesStore((state) => state.isPlaceFavorite);
+
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
 
   // ---------- Building data ----------
   const [building, setBuilding] = useState<BuildingDetails | null>(null);
@@ -69,6 +91,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const [routeStatus, setRouteStatus] = useState<RouteStatus>('idle');
   const [stepIndex, setStepIndex] = useState(0);
   const [isShelterRoute, setIsShelterRoute] = useState(false);
+  const [accessible, setAccessible] = useState(false);
 
   // ---------- Open panels ----------
   // A visitor first looks around: the map and the search come before any question.
@@ -107,7 +130,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   // Ask the server for a route and show it
   const startRoute = useCallback(
-    async (from: StartPoint, to: Destination) => {
+    async (from: StartPoint, to: Destination, isAccessible?: boolean) => {
+      const useAccessible = isAccessible ?? accessible;
       setDestination(to);
       setRoute(null);
       setIsShelterRoute(false);
@@ -119,6 +143,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           fromNodeId: from.nodeId,
           toPlaceId: to.placeId,
           toNodeId: to.nodeId,
+          accessible: useAccessible,
         });
 
         if (!path) {
@@ -134,7 +159,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         setRouteStatus('error');
       }
     },
-    [buildingId],
+    [buildingId, accessible],
   );
 
   // ?node= from a QR code: that node is the starting point
@@ -214,7 +239,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   }
 
   // Red alert: route from where the visitor is to the nearest protected space
-  async function findShelterRoute(from: StartPoint) {
+  async function findShelterRoute(from: StartPoint, isAccessible?: boolean) {
+    const useAccessible = isAccessible ?? accessible;
     setStart(from);
     setFloorChoice(from.floor);
     setIsPickerOpen(false);
@@ -227,7 +253,11 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     setRouteStatus('loading');
 
     try {
-      const path = await getNearestShelter({ buildingId, fromNodeId: from.nodeId });
+      const path = await getNearestShelter({
+        buildingId,
+        fromNodeId: from.nodeId,
+        accessible: useAccessible,
+      });
 
       if (!path) {
         setRouteStatus('no-route');
@@ -248,6 +278,46 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     } catch {
       setRouteStatus('error');
     }
+  }
+
+  function handleToggleAccessible() {
+    const nextAccessible = !accessible;
+    setAccessible(nextAccessible);
+
+    if (start && destination) {
+      if (isShelterRoute) {
+        findShelterRoute(start, nextAccessible);
+      } else {
+        startRoute(start, destination, nextAccessible);
+      }
+    }
+  }
+
+  async function handleToggleAlertSimulation() {
+    try {
+      if (alertStatus === 'active') {
+        await stopAlert(buildingId);
+      } else {
+        await simulateAlert({ buildingId, countdown: 60 });
+      }
+    } catch (err) {
+      console.error('Failed to toggle alert simulation:', err);
+    }
+  }
+
+  function handleToggleBuildingFavorite() {
+    const success = toggleBuildingFav(buildingId);
+    if (!success) {
+      setIsLoginPromptOpen(true);
+    }
+  }
+
+  function handleToggleFavoritesFilter() {
+    if (!user) {
+      setIsLoginPromptOpen(true);
+      return;
+    }
+    setFavoritesOnly(!favoritesOnly);
   }
 
   function handleRetry() {
@@ -326,7 +396,9 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   const currentFloor = floors.find((floor) => floor.floor === floorChoice) ?? floors[0];
   const planUrl = getPlanUrl(buildingId, currentFloor.floor);
-  const floorPlaces = places.filter((place) => place.floor === currentFloor.floor);
+  const floorPlaces = places.filter(
+    (place) => place.floor === currentFloor.floor && (!favoritesOnly || isPlaceFavorite(place._id))
+  );
   const categories = [...new Set(places.map((place) => place.category).filter(Boolean))].sort();
 
   let subtitle = building.city;
@@ -371,6 +443,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           destinationLabel={destination.label}
           stepIndex={stepIndex}
           isShelterRoute={isShelterRoute}
+          accessible={accessible}
+          onToggleAccessible={handleToggleAccessible}
           onStepChange={(nextIndex, floor) => {
             setStepIndex(nextIndex);
             setFloorChoice(floor);
@@ -388,6 +462,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           place={selectedPlace}
           floorName={getFloorName(floors, selectedPlace.floor)}
           routeStatus={isThisDestination ? routeStatus : 'idle'}
+          accessible={accessible}
           onNavigate={() => handleNavigate(selectedPlace)}
           onClose={() => setSelectedPlace(null)}
           onOpenChat={() => setIsChatOpen(true)}
@@ -405,7 +480,9 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       if (routeStatus === 'loading') {
         text = 'מחפשים את המסלול הטוב ביותר...';
       } else if (routeStatus === 'no-route') {
-        text = 'לא נמצא מסלול. ייתכן שמעבר חסום כרגע.';
+        text = accessible
+          ? 'לא נמצא מסלול נגיש (ללא מדרגות). ייתכן שאין מעלית בבניין או שמעבר חסום כרגע.'
+          : 'לא נמצא מסלול. ייתכן שמעבר חסום כרגע.';
       } else if (routeStatus === 'error') {
         text = 'משהו השתבש. נסו שוב.';
       } else if (!start) {
@@ -450,6 +527,34 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     <div className="screen">
       <AlertBanner />
 
+      {showAutoEnterToast && (
+        <div className="auto-enter-banner" role="status">
+          <div className="auto-enter-content">
+            <span className="auto-enter-icon">📍</span>
+            <span className="auto-enter-text">
+              זיהינו שהגעתם אל <strong>{building.name}</strong> והעברנו אתכם למפה הפנימית
+            </span>
+          </div>
+          <div className="auto-enter-actions">
+            <button
+              type="button"
+              className="auto-enter-btn-back"
+              onClick={() => navigate('/')}
+            >
+              חזרה למפת העיר
+            </button>
+            <button
+              type="button"
+              className="auto-enter-btn-close"
+              onClick={() => setShowAutoEnterToast(false)}
+              aria-label="סגירה"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="building-topbar">
         <button type="button" className="icon-btn" aria-label="חזרה למפה" onClick={() => navigate('/')}>
           <BackIcon />
@@ -464,6 +569,24 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
             <PencilIcon size={20} />
           </Link>
         )}
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label={isBuildingFav ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+          title={isBuildingFav ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+          onClick={handleToggleBuildingFavorite}
+        >
+          <StarIcon size={20} filled={isBuildingFav} />
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label={alertStatus === 'active' ? 'עצירת התרעת בדיקה' : 'סימולציית צבע אדום'}
+          title={alertStatus === 'active' ? 'עצירת התרעת בדיקה' : 'סימולציית צבע אדום'}
+          onClick={handleToggleAlertSimulation}
+        >
+          <SirenIcon size={20} />
+        </button>
         <ShareLocationButton
           buildingId={buildingId}
           start={start}
@@ -479,6 +602,30 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
           floors={floors}
           onSelectPlace={handleSearchSelect}
         />
+      </div>
+
+      <div className="building-accessibility-bar" style={{ gap: '8px' }}>
+        <button
+          type="button"
+          className={`accessibility-toggle-btn ${accessible ? 'is-active' : ''}`}
+          onClick={handleToggleAccessible}
+          aria-pressed={accessible}
+          title="מסלול נגיש / מעליות בלבד"
+        >
+          <AccessibleIcon size={18} />
+          <span>מסלול נגיש / מעליות בלבד</span>
+        </button>
+
+        <button
+          type="button"
+          className={`accessibility-toggle-btn ${favoritesOnly ? 'is-active' : ''}`}
+          onClick={handleToggleFavoritesFilter}
+          aria-pressed={favoritesOnly}
+          title="הצגת מקומות מועדפים בלבד"
+        >
+          <StarIcon size={16} filled={favoritesOnly} />
+          <span>מועדפים</span>
+        </button>
       </div>
 
       <div className="building-map">
@@ -522,6 +669,12 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       />
 
       {scanPurpose !== null && <QrScanner onScan={handleScan} onClose={() => setScanPurpose(null)} />}
+
+      <LoginPromptModal
+        isOpen={isLoginPromptOpen}
+        onClose={() => setIsLoginPromptOpen(false)}
+        title="רוצים לשמור למועדפים?"
+      />
     </div>
   );
 }

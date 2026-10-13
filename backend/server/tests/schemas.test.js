@@ -9,6 +9,7 @@ import {
 } from "../schemas/graph.schemas.js";
 import { createPlaceSchema, updatePlaceSchema } from "../schemas/places.schemas.js";
 import { registerSchema } from "../schemas/auth.schemas.js";
+import { routeSchema, shelterSchema } from "../schemas/navigation.schemas.js";
 
 // What the server accepts from the client, before a controller runs.
 
@@ -124,3 +125,38 @@ test("a role that is sent at sign up is dropped", () => {
 
   assert.deepEqual(body, { username: "dana_levi", email: "dana@example.com", password: "Demo12345" });
 });
+
+// ---------- Navigation ----------
+
+test("routeSchema accepts accessible boolean and defaults to false", () => {
+  const parsedDefault = routeSchema.body.parse({
+    buildingId: "123e4567-e89b-12d3-a456-426614174000",
+    fromNodeId: NODE_ID,
+    toNodeId: NODE_ID,
+  });
+  assert.equal(parsedDefault.accessible, false);
+
+  const parsedExplicit = routeSchema.body.parse({
+    buildingId: "123e4567-e89b-12d3-a456-426614174000",
+    fromNodeId: NODE_ID,
+    toNodeId: NODE_ID,
+    accessible: true,
+  });
+  assert.equal(parsedExplicit.accessible, true);
+});
+
+test("shelterSchema accepts accessible boolean and defaults to false", () => {
+  const parsedDefault = shelterSchema.body.parse({
+    buildingId: "123e4567-e89b-12d3-a456-426614174000",
+    fromNodeId: NODE_ID,
+  });
+  assert.equal(parsedDefault.accessible, false);
+
+  const parsedExplicit = shelterSchema.body.parse({
+    buildingId: "123e4567-e89b-12d3-a456-426614174000",
+    fromNodeId: NODE_ID,
+    accessible: true,
+  });
+  assert.equal(parsedExplicit.accessible, true);
+});
+

@@ -17,11 +17,13 @@ export interface RouteRequest {
   fromNodeId: string;
   toPlaceId?: string;
   toNodeId?: string;
+  accessible?: boolean;
 }
 
 export interface ShelterRequest {
   buildingId: string;
   fromNodeId: string;
+  accessible?: boolean;
 }
 
 // GET /api/navigation/nodes/:nodeId

@@ -15,11 +15,13 @@ class RouteBody(BaseModel):
     buildingId: str
     fromNodeId: str
     toNodeId: str
+    accessible: bool = False
 
 
 class ShelterBody(BaseModel):
     buildingId: str
     fromNodeId: str
+    accessible: bool = False
 
 
 # The answer the main server (and the client) expects:
@@ -41,7 +43,7 @@ def to_response(nodes, adjacency, path):
 # runs such functions in a separate thread, so other requests are not stuck behind it.
 @router.post("/route")
 def route(body: RouteBody):
-    nodes, adjacency = load_graph(body.buildingId)
+    nodes, adjacency = load_graph(body.buildingId, accessible=body.accessible)
 
     if body.fromNodeId not in nodes or body.toNodeId not in nodes:
         raise HTTPException(status_code=404, detail="Node not found")
@@ -53,7 +55,7 @@ def route(body: RouteBody):
 # Route to the closest shelter - Dijkstra with many targets
 @router.post("/nearest-shelter")
 def nearest_shelter(body: ShelterBody):
-    nodes, adjacency = load_graph(body.buildingId)
+    nodes, adjacency = load_graph(body.buildingId, accessible=body.accessible)
 
     if body.fromNodeId not in nodes:
         raise HTTPException(status_code=404, detail="Node not found")

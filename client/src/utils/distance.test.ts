@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { Building } from '../types/building';
-import { formatDistance, getBuildingPoint, getDistanceKm } from './distance';
+import { AUTO_ENTER_RADIUS_KM, findClosestBuildingWithinRadius, formatDistance, getBuildingPoint, getDistanceKm } from './distance';
 
 describe('formatDistance', () => {
   test('less than a kilometer is shown in meters, rounded to 10', () => {
@@ -42,3 +42,53 @@ describe('getBuildingPoint', () => {
     expect(getBuildingPoint(building)).toEqual({ lat: 32.08, lng: 34.78 });
   });
 });
+
+describe('findClosestBuildingWithinRadius', () => {
+  const b1: Building = {
+    id: 'b1',
+    name: 'קניון 1',
+    type: 'mall',
+    address: 'הרצל 1',
+    city: 'תל אביב',
+    lat: 32.08,
+    lng: 34.78,
+    floors_count: 2,
+  };
+  const b2: Building = {
+    id: 'b2',
+    name: 'קניון 2',
+    type: 'mall',
+    address: 'הרצל 2',
+    city: 'תל אביב',
+    lat: 32.0805, // ~55m away from b1
+    lng: 34.78,
+    floors_count: 2,
+  };
+  const farAway: Building = {
+    id: 'b-far',
+    name: 'קניון רחוק',
+    type: 'mall',
+    address: 'בן גוריון 1',
+    city: 'חיפה',
+    lat: 32.8,
+    lng: 35.0,
+    floors_count: 3,
+  };
+
+  test('returns closest building within 150m radius', () => {
+    // User is standing right next to b2 (~10m away)
+    const user = { lat: 32.08055, lng: 34.78 };
+    const match = findClosestBuildingWithinRadius(user, [b1, b2, farAway], AUTO_ENTER_RADIUS_KM);
+    expect(match).not.toBeNull();
+    expect(match?.building.id).toBe('b2');
+    expect(match?.distanceKm).toBeLessThan(0.05);
+  });
+
+  test('returns null if no building is within 150m radius', () => {
+    // User is 1 km away
+    const user = { lat: 32.09, lng: 34.78 };
+    const match = findClosestBuildingWithinRadius(user, [b1, b2, farAway], AUTO_ENTER_RADIUS_KM);
+    expect(match).toBeNull();
+  });
+});
+

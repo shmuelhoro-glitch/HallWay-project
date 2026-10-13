@@ -233,10 +233,10 @@ export function createFakeMongoRepo() {
 
 // Runs a controller like Express does, and returns what it answered.
 // "error" is what the controller passed to next(), the way errors reach errorHandler.
-export async function callController(controller, { params = {}, body = {}, query = {} } = {}) {
+export async function callController(controller, { params = {}, body = {}, query = {}, user = null } = {}) {
   const result = { status: 200, body: undefined, error: null };
 
-  const req = { params, body, query, validatedQuery: query };
+  const req = { params, body, query, validatedQuery: query, user };
   const res = {
     status(code) {
       result.status = code;
