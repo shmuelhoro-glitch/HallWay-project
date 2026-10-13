@@ -33,6 +33,10 @@ export function createFakeSupabaseRepo() {
   const tables = new Map();
   const plannedFailures = [];
 
+  // In the real database these tables number their rows (1, 2, 3...). The others use a uuid.
+  const numberedTables = ["owner_requests", "route_requests", "alerts", "chat_bans"];
+  let lastNumber = 0;
+
   function rowsOf(table) {
     if (!tables.has(table)) {
       tables.set(table, []);
@@ -55,7 +59,8 @@ export function createFakeSupabaseRepo() {
   return {
     async insertOne(table, newData) {
       failIfPlanned("insertOne", table);
-      const row = { id: randomUUID(), ...newData };
+      const id = numberedTables.includes(table) ? ++lastNumber : randomUUID();
+      const row = { id, ...newData };
       rowsOf(table).push(row);
       return { ...row };
     },
@@ -101,6 +106,7 @@ export function createFakeSupabaseRepo() {
     reset() {
       tables.clear();
       plannedFailures.length = 0;
+      lastNumber = 0;
     },
   };
 }

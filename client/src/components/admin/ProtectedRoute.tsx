@@ -21,6 +21,9 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
       <div className="screen">
         <div className="screen-message">
           <p>האזור הזה מיועד למנהלי מבנים.</p>
+          <Link to="/join" className="btn btn-primary">
+            בקשת גישת ניהול
+          </Link>
           <Link to="/" className="btn btn-outline">
             חזרה למפה
           </Link>

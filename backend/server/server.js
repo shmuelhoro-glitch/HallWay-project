@@ -11,6 +11,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import navigationRoutes from './routes/navigation.routes.js';
 import alertsRoutes from './routes/alerts.routes.js';
+import ownerRequestsRoutes from './routes/ownerRequests.routes.js';
 
 
 
@@ -40,6 +41,8 @@ app.use('/api/buildings/:buildingId/chat', chatRoutes);
 app.use('/api/navigation', navigationRoutes);
 
 app.use('/api/alerts', alertsRoutes);
+
+app.use('/api/owner-requests', ownerRequestsRoutes);
 
 app.use(errorHandler)
 

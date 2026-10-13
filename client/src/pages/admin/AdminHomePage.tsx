@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyBuildings } from '../../api/admin';
+import { useAuthStore } from '../../store/authStore';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
 import type { Building } from '../../types/building';
 import UserMenu from '../../components/home/UserMenu';
@@ -10,6 +11,9 @@ import './AdminHomePage.css';
 
 // /admin - the buildings this user manages. A building opens its admin screens.
 function AdminHomePage() {
+  const user = useAuthStore((state) => state.user);
+  const isSuper = user !== null && user.role === 'super';
+
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,10 +66,18 @@ function AdminHomePage() {
             <h1 className="admin-title">ניהול מבנים</h1>
             <p className="admin-subtitle">בחרו מבנה כדי לערוך את הקומות, המקומות והמעברים שלו.</p>
           </div>
-          <Link to="/admin/new" className="btn btn-primary admin-home-new">
-            <PlusIcon />
-            מבנה חדש
-          </Link>
+          <div className="admin-home-actions">
+            {/* Only the owners of the system read the requests of new building owners */}
+            {isSuper && (
+              <Link to="/admin/requests" className="btn btn-outline admin-home-new">
+                פניות של בעלי מבנים
+              </Link>
+            )}
+            <Link to="/admin/new" className="btn btn-primary admin-home-new">
+              <PlusIcon />
+              מבנה חדש
+            </Link>
+          </div>
         </div>
 
         <div className="search-field admin-home-search">

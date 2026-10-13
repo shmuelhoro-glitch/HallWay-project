@@ -80,9 +80,53 @@
   font-weight: 500;
 }
 
-/* The short line under "Account type" */
+/* A short, quiet line under a field or a card */
 .auth-hint {
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- The "manage a building" request (JoinPage) ---------- */
+
+.auth-card-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.auth-text {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* A note above the first field of the form */
+.auth-note {
+  margin: 0 0 4px;
+}
+
+.auth-note + .auth-label {
+  margin-top: 14px;
+}
+
+/* A second button under the main one */
+.auth-second {
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.auth-textarea {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 16px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* Under the login / sign up form: the way to the request page */
+.auth-join {
+  margin-top: 10px;
+  text-align: center;
 }

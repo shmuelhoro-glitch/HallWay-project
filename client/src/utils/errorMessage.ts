@@ -23,6 +23,10 @@ const MESSAGES: Record<string, string> = {
   ADDRESS_NOT_FOUND: 'לא מצאנו את הכתובת במפה. בדקו את הרחוב ואת העיר.',
   GEOCODING_UNAVAILABLE: 'שירות איתור הכתובות לא זמין כרגע. נסו שוב בעוד רגע.',
 
+  // Asking to manage a building
+  REQUEST_EXISTS: 'כבר שלחתם פנייה, והיא ממתינה לטיפול.',
+  REQUEST_NOT_FOUND: 'הפנייה לא נמצאה.',
+
   // Floors and places
   INVALID_SVG: 'קובץ ה-SVG לא תקין. הוא צריך להכיל viewBox.',
   TOO_MANY_LANDMARKS: 'בכל קומה יכולות להיות עד 5 נקודות ציון.',
@@ -60,6 +64,11 @@ const FIELD_LABELS: Record<string, string> = {
   username: 'שם משתמש',
   email: 'אימייל',
   password: 'סיסמה',
+  full_name: 'שם מלא',
+  phone: 'טלפון',
+  building_name: 'שם המבנה',
+  building_type: 'סוג המבנה',
+  message: 'הודעה',
 };
 
 // The Hebrew message of a server error code, or null for a code we don't know
