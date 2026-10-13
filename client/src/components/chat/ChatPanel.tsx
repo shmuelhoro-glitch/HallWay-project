@@ -5,6 +5,7 @@ import type { Socket } from 'socket.io-client';
 import { getMessages } from '../../api/chat';
 import { useAuthStore } from '../../store/authStore';
 import type { ChatErrorPayload, ChatMessage } from '../../types/chat';
+import { getMessageForCode } from '../../utils/errorMessage';
 import { CloseIcon, SendIcon } from '../ui/Icons';
 import './ChatPanel.css';
 
@@ -50,7 +51,8 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
     }
 
     function handleError(payload: ChatErrorPayload) {
-      setError(payload.message);
+      // The server sends English. The user gets the Hebrew message of the code.
+      setError(getMessageForCode(payload.code) ?? 'לא הצלחנו לשלוח את ההודעה. נסו שוב.');
     }
 
     socket.on('chat:message', handleMessage);
