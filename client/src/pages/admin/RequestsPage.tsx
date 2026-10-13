@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getOwnerRequests, setOwnerRequestStatus } from '../../api/ownerRequests';
+import { approveOwnerRequest, getOwnerRequests, setOwnerRequestStatus } from '../../api/ownerRequests';
 import { useAuthStore } from '../../store/authStore';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
 import type { OwnerRequestStatus, OwnerRequestWithUser } from '../../types/ownerRequest';
@@ -19,8 +19,8 @@ function formatDate(isoDate: string): string {
 }
 
 // /admin/requests - the requests of visitors who want to manage a building.
-// Only for the owners of the system (super). Approving is done by hand, in the users table:
-// this screen only shows who asked, and lets us mark a request as handled.
+// Only for the owners of the system (super). Approving a request makes its user a manager (admin);
+// a request can also be marked as handled without approving it.
 function RequestsPage() {
   const user = useAuthStore((state) => state.user);
   const isSuper = user !== null && user.role === 'super';
@@ -31,7 +31,9 @@ function RequestsPage() {
   const [tab, setTab] = useState<OwnerRequestStatus>('new');
 
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [approvedName, setApprovedName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSuper) return;
@@ -61,6 +63,7 @@ function RequestsPage() {
     if (savingId !== null) return; // one change at a time
     setSavingId(request.id);
     setSaveError(null);
+    setApprovedName(null);
 
     try {
       await setOwnerRequestStatus(request.id, status);
@@ -69,6 +72,31 @@ function RequestsPage() {
       setSaveError(getErrorMessage(error, 'לא הצלחנו לעדכן את הפנייה. נסו שוב.'));
     } finally {
       setSavingId(null);
+    }
+  }
+
+  async function approve(request: OwnerRequestWithUser) {
+    if (savingId !== null || !request.user) return;
+    const username = request.user.username;
+    const isSure = window.confirm(
+      `לאשר את הפנייה ולהפוך את ${username} למנהל מבנים? הוא יוכל ליצור מבנים ולנהל אותם.`,
+    );
+    if (!isSure) return;
+
+    setSavingId(request.id);
+    setIsApproving(true);
+    setSaveError(null);
+    setApprovedName(null);
+
+    try {
+      const approved = await approveOwnerRequest(request.id);
+      setRequests((current) => current.map((item) => (item.id === request.id ? approved : item)));
+      setApprovedName(username);
+    } catch (error) {
+      setSaveError(getErrorMessage(error, 'לא הצלחנו לאשר את הפנייה. נסו שוב.'));
+    } finally {
+      setSavingId(null);
+      setIsApproving(false);
     }
   }
 
@@ -101,9 +129,9 @@ function RequestsPage() {
             <section className="admin-card">
               <h2 className="admin-card-title">איך מאשרים פנייה</h2>
               <p className="admin-card-text">
-                ב-Supabase, בטבלה users, מוצאים את המשתמש לפי האימייל שלו ומשנים את role ל-admin. מבנה שהוא ייצור
-                יתווסף אליו אוטומטית. אחר כך מסמנים כאן את הפנייה כ"טופלה". המשתמש יראה את מסכי הניהול אחרי שיתחבר
-                מחדש.
+                לוחצים על "אישור והפיכה למנהל" בכרטיס של הפנייה. המשתמש הופך למנהל מבנים, והפנייה עוברת ל"טופלו".
+                מבנה שהוא ייצור יתווסף אליו אוטומטית. הוא יראה את מסכי הניהול אחרי שיתחבר מחדש. פנייה שלא מאשרים
+                אפשר פשוט לסמן כ"טופלה".
               </p>
             </section>
 
@@ -119,6 +147,11 @@ function RequestsPage() {
             {isLoading && <p className="message-info is-loading" role="status">טוען פניות...</p>}
             {loadError && <p className="message-error" role="alert">{loadError}</p>}
             {saveError && <p className="message-error" role="alert">{saveError}</p>}
+            {approvedName && (
+              <p className="message-success" role="status">
+                {approvedName} הוא עכשיו מנהל מבנים. הוא יראה את מסכי הניהול אחרי שיתחבר מחדש.
+              </p>
+            )}
 
             {!isLoading && !loadError && shown.length === 0 && (
               <div className="admin-empty requests-empty">
@@ -179,14 +212,27 @@ function RequestsPage() {
 
                   <div className="form-actions">
                     {request.status === 'new' ? (
-                      <button
-                        type="button"
-                        className="btn btn-primary request-action"
-                        disabled={savingId !== null}
-                        onClick={() => changeStatus(request, 'handled')}
-                      >
-                        {savingId === request.id ? 'שומר...' : 'סימון כטופלה'}
-                      </button>
+                      <>
+                        {/* Only a visitor can be made a manager: the others already are */}
+                        {request.user && request.user.role === 'visitor' && (
+                          <button
+                            type="button"
+                            className="btn btn-primary request-action"
+                            disabled={savingId !== null}
+                            onClick={() => approve(request)}
+                          >
+                            {savingId === request.id && isApproving ? 'מאשר...' : 'אישור והפיכה למנהל'}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className={`btn request-action ${request.user?.role === 'visitor' ? 'btn-outline' : 'btn-primary'}`}
+                          disabled={savingId !== null}
+                          onClick={() => changeStatus(request, 'handled')}
+                        >
+                          {savingId === request.id && !isApproving ? 'שומר...' : 'סימון כטופלה'}
+                        </button>
+                      </>
                     ) : (
                       <button
                         type="button"

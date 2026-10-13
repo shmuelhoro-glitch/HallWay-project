@@ -232,6 +232,96 @@ test("marking a request does not change anyone's role", async () => {
   assert.equal(savedVisitor.role, "visitor");
 });
 
+// ---------- Approving a request ----------
+
+function approveAs(user, requestId = 1) {
+  return request("POST", `/api/owner-requests/${requestId}/approve`, { token: user?.token });
+}
+
+function roleOf(user) {
+  return supabaseRepo.all("users").find((saved) => saved.id === user.id).role;
+}
+
+test("a super approves a request: the visitor becomes an admin, and the request is handled", async () => {
+  const owner = await addUser("super");
+  const visitor = await addUser("visitor");
+  await send(visitor);
+
+  const approved = await approveAs(owner);
+
+  assert.equal(approved.status, 200);
+  assert.equal(roleOf(visitor), "admin");
+  assert.equal(supabaseRepo.all("owner_requests")[0].status, "handled");
+  assert.equal(approved.body.status, "handled");
+  assert.deepEqual(approved.body.user, { id: visitor.id, username: "user_visitor", email: "user_visitor@example.com", role: "admin" });
+  assert.equal(JSON.stringify(approved.body).includes("secret-hash"), false);
+});
+
+test("only a super approves a request - not an admin, and not the visitor himself", async () => {
+  const visitor = await addUser("visitor");
+  const admin = await addUser("admin");
+  await send(visitor);
+
+  const results = [await approveAs(visitor), await approveAs(admin), await approveAs(null)];
+
+  assert.deepEqual(results.map((result) => result.status), [403, 403, 401]);
+  assert.equal(roleOf(visitor), "visitor");
+  assert.equal(supabaseRepo.all("owner_requests")[0].status, "new");
+});
+
+test("approving never lowers a role: a super who sent a request stays a super", async () => {
+  const owner = await addUser("super");
+  const otherOwner = await addUser("super", "second_owner");
+  await send(otherOwner);
+
+  const approved = await approveAs(owner);
+
+  assert.equal(approved.status, 200);
+  assert.equal(roleOf(otherOwner), "super");
+  assert.equal(approved.body.user.role, "super");
+});
+
+test("a request that was handled, is missing, or has no user can't be approved", async () => {
+  const owner = await addUser("super");
+  const dana = await addUser("visitor", "dana_levi");
+  const noa = await addUser("visitor", "noa_cohen");
+  await send(dana);
+  await send(noa);
+  await supabaseRepo.updateOne("owner_requests", { id: 1 }, { status: "handled" });
+  await supabaseRepo.deleteOne("users", { id: noa.id });
+
+  const handled = await approveAs(owner, 1);
+  const noUser = await approveAs(owner, 2);
+  const missing = await approveAs(owner, 999);
+  const badId = await approveAs(owner, "abc");
+
+  assert.deepEqual(
+    [handled, noUser, missing, badId].map((result) => result.body.error.code),
+    ["REQUEST_ALREADY_HANDLED", "USER_NOT_FOUND", "REQUEST_NOT_FOUND", "VALIDATION_ERROR"]
+  );
+  assert.equal(roleOf(dana), "visitor");
+  assert.equal(supabaseRepo.all("owner_requests")[1].status, "new");
+});
+
+test("when the request can't be marked, the user goes back to being a visitor", async () => {
+  const owner = await addUser("super");
+  const visitor = await addUser("visitor");
+  await send(visitor);
+
+  const realUpdate = supabaseRepo.updateOne;
+  const failing = mock.method(supabaseRepo, "updateOne", (table, ...rest) => {
+    if (table === "owner_requests") throw new Error("the database is down");
+    return realUpdate.call(supabaseRepo, table, ...rest);
+  });
+
+  const approved = await approveAs(owner);
+  failing.mock.restore();
+
+  assert.equal(approved.status, 500);
+  assert.equal(roleOf(visitor), "visitor");
+  assert.equal(supabaseRepo.all("owner_requests")[0].status, "new");
+});
+
 test("only a super marks requests, and only with a known status", async () => {
   const owner = await addUser("super");
   const visitor = await addUser("visitor");

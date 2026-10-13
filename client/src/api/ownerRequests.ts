@@ -27,3 +27,8 @@ export function setOwnerRequestStatus(requestId: number, status: OwnerRequestSta
     body: JSON.stringify({ status }),
   });
 }
+
+// Makes the user who sent the request a building manager, and marks the request as handled
+export function approveOwnerRequest(requestId: number): Promise<OwnerRequestWithUser> {
+  return apiRequest<OwnerRequestWithUser>(`/api/owner-requests/${requestId}/approve`, { method: 'POST' });
+}

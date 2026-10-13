@@ -33,6 +33,7 @@ const MESSAGES: Record<string, string> = {
   // Asking to manage a building
   REQUEST_EXISTS: 'כבר שלחתם פנייה, והיא ממתינה לטיפול.',
   REQUEST_NOT_FOUND: 'הפנייה לא נמצאה.',
+  REQUEST_ALREADY_HANDLED: 'הפנייה הזו כבר טופלה. רעננו את הדף.',
 
   // Floors and places
   INVALID_SVG: 'קובץ ה-SVG לא תקין. הוא צריך להכיל viewBox.',

@@ -1,8 +1,13 @@
 import { Router } from "express";
 import { verifyToken, requireSuper } from "../middleware/authentication.js";
 import { validateRequest } from "../middleware/validation.js";
-import { createOwnerRequestSchema, updateOwnerRequestSchema } from "../schemas/ownerRequests.schemas.js";
 import {
+  approveOwnerRequestSchema,
+  createOwnerRequestSchema,
+  updateOwnerRequestSchema,
+} from "../schemas/ownerRequests.schemas.js";
+import {
+  approveOwnerRequest,
   createOwnerRequest,
   getMyOwnerRequest,
   getOwnerRequests,
@@ -22,5 +27,7 @@ router.get('/mine', getMyOwnerRequest)
 router.get('/', requireSuper, getOwnerRequests)
 
 router.patch('/:requestId', requireSuper, validateRequest(updateOwnerRequestSchema), updateOwnerRequest)
+
+router.post('/:requestId/approve', requireSuper, validateRequest(approveOwnerRequestSchema), approveOwnerRequest)
 
 export default router
