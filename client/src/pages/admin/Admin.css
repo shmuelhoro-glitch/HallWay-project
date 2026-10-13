@@ -357,6 +357,20 @@
   margin-top: 14px;
 }
 
+/* Undo / redo, under the modes */
+.editor-history {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.editor-history-last {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 /* The letter of the keyboard shortcut, small, next to the name of the mode */
 .editor-key {
   margin-inline-start: 6px;
