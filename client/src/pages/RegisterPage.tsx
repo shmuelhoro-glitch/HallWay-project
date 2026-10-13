@@ -47,7 +47,10 @@ function RegisterPage() {
       // Registered - now log in, so the user does not have to type it again
       const result = await login(email, password);
       setAuth(result.token, result.user);
-      navigate(redirect, { replace: true });
+
+      // A new account is always a visitor. Someone who came here on the way to the admin
+      // screens wants to manage a building, so he continues to the request form, not to a closed door.
+      navigate(redirect.startsWith('/admin') ? '/join' : redirect, { replace: true });
     } catch (registerError) {
       setError(getErrorMessage(registerError));
     } finally {

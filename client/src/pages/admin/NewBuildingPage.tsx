@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createBuilding } from '../../api/admin';
+import { createBuilding, findAddressOnMap } from '../../api/admin';
+import type { MapPoint } from '../../api/admin';
+import { ApiError } from '../../api/client';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
 import type { BuildingType } from '../../types/building';
 import { getErrorMessage } from '../../utils/errorMessage';
+import LocationPickerMap from '../../components/admin/LocationPickerMap';
 import { BackIcon } from '../../components/ui/Icons';
 import './Admin.css';
 
@@ -24,13 +27,54 @@ function NewBuildingPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // The spot on the map. The admin can look the address up, see the pin, and move it.
+  // Without a pin the server looks the address up by itself when the building is saved.
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  const [point, setPoint] = useState<MapPoint | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [mapMessage, setMapMessage] = useState<string | null>(null);
+
+  // The pin belongs to the address it was found for: a new address starts over
+  function changeAddress(newAddress: string, newCity: string) {
+    setAddress(newAddress);
+    setCity(newCity);
+    setPoint(null);
+    setIsMapOpen(false);
+    setMapMessage(null);
+  }
+
+  // The address is not on the map: the admin puts the pin there by hand, and the building can still be saved
+  function askForManualPin() {
+    setPoint(null);
+    setIsMapOpen(true);
+    setMapMessage('לא מצאנו את הכתובת במפה. לחצו במפה על המיקום של המבנה.');
+  }
+
+  async function handleLocate() {
+    setIsLocating(true);
+    setMapMessage(null);
+
+    try {
+      setPoint(await findAddressOnMap(address.trim(), city.trim()));
+      setIsMapOpen(true);
+      setMapMessage('זה המיקום שמצאנו. אם הסיכה לא במקום, גררו אותה או לחצו במפה.');
+    } catch (locateError) {
+      if (locateError instanceof ApiError && locateError.code === 'ADDRESS_NOT_FOUND') {
+        askForManualPin();
+      } else {
+        setMapMessage(getErrorMessage(locateError, 'לא הצלחנו לאתר את הכתובת כרגע. נסו שוב.'));
+      }
+    } finally {
+      setIsLocating(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setIsSaving(true);
 
     try {
-      // The server finds the map location (lat, lng) from the address by itself
       const building = await createBuilding({
         name,
         type,
@@ -38,9 +82,14 @@ function NewBuildingPage() {
         city,
         alert_area: alertArea,
         floors_count: Number(floorsCount),
+        ...(point ?? {}), // the pin, when there is one
       });
       navigate(`/admin/${building.id}/floors`);
     } catch (saveError) {
+      // Nothing that was typed is lost. An address the server can't find opens the map for a pin by hand.
+      if (saveError instanceof ApiError && saveError.code === 'ADDRESS_NOT_FOUND') {
+        askForManualPin();
+      }
       setError(getErrorMessage(saveError, 'לא הצלחנו לשמור את המבנה. נסו שוב.'));
       setIsSaving(false);
     }
@@ -121,7 +170,7 @@ function NewBuildingPage() {
                 minLength={2}
                 placeholder="הרברט סמואל 1"
                 value={address}
-                onChange={(event) => setAddress(event.target.value)}
+                onChange={(event) => changeAddress(event.target.value, city)}
               />
             </div>
 
@@ -136,12 +185,27 @@ function NewBuildingPage() {
                 minLength={2}
                 placeholder="תל אביב"
                 value={city}
-                onChange={(event) => setCity(event.target.value)}
+                onChange={(event) => changeAddress(address, event.target.value)}
               />
             </div>
 
             <div className="form-wide">
-              <p className="field-hint">את המיקום במפה אנחנו מוצאים לפי הכתובת והעיר.</p>
+              <div className="locate-row">
+                <button
+                  type="button"
+                  className="btn btn-small"
+                  disabled={isLocating || address.trim().length < 2 || city.trim().length < 2}
+                  onClick={handleLocate}
+                >
+                  {isLocating ? 'מאתר...' : 'איתור הכתובת במפה'}
+                </button>
+                <span className="field-hint locate-hint">
+                  {point ? 'המיקום שבמפה הוא זה שיישמר.' : 'לא חובה: בלי איתור, המיקום נקבע לפי הכתובת בזמן השמירה.'}
+                </span>
+              </div>
+
+              {mapMessage && <p className="message-info">{mapMessage}</p>}
+              {isMapOpen && <LocationPickerMap point={point} onChange={setPoint} />}
 
               <label className="field-label" htmlFor="building-alert-area">
                 אזור התרעה

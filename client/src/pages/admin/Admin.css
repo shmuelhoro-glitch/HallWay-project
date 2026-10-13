@@ -303,6 +303,61 @@
   font-size: 14px;
 }
 
+/* ---------- New building: the spot on the map ---------- */
+
+.locate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.locate-hint {
+  flex: 1;
+  min-width: 180px;
+  margin: 0;
+}
+
+.location-map {
+  height: 260px;
+  margin-top: 10px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  isolation: isolate; /* Leaflet's layers stay inside the box */
+}
+
+.location-pin {
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: var(--shadow-card);
+  cursor: grab;
+}
+
+/* A mark on an admin tab: this step of the setup is done / needs a look */
+.admin-tab-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-inline-start: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-tab-mark.is-error {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
 /* ---------- Floors tab ---------- */
 
 .floors-next {

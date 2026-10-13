@@ -203,6 +203,18 @@ test("a new building belongs to the admin who created it", async () => {
   assert.equal(floor.status, 201);
 });
 
+test("a spot the admin confirmed on the map is saved as it is, and not looked up again", async () => {
+  const admin = await addUser("admin");
+
+  const created = await request("POST", "/api/buildings", {
+    token: admin.token,
+    body: { ...NEW_BUILDING, lat: 31.5, lng: 35.1 },
+  });
+
+  assert.equal(created.status, 201);
+  assert.deepEqual([created.body.lat, created.body.lng], [31.5, 35.1]); // the fake geocoder answers 32.08, 34.78
+});
+
 test("a super creates a building without adding it to a list", async () => {
   const owner = await addUser("super");
 

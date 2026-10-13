@@ -1,7 +1,7 @@
 import { verifyToken, requireBuildingAccess, requireManager } from "../middleware/authentication.js";
 import { validateRequest } from "../middleware/validation.js";
-import { createBuildingSchema, addFloorSchema } from "../schemas/buildings.schemas.js";
-import { createBuilding, getFloorPlan, getMyBuildings } from "../controllers/buildings.controller.js";
+import { createBuildingSchema, addFloorSchema, geocodeSchema } from "../schemas/buildings.schemas.js";
+import { createBuilding, geocodeBuildingAddress, getFloorPlan, getMyBuildings } from "../controllers/buildings.controller.js";
 import { addFloor } from "../controllers/buildings.controller.js";
 
 import { Router } from "express";
@@ -17,6 +17,8 @@ router.get('/mine', verifyToken, requireManager, getMyBuildings)
 router.get('/:buildingId', getBuildingById)
 
 router.post('/', verifyToken, requireManager, validateRequest(createBuildingSchema), createBuilding )
+
+router.post('/geocode', verifyToken, requireManager, validateRequest(geocodeSchema), geocodeBuildingAddress)
 
 router.get('/:buildingId/floors/:floor/plan.svg', getFloorPlan)
 

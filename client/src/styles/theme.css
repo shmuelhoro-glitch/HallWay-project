@@ -470,3 +470,8 @@ a:hover {
   color: var(--muted);
   text-align: center;
 }
+
+/* The message is a column, and .btn-primary grows to fill its row - here that would be the whole height */
+.screen-message .btn {
+  flex: none;
+}

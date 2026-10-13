@@ -110,7 +110,12 @@ export async function checkBuilding(req, res, next) {
     }
 
     problems.sort((a, b) => a.level.localeCompare(b.level)); // "error" before "warning"
-    res.json({ problems });
+
+    // counts: how far the setup of the building got (the marks on the admin tabs)
+    res.json({
+      problems,
+      counts: { floors: floors.length, places: places.length, nodes: nodes.length, edges: edges.length },
+    });
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, NavLink, Outlet, useParams } from 'react-router-dom';
-import { getMyBuildings } from '../../api/admin';
+import { Link, Navigate, NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
+import { getBuildingCheck, getMyBuildings } from '../../api/admin';
+import type { BuildingCheck } from '../../api/admin';
 import { getBuildingById } from '../../api/buildings';
 import type { BuildingDetails } from '../../types/building';
 import { BUILDING_TYPE_LABELS } from '../../types/building';
@@ -18,6 +19,8 @@ function AdminLayout() {
   const [building, setBuilding] = useState<BuildingDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0); // reloadBuilding() adds 1 = load again
+  const [setup, setSetup] = useState<BuildingCheck | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
     let isCancelled = false;
@@ -43,6 +46,35 @@ function AdminLayout() {
       isCancelled = true;
     };
   }, [buildingId, loadAttempt]);
+
+  // How far the setup of the building got, for the marks on the tabs.
+  // Asked again on every move between tabs, so a tab that was just finished gets its mark.
+  useEffect(() => {
+    let isCancelled = false;
+
+    getBuildingCheck(buildingId)
+      .then((result) => {
+        if (!isCancelled) setSetup(result);
+      })
+      .catch(() => {
+        // The marks are only a help. Without them the screens work the same.
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [buildingId, location.pathname]);
+
+  const errorCount = setup ? setup.problems.filter((problem) => problem.level === 'error').length : 0;
+
+  function doneMark(isDone: boolean) {
+    if (!isDone) return null;
+    return (
+      <span className="admin-tab-mark" title="הושלם">
+        ✓
+      </span>
+    );
+  }
 
   if (error) {
     return (
@@ -91,20 +123,31 @@ function AdminLayout() {
       </header>
 
       <nav className="admin-tabs" aria-label="חלקי המבנה">
+        {/* The tabs are also the steps of setting a building up: a mark shows which ones are done */}
         <NavLink to="floors" className="admin-tab">
           קומות
+          {doneMark(setup !== null && setup.counts.floors > 0)}
         </NavLink>
         <NavLink to="places" className="admin-tab">
           מקומות
+          {doneMark(setup !== null && setup.counts.places > 0)}
         </NavLink>
         <NavLink to="graph" className="admin-tab">
           מעברים
+          {doneMark(setup !== null && setup.counts.edges > 0)}
         </NavLink>
         <NavLink to="qr" className="admin-tab">
           קודי QR
         </NavLink>
         <NavLink to="check" className="admin-tab">
           בדיקה
+          {errorCount > 0 ? (
+            <span className="admin-tab-mark is-error" title={`${errorCount} שגיאות`}>
+              {errorCount}
+            </span>
+          ) : (
+            doneMark(setup !== null && setup.counts.edges > 0)
+          )}
         </NavLink>
       </nav>
 

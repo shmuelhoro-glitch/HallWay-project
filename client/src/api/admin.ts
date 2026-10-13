@@ -19,6 +19,22 @@ export interface NewBuilding {
   city: string;
   alert_area: string;
   floors_count: number;
+  // The spot the admin confirmed on the map. Without it the server finds the spot from the address.
+  lat?: number;
+  lng?: number;
+}
+
+export interface MapPoint {
+  lat: number;
+  lng: number;
+}
+
+// Where an address is on the map, to show it to the admin before the building is saved
+export function findAddressOnMap(address: string, city: string): Promise<MapPoint> {
+  return apiRequest<MapPoint>('/api/buildings/geocode', {
+    method: 'POST',
+    body: JSON.stringify({ address, city }),
+  });
 }
 
 export function createBuilding(data: NewBuilding): Promise<Building> {
@@ -157,8 +173,13 @@ export interface CheckProblem {
   name: string | null; // the place name, the point name or the connector id
 }
 
-export function getBuildingCheck(buildingId: string): Promise<{ problems: CheckProblem[] }> {
-  return apiRequest<{ problems: CheckProblem[] }>(`/api/buildings/${buildingId}/graph/check`);
+export interface BuildingCheck {
+  problems: CheckProblem[];
+  counts: { floors: number; places: number; nodes: number; edges: number }; // how far the setup got
+}
+
+export function getBuildingCheck(buildingId: string): Promise<BuildingCheck> {
+  return apiRequest<BuildingCheck>(`/api/buildings/${buildingId}/graph/check`);
 }
 
 // ---------- QR ----------

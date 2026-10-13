@@ -155,6 +155,15 @@ function FloorsPage() {
       return;
     }
 
+    // Replacing a plan can't be undone, and the points and places stay where they were on the old one
+    const existing = floors.find((floor) => floor.floor === Number(floorNumber));
+    if (existing) {
+      const isSure = window.confirm(
+        `ל${floorLabel(existing.floor, existing.name)} כבר יש תוכנית. להחליף אותה?\n\nהנקודות, המעברים והמקומות נשארים במקומם, אז כדאי שהתוכנית החדשה תהיה באותו גודל.`,
+      );
+      if (!isSure) return;
+    }
+
     setError(null);
     setSuccess(null);
     setIsUploading(true);
