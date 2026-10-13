@@ -113,7 +113,7 @@ function RegisterPage() {
           onChange={(event) => setPassword(event.target.value)}
         />
 
-        {error && <p className="message-error">{error}</p>}
+        {error && <p className="message-error" role="alert">{error}</p>}
 
         <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
           {isSubmitting ? 'יוצר חשבון...' : 'הרשמה'}

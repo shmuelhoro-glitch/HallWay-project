@@ -18,6 +18,7 @@ function AdminHomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0); // "Try again" adds 1 and loads again
 
   useEffect(() => {
     let isCancelled = false;
@@ -26,6 +27,7 @@ function AdminHomePage() {
       .then((data) => {
         if (isCancelled) return;
         setBuildings(data);
+        setError(null);
       })
       .catch(() => {
         if (isCancelled) return;
@@ -39,7 +41,13 @@ function AdminHomePage() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [loadAttempt]);
+
+  function handleRetry() {
+    setIsLoading(true);
+    setError(null);
+    setLoadAttempt((current) => current + 1);
+  }
 
   // A simple filter by name or city, while typing
   const query = search.trim().toLowerCase();
@@ -91,8 +99,15 @@ function AdminHomePage() {
           />
         </div>
 
-        {isLoading && <p className="message-info">טוען מבנים...</p>}
-        {error && <p className="message-error">{error}</p>}
+        {isLoading && <p className="message-info is-loading" role="status">טוען מבנים...</p>}
+        {error && (
+          <p className="message-error" role="alert">
+            {error}{' '}
+            <button type="button" className="text-btn home-retry" onClick={handleRetry}>
+              נסו שוב
+            </button>
+          </p>
+        )}
 
         {!isLoading && !error && buildings.length === 0 && (
           <div className="admin-empty">

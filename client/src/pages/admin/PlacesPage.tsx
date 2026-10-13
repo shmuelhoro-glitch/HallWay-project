@@ -269,7 +269,9 @@ function PlacesPage() {
               <div>
                 <h2 className="admin-card-title">{getFloorName(floors, currentFloor.floor)}</h2>
                 <p className="admin-card-text">
-                  {places.length === 1 ? 'מקום אחד' : `${places.length} מקומות`}. לחצו על מקום כדי לערוך אותו.
+                  {places.length === 0 && !isLoading
+                    ? 'עדיין אין מקומות בקומה הזאת. לחצו על "הוספת מקום", ואז על המיקום שלו במפה.'
+                    : `${places.length === 1 ? 'מקום אחד' : `${places.length} מקומות`}. לחצו על מקום כדי לערוך אותו.`}
                 </p>
               </div>
             </div>
@@ -279,8 +281,8 @@ function PlacesPage() {
               הוספת מקום
             </button>
 
-            {isLoading && <p className="message-info">טוען...</p>}
-            {loadError && <p className="message-error">{loadError}</p>}
+            {isLoading && <p className="message-info is-loading" role="status">טוען...</p>}
+            {loadError && <p className="message-error" role="alert">{loadError}</p>}
 
             {sortedPlaces.map((place) => (
               <button key={place._id} type="button" className="admin-row places-row" onClick={() => startEdit(place)}>

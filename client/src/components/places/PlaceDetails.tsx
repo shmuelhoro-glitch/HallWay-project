@@ -51,8 +51,8 @@ function PlaceDetails({ place, floorName, routeStatus, onNavigate, onClose, onOp
         )}
       </div>
 
-      {routeStatus === 'no-route' && <p className="message-error">לא נמצא מסלול. ייתכן שמעבר חסום כרגע.</p>}
-      {routeStatus === 'error' && <p className="message-error">משהו השתבש. נסו שוב.</p>}
+      {routeStatus === 'no-route' && <p className="message-error" role="alert">לא נמצא מסלול. ייתכן שמעבר חסום כרגע.</p>}
+      {routeStatus === 'error' && <p className="message-error" role="alert">משהו השתבש. נסו שוב.</p>}
 
       <div className="sheet-actions">
         <button type="button" className="btn btn-primary" onClick={onNavigate} disabled={isLoading}>

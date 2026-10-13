@@ -121,7 +121,7 @@ function PlaceForm({ values, onChange, isNew, categories, isSaving, error, onSub
         מבקרים בוחרים נקודת ציון כדי לומר איפה הם נמצאים, למשל בזמן התרעת צבע אדום. עד 5 בכל קומה.
       </p>
 
-      {error && <p className="message-error">{error}</p>}
+      {error && <p className="message-error" role="alert">{error}</p>}
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={isSaving || !hasPoint}>

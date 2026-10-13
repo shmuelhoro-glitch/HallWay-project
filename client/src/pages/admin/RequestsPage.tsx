@@ -116,9 +116,9 @@ function RequestsPage() {
               ))}
             </div>
 
-            {isLoading && <p className="message-info">טוען פניות...</p>}
-            {loadError && <p className="message-error">{loadError}</p>}
-            {saveError && <p className="message-error">{saveError}</p>}
+            {isLoading && <p className="message-info is-loading" role="status">טוען פניות...</p>}
+            {loadError && <p className="message-error" role="alert">{loadError}</p>}
+            {saveError && <p className="message-error" role="alert">{saveError}</p>}
 
             {!isLoading && !loadError && shown.length === 0 && (
               <div className="admin-empty requests-empty">

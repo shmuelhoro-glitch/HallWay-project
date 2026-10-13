@@ -85,11 +85,11 @@ function CheckPage() {
           </button>
         </div>
 
-        {problems === null && !error && <p className="message-info">בודק...</p>}
-        {error && <p className="message-error">{error}</p>}
+        {problems === null && !error && <p className="message-info is-loading" role="status">בודק...</p>}
+        {error && <p className="message-error" role="alert">{error}</p>}
 
         {problems !== null && problems.length === 0 && (
-          <p className="message-success">לא נמצאו בעיות. מבקרים יכולים להגיע לכל מקום במבנה.</p>
+          <p className="message-success" role="status">לא נמצאו בעיות. מבקרים יכולים להגיע לכל מקום במבנה.</p>
         )}
         {problems !== null && problems.length > 0 && (
           <p className={errors.length > 0 ? 'message-error' : 'message-info'}>

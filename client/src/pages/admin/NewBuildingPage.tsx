@@ -225,7 +225,7 @@ function NewBuildingPage() {
             </div>
           </div>
 
-          {error && <p className="message-error">{error}</p>}
+          {error && <p className="message-error" role="alert">{error}</p>}
 
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={isSaving}>
