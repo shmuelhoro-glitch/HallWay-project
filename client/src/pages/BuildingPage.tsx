@@ -71,8 +71,9 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const [isShelterRoute, setIsShelterRoute] = useState(false);
 
   // ---------- Open panels ----------
-  // Without ?node= we don't know where the visitor is, so we ask right away
-  const [isPickerOpen, setIsPickerOpen] = useState(nodeParam === null);
+  // A visitor first looks around: the map and the search come before any question.
+  // "Where are you?" opens by itself only for a "navigate to me" link, where a route is waiting for it.
+  const [isPickerOpen, setIsPickerOpen] = useState(nodeParam === null && targetParam !== null);
   const [scanPurpose, setScanPurpose] = useState<'start' | 'shelter' | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
