@@ -56,6 +56,20 @@
   overflow-wrap: anywhere;
 }
 
+/* Delete / block, only a manager sees them */
+.chat-message-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.chat-message-actions .text-btn {
+  min-height: 0;
+  padding: 2px 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
 .chat-form {
   display: flex;
   gap: 8px;

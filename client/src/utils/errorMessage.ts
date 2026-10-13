@@ -27,6 +27,8 @@ const MESSAGES: Record<string, string> = {
   CHAT_TEXT_INVALID: 'הודעה צריכה להכיל בין תו אחד ל-500 תווים.',
   CHAT_TOO_FAST: 'שלחתם יותר מדי הודעות. חכו כמה שניות ונסו שוב.',
   CHAT_BANNED: 'אין לכם אפשרות לכתוב בצ׳אט של המבנה הזה.',
+  MESSAGE_NOT_FOUND: 'ההודעה לא נמצאה. ייתכן שהיא כבר נמחקה.',
+  USER_NOT_FOUND: 'המשתמש לא נמצא.',
 
   // Asking to manage a building
   REQUEST_EXISTS: 'כבר שלחתם פנייה, והיא ממתינה לטיפול.',

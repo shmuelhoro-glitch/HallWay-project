@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { mongoRepo } from "../repositories/mongoRepo.js";
 import { supabaseRepo } from "../repositories/sqlRepo.js";
 
@@ -88,4 +89,52 @@ export function createRateLimiter({ max = 5, perMs = 10000 } = {}) {
 
 export function tooFastError() {
   return { code: "CHAT_TOO_FAST", message: "You are writing too fast. Wait a few seconds." };
+}
+
+// One count for every way of sending (Socket.IO and REST), so a writer has one quota
+export const allowMessage = createRateLimiter();
+
+// ---------- Moderation, for the managers of the building ----------
+
+export async function deleteMessage(buildingId, messageId) {
+  const notFound = { status: 404, code: "MESSAGE_NOT_FOUND", message: "Message not found" };
+
+  if (!ObjectId.isValid(messageId)) {
+    throw notFound;
+  }
+  // buildingId in the query: a manager can't delete a message of another building
+  const deletedCount = await mongoRepo.deleteOne("messages", { _id: new ObjectId(messageId), buildingId });
+  if (deletedCount === 0) {
+    throw notFound;
+  }
+}
+
+// Blocks a user from writing in the chat of this building. Blocking twice is not an error.
+export async function banUser(buildingId, userId) {
+  const user = await supabaseRepo.findOne("users", { id: userId });
+  if (!user) {
+    throw { status: 404, code: "USER_NOT_FOUND", message: "User not found" };
+  }
+
+  const existing = await supabaseRepo.findOne("chat_bans", { building_id: buildingId, user_id: userId });
+  if (!existing) {
+    await supabaseRepo.insertOne("chat_bans", { building_id: buildingId, user_id: userId });
+  }
+  return { userId, username: user.username };
+}
+
+export async function unbanUser(buildingId, userId) {
+  await supabaseRepo.deleteOne("chat_bans", { building_id: buildingId, user_id: userId });
+}
+
+// The users that are blocked in this building, with their names
+export async function getBans(buildingId) {
+  const bans = await supabaseRepo.findMany("chat_bans", { building_id: buildingId });
+
+  const result = [];
+  for (const ban of bans) {
+    const user = await supabaseRepo.findOne("users", { id: ban.user_id });
+    result.push({ userId: ban.user_id, username: user ? user.username : null, createdAt: ban.created_at ?? null });
+  }
+  return result;
 }

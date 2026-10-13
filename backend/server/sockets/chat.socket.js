@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
-import { createRateLimiter, saveMessage, tooFastError } from "../services/chat.service.js";
+import { allowMessage, saveMessage, tooFastError } from "../services/chat.service.js";
 
 // The live side of the chat (Socket.IO). The client:
 //   connects with { auth: { token } } (a guest connects without a token, and can only read)
 //   chat:join { buildingId }        -> enters the room of that building
 //   chat:send { buildingId, text }  -> everyone in the room gets chat:message
+//   a manager deleted a message     -> everyone in the room gets chat:deleted { messageId }
 //   a problem with a message        -> only the writer gets chat:error { code, message }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -13,8 +14,17 @@ function roomOf(buildingId) {
   return `building:${buildingId}`;
 }
 
+// The REST side of the chat (a message sent or deleted through a route) tells the room about it with this
+let chatIo = null;
+
+export function broadcastToBuilding(buildingId, event, payload) {
+  if (chatIo) {
+    chatIo.to(roomOf(buildingId)).emit(event, payload);
+  }
+}
+
 export function setupChatSocket(io) {
-  const allow = createRateLimiter();
+  chatIo = io;
 
   // Who is this? A bad or expired token is not an error here: the user is simply a guest.
   io.use((socket, next) => {
@@ -47,7 +57,7 @@ export function setupChatSocket(io) {
         }
 
         // Counted per user, so opening a second tab does not give a second quota
-        if (socket.data.userId && !allow(socket.data.userId)) {
+        if (socket.data.userId && !allowMessage(socket.data.userId)) {
           throw tooFastError();
         }
 
