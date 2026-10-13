@@ -103,6 +103,9 @@ function AdminLayout() {
         <NavLink to="qr" className="admin-tab">
           קודי QR
         </NavLink>
+        <NavLink to="check" className="admin-tab">
+          בדיקה
+        </NavLink>
       </nav>
 
       <main className="admin-content">

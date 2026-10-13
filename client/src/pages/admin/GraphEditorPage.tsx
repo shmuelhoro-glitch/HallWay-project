@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   createEdge,
   createNode,
@@ -17,6 +17,7 @@ import type { Graph, GraphEdge, GraphNode } from '../../types/graph';
 import type { Place } from '../../types/place';
 import type { SvgPoint } from '../../utils/svgCoords';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { getLinkedFloor } from '../../utils/floors';
 import { useAdminBuilding } from './adminContext';
 import FloorMap from '../../components/map/FloorMap';
 import FloorSwitcher from '../../components/map/FloorSwitcher';
@@ -32,15 +33,20 @@ function GraphEditorPage() {
   const { building } = useAdminBuilding();
   const floors = building.floors;
 
-  const [floor, setFloor] = useState(floors.length > 0 ? floors[0].floor : 0);
+  // A link from the Check tab (?floor=1&node=...) opens that floor, with that point selected
+  const [searchParams] = useSearchParams();
+  const linkedFloor = getLinkedFloor(searchParams, floors);
+  const linkedNodeId = searchParams.get('node');
+
+  const [floor, setFloor] = useState(linkedFloor ?? (floors.length > 0 ? floors[0].floor : 0));
   const [graph, setGraph] = useState<Graph>(EMPTY_GRAPH); // only the floor on screen
   const [places, setPlaces] = useState<Place[]>([]); // the places of this floor, to know their entrances
   const [connectorIds, setConnectorIds] = useState<string[]>([]); // of the whole building
   const [isLoading, setIsLoading] = useState(true);
 
-  const [mode, setMode] = useState<EditorMode>('draw');
+  const [mode, setMode] = useState<EditorMode>(linkedNodeId ? 'select' : 'draw');
   // Draw mode: the last point of the line. Edit mode: the point in the side panel.
-  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(linkedNodeId);
   const [movingNodeId, setMovingNodeId] = useState<string | null>(null);
 
   const [isBusy, setIsBusy] = useState(false);

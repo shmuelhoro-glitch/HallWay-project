@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { createPlace, deletePlace, updatePlace } from '../../api/admin';
 import type { PlaceInput } from '../../api/admin';
 import { getPlanUrl } from '../../api/buildings';
@@ -7,7 +7,7 @@ import { getPlaces } from '../../api/places';
 import type { Place } from '../../types/place';
 import type { SvgPoint } from '../../utils/svgCoords';
 import { getErrorMessage } from '../../utils/errorMessage';
-import { getFloorName } from '../../utils/floors';
+import { getFloorName, getLinkedFloor } from '../../utils/floors';
 import { useAdminBuilding } from './adminContext';
 import FloorMap from '../../components/map/FloorMap';
 import FloorSwitcher from '../../components/map/FloorSwitcher';
@@ -35,12 +35,31 @@ function getChanges(original: Place, input: PlaceInput): Partial<PlaceInput> {
   return changes;
 }
 
+// A saved place, as the form shows it
+function placeToForm(place: Place): PlaceFormValues {
+  return {
+    name: place.name,
+    type: place.type,
+    category: place.category,
+    hours: place.hours ?? '',
+    url: place.url ?? '',
+    isLandmark: place.isLandmark,
+    x: place.x,
+    y: place.y,
+  };
+}
+
 // The "Places" tab: the places of each floor, on the map and in a list
 function PlacesPage() {
   const { building } = useAdminBuilding();
   const floors = building.floors;
 
-  const [floor, setFloor] = useState(floors.length > 0 ? floors[0].floor : 0);
+  // A link from the Check tab (?floor=1&place=...) opens that floor, with that place in the form
+  const [searchParams] = useSearchParams();
+  const linkedFloor = getLinkedFloor(searchParams, floors);
+  const linkedPlaceId = useRef(searchParams.get('place')); // emptied after the place was opened once
+
+  const [floor, setFloor] = useState(linkedFloor ?? (floors.length > 0 ? floors[0].floor : 0));
   const [places, setPlaces] = useState<Place[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,6 +80,13 @@ function PlacesPage() {
         if (isCancelled) return;
         setPlaces(data);
         setLoadError(null);
+
+        const linkedPlace = data.find((place) => place._id === linkedPlaceId.current);
+        if (linkedPlace) {
+          linkedPlaceId.current = null;
+          setEditingId(linkedPlace._id);
+          setForm(placeToForm(linkedPlace));
+        }
       })
       .catch(() => {
         if (isCancelled) return;
@@ -119,16 +145,7 @@ function PlacesPage() {
 
   function startEdit(place: Place) {
     setEditingId(place._id);
-    setForm({
-      name: place.name,
-      type: place.type,
-      category: place.category,
-      hours: place.hours ?? '',
-      url: place.url ?? '',
-      isLandmark: place.isLandmark,
-      x: place.x,
-      y: place.y,
-    });
+    setForm(placeToForm(place));
     setFormError(null);
   }
 

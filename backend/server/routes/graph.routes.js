@@ -9,6 +9,7 @@ import {
   updateNodeSchema,
 } from "../schemas/graph.schemas.js";
 import {
+  checkBuilding,
   createEdge,
   createNode,
   deleteEdge,
@@ -24,6 +25,8 @@ const router = Router({ mergeParams: true })
 router.use(verifyToken, requireBuildingAccess)
 
 router.get('/', validateRequest(graphQuerySchema), getGraph)
+
+router.get('/check', checkBuilding)
 
 router.post('/nodes', validateRequest(createNodeSchema), createNode)
 
