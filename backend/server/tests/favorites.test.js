@@ -5,7 +5,7 @@ import { callController, useFakeRepos } from "./helpers.js";
 
 process.env.JWT_SECRET = "test-secret";
 
-const { supabaseRepo, resetData } = useFakeRepos();
+const { supabaseRepo, mongoRepo, resetData } = useFakeRepos();
 
 const { getFavorites, updateFavorites, register, login } = await import("../controllers/auth.controller.js");
 
@@ -91,3 +91,33 @@ test("register returns initial empty favorites", async () => {
   assert.ok(res.body.user);
   assert.deepEqual(res.body.user.favorites, { buildings: [], places: [] });
 });
+
+test("updateFavorites falls back to mongoRepo when supabase update throws", async () => {
+  supabaseRepo.failOn("updateOne", "users");
+
+  const sampleFavorites = {
+    buildings: ["b-fallback"],
+    places: [{ id: "p-fallback", buildingId: "b-fallback", name: "קפה גרג", category: "אוכל", floor: 2 }],
+  };
+
+  const req = {
+    user: { userId: testUserId },
+    body: { favorites: sampleFavorites },
+  };
+
+  const res = await callController(updateFavorites, req);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.success, true);
+  assert.deepEqual(res.body.favorites, sampleFavorites);
+
+  // Check saved in mongo fallback collection
+  const mongoDoc = await mongoRepo.findOne("user_favorites", { userId: testUserId });
+  assert.ok(mongoDoc);
+  assert.deepEqual(mongoDoc.favorites, sampleFavorites);
+
+  // Verify getFavorites reads from mongo fallback
+  const getRes = await callController(getFavorites, { user: { userId: testUserId } });
+  assert.equal(getRes.status, 200);
+  assert.deepEqual(getRes.body.favorites, sampleFavorites);
+});
+

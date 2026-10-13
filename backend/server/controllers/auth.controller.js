@@ -1,4 +1,5 @@
 import { supabaseRepo } from "../repositories/sqlRepo.js"
+import { mongoRepo } from "../repositories/mongoRepo.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { recordFailedAttempt, resetFailedAttempts, getClientIp } from "../middleware/loginRateLimiter.js"
@@ -6,6 +7,63 @@ import { recordFailedAttempt, resetFailedAttempts, getClientIp } from "../middle
 // The same token in register and login: { userId, role }
 function createToken(userId, role) {
     return jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: "24h" })
+}
+
+// Retrieves favorites from Supabase user record, or falls back to MongoDB user_favorites
+async function fetchUserFavorites(userId, userFavoritesFromSupabase) {
+    const hasSupabaseFavs = userFavoritesFromSupabase &&
+        ((userFavoritesFromSupabase.buildings?.length > 0) || (userFavoritesFromSupabase.places?.length > 0));
+
+    if (hasSupabaseFavs) {
+        return userFavoritesFromSupabase;
+    }
+
+    try {
+        const doc = await mongoRepo.findOne("user_favorites", { userId });
+        if (doc && doc.favorites) {
+            return doc.favorites;
+        }
+    } catch {
+        // ignore fallback errors
+    }
+    return userFavoritesFromSupabase || { buildings: [], places: [] };
+}
+
+// Saves favorites into Supabase if 'favorites' column exists, otherwise falls back to MongoDB user_favorites
+async function persistUserFavorites(userId, cleanFavorites) {
+    try {
+        await supabaseRepo.updateOne(
+            "users",
+            { id: userId },
+            { favorites: cleanFavorites }
+        );
+        return;
+    } catch (err) {
+        console.warn(
+            `[persistUserFavorites] Supabase update failed (${err.message}). Storing in MongoDB user_favorites fallback.`
+        );
+    }
+
+    // Fallback to MongoDB
+    try {
+        const existing = await mongoRepo.findOne("user_favorites", { userId });
+        if (existing) {
+            await mongoRepo.updateOne(
+                "user_favorites",
+                { userId },
+                { $set: { favorites: cleanFavorites, updatedAt: new Date() } }
+            );
+        } else {
+            await mongoRepo.insertOne("user_favorites", {
+                userId,
+                favorites: cleanFavorites,
+                updatedAt: new Date(),
+            });
+        }
+    } catch (mongoErr) {
+        console.error("[persistUserFavorites] MongoDB fallback also failed:", mongoErr);
+        throw { status: 500, code: "FAVORITES_SAVE_FAILED", message: "Failed to save favorites" };
+    }
 }
 
 export async function register(req, res, next) {
@@ -28,14 +86,27 @@ export async function register(req, res, next) {
         // 10 rounds, like the seed script. More rounds = much slower on the free cloud server.
         const hashPassword = await bcrypt.hash(password, 10)
         const initialFavorites = { buildings: [], places: [] }
-        const data = await supabaseRepo.insertOne("users", {
-            username,
-            email,
-            hashPassword,
-            role,
-            buildingIds: [],
-            favorites: initialFavorites,
-        })
+        
+        let data
+        try {
+            data = await supabaseRepo.insertOne("users", {
+                username,
+                email,
+                hashPassword,
+                role,
+                buildingIds: [],
+                favorites: initialFavorites,
+            })
+        } catch {
+            // If favorites column is not present in Supabase users table yet
+            data = await supabaseRepo.insertOne("users", {
+                username,
+                email,
+                hashPassword,
+                role,
+                buildingIds: [],
+            })
+        }
 
         const token = createToken(data.id, role)
         res.status(201).json({
@@ -75,6 +146,7 @@ export async function login(req, res, next) {
         resetFailedAttempts(clientIp)
 
         const token = createToken(user.id, user.role)
+        const favorites = await fetchUserFavorites(user.id, user.favorites)
 
         res.json({
             token,
@@ -84,7 +156,7 @@ export async function login(req, res, next) {
                 email: user.email,
                 role: user.role,
                 buildingIds: user.buildingIds,
-                favorites: user.favorites || { buildings: [], places: [] },
+                favorites,
             },
         })
     } catch (error) {
@@ -98,7 +170,8 @@ export async function getFavorites(req, res, next) {
         if (!user) {
             throw { status: 404, code: "USER_NOT_FOUND", message: "User not found" }
         }
-        res.json({ favorites: user.favorites || { buildings: [], places: [] } })
+        const favorites = await fetchUserFavorites(user.id, user.favorites)
+        res.json({ favorites })
     } catch (error) {
         next(error)
     }
@@ -116,14 +189,11 @@ export async function updateFavorites(req, res, next) {
             places: Array.isArray(favorites.places) ? favorites.places : [],
         }
 
-        await supabaseRepo.updateOne(
-            "users",
-            { id: req.user.userId },
-            { favorites: cleanFavorites }
-        )
+        await persistUserFavorites(req.user.userId, cleanFavorites)
 
         res.json({ success: true, favorites: cleanFavorites })
     } catch (error) {
         next(error)
     }
 }
+
