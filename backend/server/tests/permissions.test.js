@@ -234,6 +234,100 @@ test("when the building can't be given to its manager, it is not left behind", a
   assert.deepEqual(supabaseRepo.all("buildings").map((building) => building.name).sort(), ["Other Mall", "Sea Mall"]);
 });
 
+// ---------- Deleting a building ----------
+
+// Something of every kind, in both buildings
+async function fillBothBuildings() {
+  for (const buildingId of [BUILDING_ID, OTHER_BUILDING_ID]) {
+    for (const collection of ["floors", "places", "nodes", "edges", "messages"]) {
+      await mongoRepo.insertOne(collection, { buildingId });
+    }
+    for (const table of ["chat_bans", "route_requests", "alerts"]) {
+      await supabaseRepo.insertOne(table, { building_id: buildingId });
+    }
+  }
+}
+
+function buildingsLeft() {
+  return supabaseRepo.all("buildings").map((building) => building.id);
+}
+
+test("an admin deletes his building, with everything in it - and nothing of another building", async () => {
+  const admin = await addUser("admin", [BUILDING_ID, OTHER_BUILDING_ID]);
+  await fillBothBuildings();
+
+  const result = await request("DELETE", `/api/buildings/${BUILDING_ID}`, { token: admin.token });
+
+  assert.equal(result.status, 204);
+  assert.deepEqual(buildingsLeft(), [OTHER_BUILDING_ID]);
+  for (const collection of ["floors", "places", "nodes", "edges", "messages"]) {
+    assert.deepEqual(mongoRepo.all(collection).map((doc) => doc.buildingId), [OTHER_BUILDING_ID], collection);
+  }
+  for (const table of ["chat_bans", "route_requests", "alerts"]) {
+    assert.deepEqual(supabaseRepo.all(table).map((row) => row.building_id), [OTHER_BUILDING_ID], table);
+  }
+  // The building also leaves the list of its manager
+  assert.deepEqual(supabaseRepo.all("users")[0].buildingIds, [OTHER_BUILDING_ID]);
+});
+
+test("a super deletes any building", async () => {
+  const owner = await addUser("super");
+
+  const result = await request("DELETE", `/api/buildings/${OTHER_BUILDING_ID}`, { token: owner.token });
+
+  assert.equal(result.status, 204);
+  assert.deepEqual(buildingsLeft(), [BUILDING_ID]);
+});
+
+test("nobody else deletes a building: not a visitor, not another admin, not without a token", async () => {
+  const visitor = await addUser("visitor");
+  const otherAdmin = await addUser("admin", [OTHER_BUILDING_ID]);
+  const removed = await addUser("visitor", [BUILDING_ID], "admin"); // his token still says admin
+  await fillBothBuildings();
+
+  const results = [
+    await request("DELETE", `/api/buildings/${BUILDING_ID}`, { token: visitor.token }),
+    await request("DELETE", `/api/buildings/${BUILDING_ID}`, { token: otherAdmin.token }),
+    await request("DELETE", `/api/buildings/${BUILDING_ID}`, { token: removed.token }),
+    await request("DELETE", `/api/buildings/${BUILDING_ID}`),
+  ];
+
+  assert.deepEqual(results.map((result) => result.status), [403, 403, 403, 401]);
+  assert.equal(buildingsLeft().length, 2);
+  assert.equal(mongoRepo.all("places").length, 2);
+});
+
+test("a building that does not exist, or a wrong id, deletes nothing", async () => {
+  const owner = await addUser("super");
+  await fillBothBuildings();
+
+  const missing = await request("DELETE", "/api/buildings/33333333-3333-4333-8333-333333333333", { token: owner.token });
+  const badId = await request("DELETE", "/api/buildings/abc", { token: owner.token });
+
+  assert.equal(missing.body.error.code, "BUILDING_NOT_FOUND");
+  assert.equal(badId.body.error.code, "VALIDATION_ERROR");
+  assert.equal(buildingsLeft().length, 2);
+  assert.equal(mongoRepo.all("places").length, 2);
+});
+
+test("when the delete fails in the middle, the building stays in the list and can be deleted again", async () => {
+  const admin = await addUser("admin", [BUILDING_ID]);
+  await fillBothBuildings();
+  mongoRepo.failOn("deleteMany", "nodes");
+
+  const failed = await request("DELETE", `/api/buildings/${BUILDING_ID}`, { token: admin.token });
+
+  assert.equal(failed.status, 500);
+  assert.equal(buildingsLeft().length, 2);
+  assert.deepEqual(supabaseRepo.all("users")[0].buildingIds, [BUILDING_ID]);
+
+  const again = await request("DELETE", `/api/buildings/${BUILDING_ID}`, { token: admin.token });
+
+  assert.equal(again.status, 204);
+  assert.deepEqual(buildingsLeft(), [OTHER_BUILDING_ID]);
+  assert.deepEqual(mongoRepo.all("nodes").map((doc) => doc.buildingId), [OTHER_BUILDING_ID]);
+});
+
 // ---------- The list in the admin home screen ----------
 
 test("an admin gets only his buildings, a super gets all of them, a visitor none", async () => {

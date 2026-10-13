@@ -50,6 +50,56 @@ export async function createBuilding(req, res, next) {
   }
 }
 
+// Everything a building has in MongoDB, and in the tables that point at it
+const BUILDING_COLLECTIONS = ["places", "edges", "nodes", "floors", "messages"];
+const BUILDING_TABLES = ["chat_bans", "route_requests", "alerts"];
+
+// DELETE /api/buildings/:buildingId  (a manager of this building, or a super)
+// Deletes the building with everything in it. There is no way back, so the order matters:
+// the content first and the building itself last. If something fails in the middle,
+// the building is still in the list and can be deleted again.
+export async function deleteBuilding(req, res, next) {
+  try {
+    const { buildingId } = req.params;
+
+    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
+    if (!building) {
+      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
+    }
+
+    for (const collection of BUILDING_COLLECTIONS) {
+      await mongoRepo.deleteMany(collection, { buildingId });
+    }
+
+    // The database deletes these rows with the building (on delete cascade), if the tables were
+    // created from scripts/tables.sql. Deleting them here too costs nothing, and a table that
+    // does not exist yet must not stop the delete.
+    for (const table of BUILDING_TABLES) {
+      await undo(`delete the ${table} of building ${buildingId}`, () =>
+        supabaseRepo.deleteOne(table, { building_id: buildingId })
+      );
+    }
+
+    // No manager keeps a building that is gone
+    const users = await supabaseRepo.findMany("users");
+    for (const user of users) {
+      if (Array.isArray(user.buildingIds) && user.buildingIds.includes(buildingId)) {
+        await supabaseRepo.updateOne(
+          "users",
+          { id: user.id },
+          { buildingIds: user.buildingIds.filter((id) => id !== buildingId) }
+        );
+      }
+    }
+
+    await supabaseRepo.deleteOne("buildings", { id: buildingId });
+
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+}
+
 // POST /api/buildings/geocode  { address, city }  (admin or super)
 // Where the address is on the map, so the admin can check it before the building is saved.
 export async function geocodeBuildingAddress(req, res, next) {

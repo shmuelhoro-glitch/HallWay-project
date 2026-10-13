@@ -12,6 +12,7 @@ import { detectPlacesInPlan } from '../../utils/placeDetection';
 import type { ReviewRow } from '../../utils/placeDetection';
 import { useAdminBuilding } from './adminContext';
 import FloorMap from '../../components/map/FloorMap';
+import DeleteBuildingCard from '../../components/admin/DeleteBuildingCard';
 import DetectedPointsLayer from '../../components/admin/DetectedPointsLayer';
 import DetectedPlacesReview from '../../components/admin/DetectedPlacesReview';
 import { UploadIcon } from '../../components/ui/Icons';
@@ -347,6 +348,8 @@ function FloorsPage() {
             </button>
           </div>
         </form>
+
+        <DeleteBuildingCard building={building} />
       </div>
     </div>
   );

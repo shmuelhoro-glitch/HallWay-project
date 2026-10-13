@@ -44,6 +44,11 @@ export function createBuilding(data: NewBuilding): Promise<Building> {
   });
 }
 
+// Deletes the building with everything in it: floors, places, walkways and its chat. No way back.
+export function deleteBuilding(buildingId: string): Promise<void> {
+  return apiRequest<void>(`/api/buildings/${buildingId}`, { method: 'DELETE' });
+}
+
 export interface UploadedFloor {
   floor: number;
   name: string;
