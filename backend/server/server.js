@@ -1,6 +1,9 @@
 import "dotenv/config"
+import { createServer } from "node:http"
 import  express from "express"
 import cors from "cors"
+import { Server } from "socket.io"
+import { setupChatSocket } from "./sockets/chat.socket.js"
 import { errorHandler } from "./middleware/errorHandler.js"
 import authRoutes from './routes/auth.routes.js';
 import buildingsRoutes from './routes/buildings.routes.js';
@@ -46,6 +49,11 @@ app.use('/api/owner-requests', ownerRequestsRoutes);
 
 app.use(errorHandler)
 
-app.listen(process.env.PORT, () => {
+// Express and Socket.IO share one HTTP server (and one port): the chat is live through Socket.IO
+const httpServer = createServer(app)
+const io = new Server(httpServer, { cors: { origin: "*" } })
+setupChatSocket(io)
+
+httpServer.listen(process.env.PORT, () => {
     console.log(`server is listening on port ${process.env.PORT}`)
 })
