@@ -47,6 +47,21 @@ export const EDITOR_MODES: EditorModeInfo[] = [
   },
 ];
 
+// What is drawn on the map. Hiding a layer is only a view: nothing is deleted.
+export interface EditorLayers {
+  plan: boolean;
+  edges: boolean;
+  nodes: boolean;
+  places: boolean;
+}
+
+export const EDITOR_LAYERS: { key: keyof EditorLayers; label: string }[] = [
+  { key: 'plan', label: 'תוכנית הקומה' },
+  { key: 'edges', label: 'מעברים' },
+  { key: 'nodes', label: 'נקודות' },
+  { key: 'places', label: 'מקומות' },
+];
+
 // The color of each point type, on the map and in the legend
 export const NODE_COLORS: Record<NodeType, string> = {
   corridor: '#3d4550',

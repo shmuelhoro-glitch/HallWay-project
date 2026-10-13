@@ -16,7 +16,9 @@ interface FloorMapProps {
   planUrl: string;
   width: number;
   height: number;
-  onMapClick?: (point: SvgPoint) => void;
+  // unitsPerPixel: how many plan units one screen pixel is right now (it changes with the zoom)
+  onMapClick?: (point: SvgPoint, unitsPerPixel: number) => void;
+  isPlanHidden?: boolean; // the admin editor can hide the plan, to see only the walkways
   children?: ReactNode;
 }
 
@@ -44,7 +46,7 @@ function zoomViewBox(current: ViewBox, factor: number, center: SvgPoint, planWid
 // Shows one floor plan. Layers (places, route, "you are here") are passed as children
 // and drawn on top of the plan, in the same coordinates.
 // Give it key={planUrl} from the parent, so the view resets when the floor changes.
-function FloorMap({ planUrl, width, height, onMapClick, children }: FloorMapProps) {
+function FloorMap({ planUrl, width, height, onMapClick, isPlanHidden = false, children }: FloorMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [viewBox, setViewBox] = useState<ViewBox>({ x: 0, y: 0, width, height });
   const [pixelSize, setPixelSize] = useState({ width: 1, height: 1 });
@@ -157,7 +159,7 @@ function FloorMap({ planUrl, width, height, onMapClick, children }: FloorMapProp
 
   function handleClick(event: MouseEvent<SVGSVGElement>) {
     if (!onMapClick || !svgRef.current) return;
-    onMapClick(screenToSvg(svgRef.current, event.clientX, event.clientY));
+    onMapClick(screenToSvg(svgRef.current, event.clientX, event.clientY), unitsPerPixel);
   }
 
   return (
@@ -175,7 +177,12 @@ function FloorMap({ planUrl, width, height, onMapClick, children }: FloorMapProp
         onClickCapture={handleClickCapture}
         onClick={handleClick}
       >
-        <image href={planUrl} x={0} y={0} width={width} height={height} />
+        {isPlanHidden ? (
+          // The outline of the plan stays, so the admin still sees where the floor ends
+          <rect x={0} y={0} width={width} height={height} fill="#ffffff" stroke="#d3d8dd" strokeWidth={2 * unitsPerPixel} />
+        ) : (
+          <image href={planUrl} x={0} y={0} width={width} height={height} />
+        )}
         <MapScaleContext.Provider value={unitsPerPixel}>{children}</MapScaleContext.Provider>
       </svg>
     </div>

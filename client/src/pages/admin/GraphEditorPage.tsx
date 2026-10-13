@@ -25,7 +25,9 @@ import EditorLayer from '../../components/admin/EditorLayer';
 import EditorToolbar from '../../components/admin/EditorToolbar';
 import NodeInspector from '../../components/admin/NodeInspector';
 import { EDITOR_MODES } from '../../components/admin/editorModes';
-import type { EditorMode } from '../../components/admin/editorModes';
+import type { EditorLayers, EditorMode } from '../../components/admin/editorModes';
+import PlacesLayer from '../../components/map/PlacesLayer';
+import { SNAP_PIXELS, findNearPoint, snapToAxes } from '../../utils/snap';
 
 const EMPTY_GRAPH: Graph = { nodes: [], edges: [] };
 
@@ -98,6 +100,10 @@ function GraphEditorPage() {
       })
       .catch(() => setConnectorIds([]));
   }, [building.id]);
+
+  // What is drawn on the map (only a view: hiding a layer deletes nothing), and the snap switch
+  const [layers, setLayers] = useState<EditorLayers>({ plan: true, edges: true, nodes: true, places: false });
+  const [isSnapOn, setIsSnapOn] = useState(true);
 
   // ---------- Undo / redo ----------
   // The history belongs to the floor on screen, and is forgotten when the floor changes.
@@ -362,12 +368,41 @@ function GraphEditorPage() {
 
   // ---------- Clicks ----------
 
-  function handleMapClick(point: SvgPoint) {
-    const x = Math.round(point.x);
-    const y = Math.round(point.y);
+  // The points a point has a walkway to
+  function getNeighbors(nodeId: string): GraphNode[] {
+    const neighbors: GraphNode[] = [];
+    for (const edge of graph.edges) {
+      const otherId = edge.from === nodeId ? edge.to : edge.to === nodeId ? edge.from : null;
+      const other = otherId ? graph.nodes.find((node) => node.id === otherId) : undefined;
+      if (other) neighbors.push(other);
+    }
+    return neighbors;
+  }
 
+  // With snap on: the clicked spot, pulled into line with the given points when it is almost there
+  function snapSpot(point: SvgPoint, references: GraphNode[], unitsPerPixel: number): SvgPoint {
+    if (!isSnapOn) return point;
+    return snapToAxes(point, references, SNAP_PIXELS * unitsPerPixel);
+  }
+
+  function handleMapClick(point: SvgPoint, unitsPerPixel: number) {
     if (mode === 'draw') {
       const previousNodeId = activeNodeId;
+      const previousNode = graph.nodes.find((node) => node.id === previousNodeId);
+
+      // A click right next to a point means that point: connect to it, don't put a second point on top of it
+      if (isSnapOn && layers.nodes) {
+        const nearNode = findNearPoint(point, graph.nodes, SNAP_PIXELS * 1.5 * unitsPerPixel);
+        if (nearNode) {
+          handleNodeClick(nearNode);
+          return;
+        }
+      }
+
+      const spot = snapSpot(point, previousNode ? [previousNode] : [], unitsPerPixel);
+      const x = Math.round(spot.x);
+      const y = Math.round(spot.y);
+
       run(async () => {
         // One request for the point and its walkway, so a point is never left without one
         let created;
@@ -420,8 +455,9 @@ function GraphEditorPage() {
     if (mode === 'select') {
       const movingNode = graph.nodes.find((node) => node.id === movingNodeId);
       if (movingNode) {
+        const spot = snapSpot(point, getNeighbors(movingNode.id), unitsPerPixel);
         run(async () => {
-          await moveNode(movingNode, x, y);
+          await moveNode(movingNode, Math.round(spot.x), Math.round(spot.y));
           setMovingNodeId(null);
         });
       } else {
@@ -631,7 +667,14 @@ function GraphEditorPage() {
           width={currentFloor.width}
           height={currentFloor.height}
           onMapClick={handleMapClick}
+          isPlanHidden={!layers.plan}
         >
+          {/* The places are only shown here, as a reference. They are edited in the Places tab. */}
+          {layers.places && (
+            <g pointerEvents="none">
+              <PlacesLayer places={places} selectedPlaceId={null} highlightShelters={false} onSelect={() => {}} showAllLabels />
+            </g>
+          )}
           <EditorLayer
             nodes={graph.nodes}
             edges={graph.edges}
@@ -639,6 +682,9 @@ function GraphEditorPage() {
             activeNodeId={activeNodeId}
             looseNodeIds={looseNodeIds}
             canDrag={mode === 'select' && !isBusy}
+            showEdges={layers.edges}
+            showNodes={layers.nodes}
+            isSnapOn={isSnapOn}
             onNodeClick={handleNodeClick}
             onNodeMove={handleNodeMove}
             onEdgeClick={handleEdgeClick}
@@ -660,6 +706,10 @@ function GraphEditorPage() {
           isBusy={isBusy}
           onUndo={undoLast}
           onRedo={redoLast}
+          layers={layers}
+          onLayersChange={setLayers}
+          isSnapOn={isSnapOn}
+          onSnapChange={setIsSnapOn}
         />
 
         {error && <p className="message-error">{error}</p>}

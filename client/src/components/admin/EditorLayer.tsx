@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import type { GraphEdge, GraphNode } from '../../types/graph';
 import { NODE_TYPE_LABELS } from '../../types/graph';
+import { SNAP_PIXELS, snapToAxes } from '../../utils/snap';
+import type { Point } from '../../utils/snap';
 import { screenToSvg } from '../../utils/svgCoords';
 import { useMapScale } from '../map/mapScale';
 import { NODE_COLORS } from './editorModes';
@@ -14,6 +16,9 @@ interface EditorLayerProps {
   activeNodeId: string | null; // the point being edited, or the last point of the line being drawn
   looseNodeIds: Set<string>; // points with no walkway - visitors can't get to them
   canDrag: boolean; // Edit mode, and no request is running
+  showEdges: boolean; // the "walkways" and "points" layers. Hiding is for the eyes only, nothing is deleted.
+  showNodes: boolean;
+  isSnapOn: boolean; // a dragged point is pulled into line with its neighbors
   onNodeClick: (node: GraphNode) => void;
   onNodeMove: (node: GraphNode, x: number, y: number) => void; // a point was dragged to a new spot
   onEdgeClick: (edge: GraphEdge) => void;
@@ -24,6 +29,7 @@ interface Drag {
   nodeId: string;
   x: number;
   y: number;
+  guides: Point[]; // the neighbors it is now in line with: a thin line is drawn to each
 }
 
 const DRAG_THRESHOLD = 5; // pixels. Less than this is a click, not a drag
@@ -37,6 +43,9 @@ function EditorLayer({
   activeNodeId,
   looseNodeIds,
   canDrag,
+  showEdges,
+  showNodes,
+  isSnapOn,
   onNodeClick,
   onNodeMove,
   onEdgeClick,
@@ -86,7 +95,23 @@ function EditorLayer({
     const svg = event.currentTarget.ownerSVGElement;
     if (!svg) return;
     const point = screenToSvg(svg, event.clientX, event.clientY);
-    setDrag({ nodeId: node.id, x: Math.round(point.x), y: Math.round(point.y) });
+
+    if (!isSnapOn) {
+      setDrag({ nodeId: node.id, x: Math.round(point.x), y: Math.round(point.y), guides: [] });
+      return;
+    }
+
+    // The points this one has a walkway to, where they really are (not the dragged copy)
+    const neighbors: Point[] = [];
+    for (const edge of edges) {
+      const otherId = edge.from === node.id ? edge.to : edge.to === node.id ? edge.from : null;
+      const other = otherId ? nodes.find((item) => item.id === otherId) : undefined;
+      if (other) neighbors.push(other);
+    }
+
+    const snapped = snapToAxes(point, neighbors, SNAP_PIXELS * scale);
+    const guides = [snapped.alignedX, snapped.alignedY].filter((guide): guide is Point => guide !== null);
+    setDrag({ nodeId: node.id, x: Math.round(snapped.x), y: Math.round(snapped.y), guides });
   }
 
   function handlePointerUp(event: PointerEvent<SVGGElement>, node: GraphNode) {
@@ -96,7 +121,9 @@ function EditorLayer({
     pressStart.current = null;
 
     if (drag && drag.nodeId === node.id) {
-      onNodeMove(node, drag.x, drag.y);
+      // "node" here is the dragged copy. The parent needs the point as it was, to be able to undo the move.
+      const original = nodes.find((item) => item.id === node.id) ?? node;
+      onNodeMove(original, drag.x, drag.y);
     } else if (!didDrag.current) {
       // A plain tap. We pass it on here and not in onClick: FloorMap never saw this press,
       // so it may still think the last map drag is going on, and swallow the click.
@@ -114,7 +141,24 @@ function EditorLayer({
 
   return (
     <g>
+      {/* In line with a neighbor: a thin line shows it, before the point is released */}
+      {drag &&
+        drag.guides.map((guide, index) => (
+          <line
+            key={index}
+            x1={guide.x}
+            y1={guide.y}
+            x2={drag.x}
+            y2={drag.y}
+            stroke="#1d4ed8"
+            strokeWidth={1.5 * scale}
+            strokeDasharray={`${5 * scale} ${4 * scale}`}
+            pointerEvents="none"
+          />
+        ))}
+
       {edges.map((edge) => {
+        if (!showEdges) return null;
         const a = nodesById.get(edge.from);
         const b = nodesById.get(edge.to);
         if (!a || !b) return null;
@@ -155,6 +199,7 @@ function EditorLayer({
       })}
 
       {shownNodes.map((node) => {
+        if (!showNodes) return null;
         const isActive = node.id === activeNodeId;
         const isLoose = looseNodeIds.has(node.id);
         const isDragged = drag !== null && drag.nodeId === node.id;
