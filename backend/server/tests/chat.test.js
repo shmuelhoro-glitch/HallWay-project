@@ -9,7 +9,9 @@ process.env.JWT_SECRET = "test-secret";
 
 const { mongoRepo, supabaseRepo, resetData } = useFakeRepos();
 
-const { createRateLimiter, getRecentMessages, saveMessage } = await import("../services/chat.service.js");
+const { banUser, createRateLimiter, deleteMessage, getBans, getRecentMessages, saveMessage, unbanUser } = await import(
+  "../services/chat.service.js"
+);
 const { setupChatSocket } = await import("../sockets/chat.socket.js");
 
 let userId;
@@ -80,6 +82,33 @@ test("the rate limit lets 5 messages in 10 seconds through, and opens again late
   assert.deepEqual(results, [true, true, true, true, true, false]);
   assert.equal(allow("noa", 5000), true); // another writer has his own count
   assert.equal(allow("dana", 11000), true);
+});
+
+// ---------- Moderation ----------
+
+test("a deleted message is gone, and a message of another building can't be deleted from here", async () => {
+  const mine = await saveMessage({ buildingId: BUILDING_ID, userId, text: "first" });
+  const foreignId = String(await mongoRepo.insertOne("messages", { buildingId: "other-building", userId, text: "x", createdAt: new Date() }));
+
+  await deleteMessage(BUILDING_ID, mine._id);
+  const foreign = await failureOf(deleteMessage(BUILDING_ID, foreignId));
+  const notAnId = await failureOf(deleteMessage(BUILDING_ID, "abc"));
+
+  assert.deepEqual(mongoRepo.all("messages").map((message) => String(message._id)), [foreignId]);
+  assert.deepEqual([foreign.code, notAnId.code], ["MESSAGE_NOT_FOUND", "MESSAGE_NOT_FOUND"]);
+});
+
+test("a blocked user can't write until he is unblocked, and blocking twice is fine", async () => {
+  await banUser(BUILDING_ID, userId);
+  await banUser(BUILDING_ID, userId);
+
+  assert.deepEqual(await getBans(BUILDING_ID), [{ userId, username: "dana_levi", createdAt: null }]);
+  assert.equal((await failureOf(saveMessage({ buildingId: BUILDING_ID, userId, text: "hi" }))).code, "CHAT_BANNED");
+
+  await unbanUser(BUILDING_ID, userId);
+
+  assert.equal((await saveMessage({ buildingId: BUILDING_ID, userId, text: "hi" })).text, "hi");
+  assert.equal((await failureOf(banUser(BUILDING_ID, "44444444-4444-4444-8444-444444444444"))).code, "USER_NOT_FOUND");
 });
 
 // ---------- The live side ----------

@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Socket } from 'socket.io-client';
-import { getMessages } from '../../api/chat';
+import { banUser, deleteMessage, getMessages } from '../../api/chat';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useAuthStore } from '../../store/authStore';
 import type { ChatErrorPayload, ChatMessage } from '../../types/chat';
-import { getMessageForCode } from '../../utils/errorMessage';
+import { getErrorMessage, getMessageForCode } from '../../utils/errorMessage';
 import { CloseIcon, SendIcon } from '../ui/Icons';
 import './ChatPanel.css';
 
@@ -33,6 +33,9 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // A manager gets "delete" and "block" next to every message
+  const isManager = user !== null && (user.role === 'admin' || user.role === 'super');
+
   useEscapeKey(onClose);
 
   // 1. The last messages from the server (REST)
@@ -58,12 +61,19 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
       setError(getMessageForCode(payload.code) ?? 'לא הצלחנו לשלוח את ההודעה. נסו שוב.');
     }
 
+    // A manager deleted a message: it disappears here too
+    function handleDeleted(payload: { messageId: string }) {
+      setMessages((current) => current.filter((message) => message._id !== payload.messageId));
+    }
+
     socket.on('chat:message', handleMessage);
     socket.on('chat:error', handleError);
+    socket.on('chat:deleted', handleDeleted);
 
     return () => {
       socket.off('chat:message', handleMessage);
       socket.off('chat:error', handleError);
+      socket.off('chat:deleted', handleDeleted);
     };
   }, [socket]);
 
@@ -82,6 +92,29 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
     socket.emit('chat:send', { buildingId, text: trimmed });
     setText('');
     setError(null);
+  }
+
+  // ---------- For a manager of the building (the server checks that he really is one) ----------
+
+  async function handleDelete(message: ChatMessage) {
+    try {
+      await deleteMessage(buildingId, message._id);
+      setMessages((current) => current.filter((item) => item._id !== message._id));
+      setError(null);
+    } catch (deleteError) {
+      setError(getErrorMessage(deleteError, 'לא הצלחנו למחוק את ההודעה. נסו שוב.'));
+    }
+  }
+
+  async function handleBan(message: ChatMessage) {
+    if (!window.confirm(`לחסום את ${message.username} מכתיבה בצ׳אט של המבנה? קריאה תישאר פתוחה.`)) return;
+
+    try {
+      await banUser(buildingId, message.userId);
+      setError(null);
+    } catch (banError) {
+      setError(getErrorMessage(banError, 'לא הצלחנו לחסום את המשתמש. נסו שוב.'));
+    }
   }
 
   function handleLogin() {
@@ -119,6 +152,19 @@ function ChatPanel({ buildingId, buildingName, socket, onClose }: ChatPanelProps
                 <div className="chat-message-text" dir="auto">
                   {message.text}
                 </div>
+
+                {isManager && (
+                  <div className="chat-message-actions">
+                    <button type="button" className="text-btn" onClick={() => handleDelete(message)}>
+                      מחיקה
+                    </button>
+                    {!isMine && (
+                      <button type="button" className="text-btn" onClick={() => handleBan(message)}>
+                        חסימת הכותב
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
