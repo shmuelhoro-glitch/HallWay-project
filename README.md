@@ -1,61 +1,57 @@
 # InRoute
 
-ניווט ותקשורת בתוך מבנים סגורים, מהדפדפן, בלי להתקין אפליקציה.
+ניווט בתוך מבנים סגורים, מהדפדפן, בלי להתקין אפליקציה.
 
-המבקר סורק קוד QR שתלוי במבנה (קניון, בית חולים, קמפוס) ומקבל מפה של המבנה, חיפוש חנויות ומסלול הליכה עד היעד, כולל מעבר בין קומות. בעל המבנה מנהל בעצמו את המפה, החנויות ודרכי ההליכה. בזמן אזעקה המערכת מתריעה למבקרים במבנה ומובילה אותם למרחב המוגן הקרוב.
+המבקר סורק קוד QR שתלוי במבנה (קניון, בית חולים, קמפוס) ומקבל מפה של המבנה, חיפוש חנויות ומסלול הליכה עד היעד, כולל מעבר בין קומות. בעל המבנה מנהל בעצמו את המפה, החנויות ודרכי ההליכה.
 
 > **סטטוס:** בפיתוח. פרויקט גמר בהנדסת תוכנה, המרכז החרדי להכשרה מקצועית.
 
+אתר חי: https://www.shmuelhoro.co.il
+
 ---
 
-## מה המערכת עושה
+## מה המערכת עושה היום
 
 ### מבקר
-- **מפת מבנים:** מפת ישראל בעמוד הבית עם סיכה לכל מבנה במערכת, וסינון לפי עיר וסוג מבנה.
+- **מפת מבנים:** מפת ישראל בעמוד הבית עם סיכה לכל מבנה, חיפוש לפי שם, עיר או כתובת, וסינון לפי סוג.
 - **כניסה ב-QR:** כל קוד מוצב בנקודה ידועה במבנה, כך שהסריקה קובעת גם את המבנה וגם את נקודת המוצא.
 - **חיפוש וסינון:** חנויות ושירותים לפי שם, קטגוריה וקומה.
-- **ניווט:** המסלול הקצר ביותר עד החנות, מצויר על מפת הקומה, כולל מדרגות ומעליות.
-- **התראת צבע אדום:** כשיש אזעקה באזור של המבנה, נפתח חלון אדום עם הזמן שנשאר להגעה למרחב מוגן. המשתמש מעדכן איפה הוא נמצא (קומה ואחת מחמש חנויות בולטות, או סריקת QR) ומקבל מיד מסלול למרחב המוגן הקרוב.
-- **נווט אליי:** שליחת קישור למיקום שלך במבנה, למשל בוואטסאפ. מי שפותח את הקישור מקבל את הנקודה שלך כיעד.
-- **צ'אט:** צ'אט נפרד לכל מבנה. קריאה פתוחה לכולם, כתיבה רק למשתמשים רשומים.
+- **ניווט:** המסלול הקצר ביותר עד היעד, מצויר על מפת הקומה, כולל מדרגות ומעליות.
+- **נווטו אליי:** שליחת קישור למיקום שלך במבנה. מי שפותח אותו מקבל את הנקודה שלך כיעד.
+- **בקשת גישת ניהול:** טופס פנייה למי שמנהל מבנה.
 
-### בעל מבנה
-- ניהול חנויות ונקודות עניין והצבתן על המפה.
-- עורך דרכי הליכה: צמתים וקשתות על גבי שרטוט הקומה, כולל מדרגות ומעליות בין קומות.
-- חסימת מעברים (למשל מסדרון בשיפוץ).
-- סימון מרחבים מוגנים וחנויות בולטות בכל קומה.
+### מנהל מבנה
+- הקמת מבנה: כתובת, אימות המיקום על מפה, ותוכניות קומה (SVG, PNG או JPG).
+- זיהוי אוטומטי של חנויות מתוך תוכנית SVG.
+- ניהול מקומות ונקודות עניין והצבתם על המפה.
+- עורך מעברים: ציור, גרירה, חסימה, מחיקה, ביטול וביצוע מחדש, שכבות תצוגה והצמדה.
+- בדיקת תקינות: מקומות שאין אליהם מסלול, קומות לא מחוברות, נתונים שבורים.
 - הפקת קודי QR להדפסה.
-- ניהול הצ'אט ונתוני שימוש: חיפושים, יעדים מבוקשים ומפת חום של מעברים.
 
-### מנהל מערכת
-- הקמת מבנה: כתובת (שמומרת לקואורדינטות), שרטוטי קומות ואזור התראה של פיקוד העורף.
-- יצירת חשבון לבעל המבנה.
-- הדמיית אזעקה במבנה, לבדיקות ולהדגמה.
+מנהל עורך רק את המבנים שלו. בעלי המערכת (`super`) רואים את כולם ומאשרים פניות של מנהלים חדשים.
+
+### עדיין לא בנוי בשרת
+הממשק קיים בלקוח, אבל צד השרת עוד לא נכתב: צ'אט לכל מבנה, התרעות צבע אדום והדמיית אזעקה, ונתוני שימוש.
 
 ---
 
 ## ארכיטקטורה
 
 ```
-                      HTTPS / WSS
-  React client  ───────────────────►  Main server (Node.js)  ──► PostgreSQL (Supabase)
-       │                               Express + Socket.IO    ──► MongoDB (Atlas)
-       │                                    │      ▲          ──► Redis
-       ▼                                    │      │
-  OpenStreetMap tiles          internal HTTP│      │ alerts
-                                            ▼      │
-                           Routing service (Python)   Tzeva Adom relay
-                           FastAPI: A*, Dijkstra,
-                           analytics
+  React client  ──HTTPS──►  Main server (Node.js, Express)  ──►  PostgreSQL (Supabase)
+       │                            │                        ──►  MongoDB (Atlas)
+       ▼                            │ internal HTTP
+  OpenStreetMap tiles               ▼
+                            Routing service (Python, FastAPI): A*, Dijkstra
 ```
 
-- **השרת הראשי** מטפל במשתמשים, בהרשאות, בניהול המבנים, בצ'אט ובהתראות, ומעביר בקשות ניווט לשירות הניווט.
-- **שירות הניווט** אחראי רק על חישובים: מסלולים ואנליטיקה. הוא לא חשוף לאינטרנט, ורק השרת הראשי פונה אליו.
-- **Redis** משמש מטמון לגרפים של המבנים, ומתווך הודעות בין עותקים של השרת הראשי.
+- **השרת הראשי** מטפל במשתמשים, בהרשאות ובניהול המבנים, ומעביר בקשות ניווט לשירות הניווט.
+- **שירות הניווט** אחראי רק על חישוב מסלולים. רק השרת הראשי פונה אליו, עם מפתח פנימי משותף.
+- **Supabase** מחזיק מבנים, משתמשים ופניות. **MongoDB** מחזיק קומות, נקודות, מעברים ומקומות.
 
 ### האלגוריתמים
-- **A\*:** ניווט ליעד ידוע. ההערכה היא מרחק בקו ישר עד היעד, ולכן החיפוש מתקדם קודם לכיוון הנכון.
-- **Dijkstra:** בזמן אזעקה, כשהיעד הוא המרחב המוגן הקרוב מבין כמה. האלגוריתם מתפשט לפי סדר המרחק ועוצר במרחב המוגן הראשון שהוא מגיע אליו.
+- **A\*:** ניווט ליעד ידוע. ההערכה היא מרחק בקו ישר עד היעד.
+- **Dijkstra:** מסלול למרחב המוגן הקרוב מבין כמה. האלגוריתם עוצר במרחב המוגן הראשון שהוא מגיע אליו.
 
 ---
 
@@ -63,109 +59,93 @@
 
 | שכבה | טכנולוגיה |
 | --- | --- |
-| לקוח | React, TypeScript, Vite, React Router, Leaflet |
-| שרת ראשי | Node.js, Express, Socket.IO, TypeScript |
+| לקוח | React, TypeScript, Vite, React Router, Leaflet, Zustand |
+| שרת ראשי | Node.js, Express, Zod, JWT, bcrypt |
 | שירות ניווט | Python, FastAPI, Pydantic |
-| מסדי נתונים | PostgreSQL (Supabase), MongoDB (Atlas), Redis |
-| אבטחה | bcrypt, JWT, Zod, express-rate-limit |
-| בדיקות | Jest, pytest, NetworkX (לבדיקת נכונות A\*) |
-| הרצה ופריסה | Docker, Docker Compose, GitHub Actions |
+| מסדי נתונים | PostgreSQL (Supabase), MongoDB (Atlas) |
+| בדיקות | Node test runner, Vitest, pytest, NetworkX |
+| פריסה | Vercel (לקוח), Render (שרת ראשי ושירות ניווט) |
 
----
-
-## שירותים חיצוניים
-
-| שירות | שימוש |
-| --- | --- |
-| OpenStreetMap | אריחי המפה של עמוד הבית |
-| Nominatim | המרת כתובת לקואורדינטות בהקמת מבנה |
-| צבע אדום (tzevaadom.co.il) | התראות פיקוד העורף בזמן אמת |
-| קובץ האזורים של pikud-haoref-api | רשימת אזורי ההתראה וזמן ההגעה למרחב מוגן בכל אזור |
-| Web Share API (בדפדפן) | תפריט השיתוף של הטלפון ב"נווט אליי" |
-
-> ה-API הרשמי של פיקוד העורף חוסם כתובות שאינן מישראל, ולכן ההתראות מגיעות דרך השירות של צבע אדום. **פיצ'ר ההתראות הוא כלי עזר בלבד, ואינו מחליף את אפליקציית פיקוד העורף ואת הצופרים.**
-
-נתוני המפה © תורמי OpenStreetMap.
+שירותים חיצוניים: אריחי OpenStreetMap למפה, ו-Nominatim להמרת כתובת לקואורדינטות. נתוני המפה © תורמי OpenStreetMap.
 
 ---
 
 ## מבנה הריפו
 
 ```
-inroute/
-├── client/               # React + TypeScript
-├── server/               # Node.js + Express + Socket.IO
-│   └── src/
-│       ├── routes/
-│       ├── controllers/
-│       ├── services/
-│       ├── repositories/
-│       ├── middleware/   # auth, validation, rate limit
-│       ├── sockets/      # chat + alerts
-│       └── alerts/       # alerts listener + simulation
-├── routing-service/      # Python + FastAPI
-│   └── app/
-│       ├── graph/
-│       ├── astar.py
-│       ├── dijkstra.py
-│       └── analytics/
-├── docker-compose.yml
-└── .github/workflows/
+client/                    # React + TypeScript
+backend/
+├── server/                # Node.js + Express
+│   ├── routes/  controllers/  services/  repositories/
+│   ├── middleware/        # הרשאות, אימות קלט, טיפול בשגיאות
+│   ├── schemas/           # Zod
+│   ├── scripts/           # tables.sql, seed.js, check-data.js
+│   └── tests/
+└── routing-service/       # Python + FastAPI
+    ├── app/               # algorithms/, graph/, routers/
+    └── tests/
+render.yaml
 ```
 
 ---
 
 ## הרצה מקומית
 
-**דרישות מקדימות:** Docker ו-Docker Compose. להרצה בלי Docker: Node.js 20 ומעלה ו-Python 3.11 ומעלה.
+דרישות: Node.js 22 ומעלה, Python 3.11 ומעלה.
 
 ```bash
-git clone <repo-url>
-cd inroute
+# שרת ראשי
+cd backend/server
+cp .env.example .env      # ולמלא את הערכים
+npm install
+npm run dev
 
-cp server/.env.example server/.env
-cp routing-service/.env.example routing-service/.env
-cp client/.env.example client/.env
+# שירות הניווט
+cd backend/routing-service
+cp .env.example .env
+pip install -r requirements.txt
+uvicorn app.main:app --port 8000
 
-docker compose up --build
+# לקוח
+cd client
+cp .env.example .env
+npm install
+npm run dev
 ```
-
-| רכיב | כתובת |
-| --- | --- |
-| לקוח | http://localhost:5173 |
-| שרת ראשי | http://localhost:4000 |
-| שירות ניווט (פנימי) | http://localhost:8000 |
 
 ### משתני סביבה
 
-**server/.env**
+**backend/server/.env**
 
 | משתנה | תיאור |
 | --- | --- |
 | `PORT` | פורט השרת הראשי |
-| `DATABASE_URL` | חיבור ל-PostgreSQL ב-Supabase |
-| `MONGODB_URI` | חיבור ל-MongoDB Atlas |
-| `REDIS_URL` | חיבור ל-Redis |
+| `MONGO_URI` | חיבור ל-MongoDB |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | חיבור ל-Supabase |
 | `JWT_SECRET` | מפתח לחתימת טוקנים |
-| `ROUTING_SERVICE_URL` | כתובת שירות הניווט |
-| `INTERNAL_API_KEY` | מפתח פנימי בין השרת לשירות הניווט |
-| `ALERTS_SOURCE` | `tzofar` להתראות אמיתיות, `simulation` להדמיה בלבד |
-| `CLIENT_URL` | כתובת הלקוח, להגדרות CORS |
+| `ROUTING_URL` | כתובת שירות הניווט, בלי `/` בסוף |
+| `INTERNAL_API_KEY` | מפתח משותף עם שירות הניווט. חייב להיות זהה בשניהם |
+| `CLIENT_URL` | כתובת הלקוח. קודי ה-QR מובילים אליה |
 
-**routing-service/.env:** `MONGODB_URI`, `REDIS_URL`, `DATABASE_URL`, `INTERNAL_API_KEY`
+**backend/routing-service/.env:** `MONGO_URI`, `INTERNAL_API_KEY`
 
-**client/.env:** `VITE_API_URL`, `VITE_SOCKET_URL`
+**client/.env:** `VITE_API_URL`
 
 ---
 
 ## בדיקות
 
 ```bash
-cd server && npm test
-cd routing-service && pytest
+cd backend/server && npm test
+cd backend/routing-service && python -m pytest
+cd client && npm test
 ```
 
-בדיקות היחידה רצות אוטומטית ב-GitHub Actions על כל Pull Request.
+בדיקת הנתונים שכבר במסד (קוראת בלבד, לא משנה כלום):
+
+```bash
+cd backend/server && npm run check-data
+```
 
 ---
 
