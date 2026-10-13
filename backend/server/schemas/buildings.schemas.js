@@ -48,6 +48,11 @@ export const geocodeSchema = {
   }),
 };
 
+export const deleteBuildingSchema = {
+  params: z.object({
+    buildingId: z.string().uuid("Invalid building ID format"),
+  }),
+};
 
 export const addFloorSchema = {
   params: z.object({
