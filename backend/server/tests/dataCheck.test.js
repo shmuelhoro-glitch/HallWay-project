@@ -192,6 +192,44 @@ test("two places with the same entrance, and an entrance that is not an entrance
   ]);
 });
 
+// ---------- Can a visitor get there? ----------
+
+test("a place on an island of walkways, apart from the building, can't be reached", () => {
+  const building = healthyBuilding();
+  building.nodes.push({ _id: "S2", floor: 0, x: 500, y: 500, type: "entrance", label: "Far Store" });
+  building.nodes.push({ _id: "C9", floor: 0, x: 550, y: 500, type: "corridor" });
+  building.edges.push({ _id: "S2-C9", from: "S2", to: "C9" });
+  building.places.push({ _id: "P2", floor: 0, x: 500, y: 500, name: "Far Store", entryNodeId: "S2" });
+
+  assert.deepEqual(found(building), ["PLACE_UNREACHABLE place P2"]);
+  assert.equal(levelOf(building, "PLACE_UNREACHABLE"), "error");
+});
+
+test("a place behind a blocked walkway is reported as blocked, not as never connected", () => {
+  const building = healthyBuilding();
+  building.edges[0].blocked = true; // S - C0, the only way to the store
+
+  assert.deepEqual(found(building), ["PLACE_BLOCKED place P"]);
+});
+
+test("a floor whose elevator has another id is not connected, and so are its QR points", () => {
+  const building = healthyBuilding();
+  building.nodes[3].connectorId = "elevator-b"; // E1
+  building.nodes[4].type = "qr"; // C1
+
+  const problems = found(building);
+
+  assert.ok(problems.includes("FLOOR_NOT_CONNECTED floor 1"));
+  assert.ok(problems.includes("QR_UNREACHABLE node C1"));
+});
+
+test("a problem carries the name the admin knows the thing by", () => {
+  const building = healthyBuilding();
+  building.edges.shift(); // S - C0
+
+  assert.equal(findBuildingProblems(building)[0].name, "Sea Fashion");
+});
+
 // ---------- Users ----------
 
 const BUILDINGS = [

@@ -14,6 +14,7 @@ import FloorsPage from './pages/admin/FloorsPage';
 import PlacesPage from './pages/admin/PlacesPage';
 import GraphEditorPage from './pages/admin/GraphEditorPage';
 import QrPage from './pages/admin/QrPage';
+import CheckPage from './pages/admin/CheckPage';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="places" element={<PlacesPage />} />
         <Route path="graph" element={<GraphEditorPage />} />
         <Route path="qr" element={<QrPage />} />
+        <Route path="check" element={<CheckPage />} />
       </Route>
 
       {/* Any other address - a clear "not found" message */}

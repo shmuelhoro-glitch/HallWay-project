@@ -19,8 +19,10 @@ function isNumber(value) {
 export function findBuildingProblems({ floors, nodes, edges, places }) {
   const problems = [];
 
-  function add(level, code, kind, doc, floor, message) {
-    problems.push({ level, code, kind, id: String(doc._id), floor: floor ?? null, message });
+  // name: what the admin calls this thing (a place name, a point name, a connector id).
+  // The client writes its own Hebrew message from the code and this name.
+  function add(level, code, kind, doc, floor, message, name = doc.name ?? doc.label ?? null) {
+    problems.push({ level, code, kind, id: String(doc._id), floor: floor ?? null, name, message });
   }
 
   const floorsByNumber = new Map(floors.map((floor) => [floor.floor, floor]));
@@ -115,6 +117,7 @@ export function findBuildingProblems({ floors, nodes, edges, places }) {
         group[0],
         group[0].floor,
         `"${connectorId}" is only on floor ${group[0].floor}, so it leads nowhere`,
+        connectorId,
       );
     }
     if (differentFloors.size < floorsOfGroup.length) {
@@ -126,6 +129,7 @@ export function findBuildingProblems({ floors, nodes, edges, places }) {
         repeated,
         repeated.floor,
         `"${connectorId}" is on floor ${repeated.floor} more than once`,
+        connectorId,
       );
     }
   }
@@ -205,6 +209,96 @@ export function findBuildingProblems({ floors, nodes, edges, places }) {
     }
     if (placesByEntry.get(place.entryNodeId).length > 1) {
       add("warning", "PLACE_ENTRANCE_SHARED", "place", place, place.floor, `${name} shares its entrance point with another place`);
+    }
+  }
+
+  // ---------- Can a visitor really get there? ----------
+  // The same graph the routing service walks on: the walkways, and the same connector id on
+  // different floors. The biggest connected part is "the building"; anything outside it can't be reached.
+
+  function buildParts(withBlocked) {
+    const neighbors = new Map(nodes.map((node) => [String(node._id), []]));
+
+    function connect(a, b) {
+      neighbors.get(a).push(b);
+      neighbors.get(b).push(a);
+    }
+
+    for (const edge of edges) {
+      if (edge.blocked === true && !withBlocked) continue;
+      if (!neighbors.has(edge.from) || !neighbors.has(edge.to)) continue;
+      connect(edge.from, edge.to);
+    }
+    for (const group of nodesByConnector.values()) {
+      for (const a of group) {
+        for (const b of group) {
+          if (a.floor < b.floor) connect(String(a._id), String(b._id));
+        }
+      }
+    }
+
+    // partOf: node id -> the number of its connected part. sizes: how many nodes each part has.
+    const partOf = new Map();
+    const sizes = [];
+    for (const start of neighbors.keys()) {
+      if (partOf.has(start)) continue;
+      const part = sizes.length;
+      let size = 0;
+      const queue = [start];
+      partOf.set(start, part);
+      while (queue.length > 0) {
+        const id = queue.pop();
+        size++;
+        for (const next of neighbors.get(id)) {
+          if (!partOf.has(next)) {
+            partOf.set(next, part);
+            queue.push(next);
+          }
+        }
+      }
+      sizes.push(size);
+    }
+
+    return { partOf, mainPart: sizes.indexOf(Math.max(...sizes)) };
+  }
+
+  if (nodes.length > 0) {
+    const open = buildParts(false);
+    const isReachable = (id) => open.partOf.get(id) === open.mainPart;
+
+    // With the blocked walkways opened: tells "blocked right now" from "never connected"
+    const all = buildParts(true);
+    const mainNode = [...open.partOf.keys()].find(isReachable);
+    const isReachableWithoutBlocks = (id) => all.partOf.get(id) === all.partOf.get(mainNode);
+
+    for (const place of places) {
+      const entrance = place.entryNodeId ? nodesById.get(place.entryNodeId) : null;
+      // No entrance, or an entrance with no walkway at all: already reported above
+      if (!entrance || !connectedIds.has(place.entryNodeId) || isReachable(place.entryNodeId)) continue;
+
+      if (isReachableWithoutBlocks(place.entryNodeId)) {
+        add("error", "PLACE_BLOCKED", "place", place, place.floor, `A blocked walkway cuts "${place.name}" off`);
+      } else {
+        add("error", "PLACE_UNREACHABLE", "place", place, place.floor, `"${place.name}" is not connected to the rest of the building`);
+      }
+    }
+
+    for (const node of nodes) {
+      const id = String(node._id);
+      if (node.type === "qr" && connectedIds.has(id) && !isReachable(id)) {
+        add("warning", "QR_UNREACHABLE", "node", node, node.floor, `The QR point "${node.label ?? ""}" is not connected to the rest of the building`);
+      }
+    }
+
+    // A floor with points, none of them in the building: its stairs / elevator are not set
+    const floorsWithNodes = [...new Set(nodes.map((node) => node.floor))];
+    if (floorsWithNodes.length > 1) {
+      for (const floorNumber of floorsWithNodes) {
+        const hasReachableNode = nodes.some((node) => node.floor === floorNumber && isReachable(String(node._id)));
+        if (!hasReachableNode) {
+          add("warning", "FLOOR_NOT_CONNECTED", "floor", { _id: floorNumber }, floorNumber, `Floor ${floorNumber} is not connected to the other floors`);
+        }
+      }
     }
   }
 

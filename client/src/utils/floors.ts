@@ -8,6 +8,15 @@ export function getDefaultFloorName(floorNumber: number): string {
   return `קומה ${floorNumber}`;
 }
 
+// The floor asked for in the address (?floor=1), when the building really has it. Otherwise null.
+export function getLinkedFloor(searchParams: URLSearchParams, floors: Floor[]): number | null {
+  const value = searchParams.get('floor');
+  if (value === null || value === '') return null;
+
+  const floorNumber = Number(value);
+  return floors.some((floor) => floor.floor === floorNumber) ? floorNumber : null;
+}
+
 // The name the admin gave the floor, or the default name when he gave none
 export function getFloorName(floors: Floor[], floorNumber: number): string {
   const floor = floors.find((item) => item.floor === floorNumber);

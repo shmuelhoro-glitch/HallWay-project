@@ -9,6 +9,7 @@ import {
   updateEdgeLengths,
 } from "../services/graph.service.js";
 import { undo } from "../services/undo.js";
+import { findBuildingProblems } from "../services/dataCheck.service.js";
 
 // The walking graph of a building, for the admin editor.
 // The Python service reads the same collections on every route, so every change here
@@ -71,6 +72,45 @@ export async function getGraph(req, res, next) {
       nodes: nodes.map(toNodeResponse),
       edges: edges.map(toEdgeResponse),
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// GET /api/buildings/:buildingId/graph/check
+// Everything that is wrong in the building, for the "Check" tab: errors first.
+export async function checkBuilding(req, res, next) {
+  try {
+    const { buildingId } = req.params;
+
+    const building = await supabaseRepo.findOne("buildings", { id: buildingId });
+    if (!building) {
+      throw { status: 404, code: "BUILDING_NOT_FOUND", message: "Building not found" };
+    }
+
+    const [floors, nodes, edges, places] = await Promise.all([
+      mongoRepo.findMany("floors", { buildingId }),
+      mongoRepo.findMany("nodes", { buildingId }),
+      mongoRepo.findMany("edges", { buildingId }),
+      mongoRepo.findMany("places", { buildingId }),
+    ]);
+
+    const problems = findBuildingProblems({ floors, nodes, edges, places });
+
+    if (floors.length < building.floors_count) {
+      problems.push({
+        level: "warning",
+        code: "FLOOR_PLANS_MISSING",
+        kind: "building",
+        id: buildingId,
+        floor: null,
+        name: null,
+        message: `${floors.length} of ${building.floors_count} floor plans were uploaded`,
+      });
+    }
+
+    problems.sort((a, b) => a.level.localeCompare(b.level)); // "error" before "warning"
+    res.json({ problems });
   } catch (error) {
     next(error);
   }
@@ -143,6 +183,13 @@ export async function updateNode(req, res, next) {
     const finalType = changes.type ?? node.type;
     const finalConnector = changes.connectorId !== undefined ? changes.connectorId : node.connectorId;
     checkConnector(finalType, finalConnector);
+
+    // Only stairs and elevators connect floors. Any other type must not keep a connector id,
+    // or the routes would still change floors through this point.
+    const isConnector = finalType === "stairs" || finalType === "elevator";
+    if (!isConnector && finalConnector) {
+      changes.connectorId = "";
+    }
 
     // An empty text removes the field
     const fieldsToSet = {};

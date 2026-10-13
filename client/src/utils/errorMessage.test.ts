@@ -16,7 +16,8 @@ const serverFiles = import.meta.glob<string>('../../../backend/server/{controlle
 
 // Not shown through this table: validation has its own message, a server bug gets the message
 // of the screen, and dataCheck.service.js is a report for the admin script, not an API error
-const HANDLED_ELSEWHERE = ['VALIDATION_ERROR', 'SERVER_ERROR'];
+// (FLOOR_PLANS_MISSING is a line of the building check too, written in checkMessages.ts)
+const HANDLED_ELSEWHERE = ['VALIDATION_ERROR', 'SERVER_ERROR', 'FLOOR_PLANS_MISSING'];
 
 function findServerCodes(): string[] {
   const codes = new Set<string>();

@@ -142,6 +142,23 @@ export function deleteEdge(buildingId: string, edgeId: string): Promise<void> {
   return apiRequest<void>(`/api/buildings/${buildingId}/graph/edges/${edgeId}`, { method: 'DELETE' });
 }
 
+// ---------- The check of the whole building ----------
+
+// One thing that is wrong in the building.
+// error = visitors get a wrong route or none. warning = worth a look.
+export interface CheckProblem {
+  level: 'error' | 'warning';
+  code: string;
+  kind: 'node' | 'edge' | 'place' | 'floor' | 'building';
+  id: string;
+  floor: number | null;
+  name: string | null; // the place name, the point name or the connector id
+}
+
+export function getBuildingCheck(buildingId: string): Promise<{ problems: CheckProblem[] }> {
+  return apiRequest<{ problems: CheckProblem[] }>(`/api/buildings/${buildingId}/graph/check`);
+}
+
 // ---------- QR ----------
 
 // The picture is open to everyone, so it goes straight into <img src>

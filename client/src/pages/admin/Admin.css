@@ -480,6 +480,27 @@
   }
 }
 
+/* ---------- Check tab ---------- */
+
+.check-page {
+  max-width: 820px;
+}
+
+.check-message {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.badge-red {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.badge-yellow {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
 /* ---------- Requests of building owners (super only) ---------- */
 
 .requests-tabs {
