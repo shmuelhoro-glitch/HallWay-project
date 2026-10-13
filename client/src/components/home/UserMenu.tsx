@@ -90,6 +90,14 @@ function UserMenu() {
             </Link>
           )}
 
+          {/* A visitor can ask to become a building manager */}
+          {!isAdmin && (
+            <Link to="/join" role="menuitem" className="user-popover-link" onClick={() => setIsOpen(false)}>
+              <DashboardIcon />
+              רוצים לנהל מבנה?
+            </Link>
+          )}
+
           <button type="button" role="menuitem" className="user-popover-item" onClick={handleLogout}>
             <LogoutIcon />
             התנתקות

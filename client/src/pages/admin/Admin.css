@@ -480,6 +480,78 @@
   }
 }
 
+/* ---------- Requests of building owners (super only) ---------- */
+
+.requests-tabs {
+  max-width: 320px;
+  margin: 16px 0;
+}
+
+.requests-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Inside the grid the gap does the spacing, not the margin between cards */
+.requests-list .admin-card + .admin-card {
+  margin-top: 0;
+}
+
+.requests-empty {
+  margin-top: 4px;
+}
+
+.requests-empty p {
+  margin: 0;
+}
+
+.request-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.request-details {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.request-details div {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.request-details dt {
+  flex: 0 0 64px;
+  color: var(--muted);
+}
+
+.request-details dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.request-message {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.request-action {
+  flex: none;
+}
+
 /* ---------- Places found in a plan (review list) ---------- */
 
 .review-card {

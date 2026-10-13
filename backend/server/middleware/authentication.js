@@ -70,6 +70,20 @@ export async function requireManager(req, res, next) {
     }
 }
 
+// After verifyToken. Only a super (us, the owners of the system) may continue.
+export async function requireSuper(req, res, next) {
+    try {
+        const manager = await findManager(req.user.userId)
+        if (!manager || manager.role !== "super") {
+            return forbidden(res)
+        }
+        req.user = manager
+        next()
+    } catch (error) {
+        next(error)
+    }
+}
+
 // After verifyToken, on a path with :buildingId.
 // Only a manager of this building (or a super) may continue.
 export async function requireBuildingAccess(req, res, next) {

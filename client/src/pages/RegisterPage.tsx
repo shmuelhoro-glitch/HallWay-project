@@ -120,6 +120,9 @@ function RegisterPage() {
       <p className="auth-switch">
         כבר יש לכם חשבון? <Link to={`/login?redirect=${encodeURIComponent(redirect)}`}>התחברות</Link>
       </p>
+      <p className="auth-hint auth-join">
+        מנהלים מבנה? אחרי ההרשמה אפשר <Link to="/join">לבקש גישת ניהול</Link>.
+      </p>
     </div>
   );
 }

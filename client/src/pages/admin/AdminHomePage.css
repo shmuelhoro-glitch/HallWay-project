@@ -10,6 +10,12 @@
   font-size: 26px;
 }
 
+.admin-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .admin-home-new {
   flex: none;
   text-decoration: none;
