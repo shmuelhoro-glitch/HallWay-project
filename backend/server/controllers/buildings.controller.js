@@ -11,7 +11,10 @@ export async function createBuilding(req, res, next) {
   try {
     const { name, type, address, city, alert_area, floors_count } = req.body;
 
-    const { lat, lng } = await geocodeAddress(address, city);
+    // The admin saw the spot on the map and confirmed it (or moved it): that is the spot.
+    // Otherwise we look the address up, like before.
+    const hasSpot = req.body.lat !== undefined && req.body.lng !== undefined;
+    const { lat, lng } = hasSpot ? req.body : await geocodeAddress(address, city);
 
     const newBuilding = await supabaseRepo.insertOne("buildings", {
       name,
@@ -44,6 +47,17 @@ export async function createBuilding(req, res, next) {
     res.status(201).json(newBuilding);
   } catch (err) {
     next(err);
+  }
+}
+
+// POST /api/buildings/geocode  { address, city }  (admin or super)
+// Where the address is on the map, so the admin can check it before the building is saved.
+export async function geocodeBuildingAddress(req, res, next) {
+  try {
+    const { address, city } = req.body;
+    res.json(await geocodeAddress(address, city));
+  } catch (error) {
+    next(error);
   }
 }
 

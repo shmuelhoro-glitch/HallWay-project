@@ -32,6 +32,19 @@ export const createBuildingSchema = {
       .number({ invalid_type_error: "Floors count must be a number" })
       .int("Floors count must be an integer")
       .min(1, "Building must have at least 1 floor"),
+
+    // Optional: the spot the admin confirmed (or fixed) on the map.
+    // Without them the server finds the spot from the address by itself.
+    lat: z.number().min(-90).max(90).optional(),
+    lng: z.number().min(-180).max(180).optional(),
+  }),
+};
+
+// POST /api/buildings/geocode - where is this address on the map?
+export const geocodeSchema = {
+  body: z.object({
+    address: z.string().trim().min(2, "Address must be at least 2 characters"),
+    city: z.string().trim().min(2, "City must be at least 2 characters"),
   }),
 };
 
