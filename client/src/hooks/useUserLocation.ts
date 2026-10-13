@@ -33,6 +33,20 @@ export function useUserLocation() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    // Support testing and simulation via URL parameters (?mock_lat=..&mock_lng=..)
+    const searchParams = new URLSearchParams(window.location.search);
+    const mockLat = searchParams.get('mock_lat');
+    const mockLng = searchParams.get('mock_lng');
+    if (mockLat && mockLng) {
+      const lat = parseFloat(mockLat);
+      const lng = parseFloat(mockLng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        setPosition({ lat, lng, accuracy: 10 });
+        setStatus('found');
+        return;
+      }
+    }
+
     if (!canAskForLocation()) return;
 
     let isCancelled = false;

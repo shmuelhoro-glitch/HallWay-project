@@ -8,7 +8,7 @@ import { useAuthStore } from '../store/authStore';
 import { useFavoritesStore } from '../store/favoritesStore';
 import type { Building, BuildingType } from '../types/building';
 import { searchBuildings } from '../utils/buildingSearch';
-import { getBuildingPoint, getDistanceKm } from '../utils/distance';
+import { findClosestBuildingWithinRadius, getBuildingPoint, getDistanceKm } from '../utils/distance';
 import BuildingsMap from '../components/home/BuildingsMap';
 import type { MapFocus } from '../components/home/BuildingsMap';
 import BuildingSearch from '../components/home/BuildingSearch';
@@ -98,6 +98,23 @@ function HomePage() {
 
   // ---------- Actions ----------
 
+  // Auto-enter closest building if user is within 150m (and has not already exited/entered in this session)
+  useEffect(() => {
+    if (!userPoint || buildings.length === 0 || isLoading) return;
+
+    const hasAutoEntered = sessionStorage.getItem('inroute_auto_entered');
+    if (hasAutoEntered) return;
+
+    const match = findClosestBuildingWithinRadius(userPoint, buildings);
+    if (match) {
+      sessionStorage.setItem('inroute_auto_entered', match.building.id);
+      addRecent(match.building);
+      navigate(`/b/${match.building.id}`, {
+        state: { autoEntered: true, buildingName: match.building.name },
+      });
+    }
+  }, [userPoint, buildings, isLoading, addRecent, navigate]);
+
   function handleToggleFavorites() {
     if (!user) {
       setIsLoginPromptOpen(true);
@@ -131,12 +148,14 @@ function HomePage() {
   }
 
   function enterBuilding(building: Building) {
+    sessionStorage.setItem('inroute_auto_entered', building.id);
     addRecent(building);
     navigate(`/b/${building.id}`);
   }
 
   function handleScan(result: QrResult) {
     setIsScannerOpen(false);
+    sessionStorage.setItem('inroute_auto_entered', result.buildingId);
 
     const scannedBuilding = buildings.find((building) => building.id === result.buildingId);
     if (scannedBuilding) {
@@ -246,7 +265,10 @@ function HomePage() {
         onPick={selectBuilding}
         onShowAll={showResultsOnMap}
         recent={recent}
-        onPickRecent={(buildingId) => navigate(`/b/${buildingId}`)}
+        onPickRecent={(buildingId) => {
+          sessionStorage.setItem('inroute_auto_entered', buildingId);
+          navigate(`/b/${buildingId}`);
+        }}
         onClearRecent={clearRecent}
         placeholder={searchPlaceholder}
       />

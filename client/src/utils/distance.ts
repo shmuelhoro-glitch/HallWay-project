@@ -39,3 +39,33 @@ export function formatDistance(km: number): string {
   }
   return `${Math.round(km)} ק״מ`;
 }
+
+// 150 meters: default threshold to determine the visitor is inside / at the building
+export const AUTO_ENTER_RADIUS_KM = 0.15;
+
+export interface NearbyBuildingMatch {
+  building: Building;
+  distanceKm: number;
+}
+
+export function findClosestBuildingWithinRadius(
+  userPoint: LatLng,
+  buildings: Building[],
+  maxRadiusKm: number = AUTO_ENTER_RADIUS_KM
+): NearbyBuildingMatch | null {
+  let closest: NearbyBuildingMatch | null = null;
+
+  for (const building of buildings) {
+    const point = getBuildingPoint(building);
+    if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng)) continue;
+    const distanceKm = getDistanceKm(userPoint, point);
+    if (distanceKm <= maxRadiusKm) {
+      if (!closest || distanceKm < closest.distanceKm) {
+        closest = { building, distanceKm };
+      }
+    }
+  }
+
+  return closest;
+}
+

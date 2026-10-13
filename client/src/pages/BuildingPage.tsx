@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getBuildingById, getPlanUrl } from '../api/buildings';
 import { getPlaces } from '../api/places';
 import { getNearestShelter, getNode, getRoute } from '../api/navigation';
@@ -45,7 +45,19 @@ const MEETING_POINT_LABEL = 'נקודת המפגש';
 
 function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const socket = useBuildingRoom(buildingId);
+
+  const [showAutoEnterToast, setShowAutoEnterToast] = useState(Boolean(location.state?.autoEntered));
+
+  useEffect(() => {
+    if (showAutoEnterToast) {
+      const timer = setTimeout(() => {
+        setShowAutoEnterToast(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAutoEnterToast]);
 
   const start = useLocationStore((state) => state.start);
   const setStart = useLocationStore((state) => state.setStart);
@@ -514,6 +526,34 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   return (
     <div className="screen">
       <AlertBanner />
+
+      {showAutoEnterToast && (
+        <div className="auto-enter-banner" role="status">
+          <div className="auto-enter-content">
+            <span className="auto-enter-icon">📍</span>
+            <span className="auto-enter-text">
+              זיהינו שהגעתם אל <strong>{building.name}</strong> והעברנו אתכם למפה הפנימית
+            </span>
+          </div>
+          <div className="auto-enter-actions">
+            <button
+              type="button"
+              className="auto-enter-btn-back"
+              onClick={() => navigate('/')}
+            >
+              חזרה למפת העיר
+            </button>
+            <button
+              type="button"
+              className="auto-enter-btn-close"
+              onClick={() => setShowAutoEnterToast(false)}
+              aria-label="סגירה"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <header className="building-topbar">
         <button type="button" className="icon-btn" aria-label="חזרה למפה" onClick={() => navigate('/')}>
