@@ -24,6 +24,7 @@ import FloorSwitcher from '../../components/map/FloorSwitcher';
 import EditorLayer from '../../components/admin/EditorLayer';
 import EditorToolbar from '../../components/admin/EditorToolbar';
 import NodeInspector from '../../components/admin/NodeInspector';
+import { EDITOR_MODES } from '../../components/admin/editorModes';
 import type { EditorMode } from '../../components/admin/editorModes';
 
 const EMPTY_GRAPH: Graph = { nodes: [], edges: [] };
@@ -88,17 +89,36 @@ function GraphEditorPage() {
       .catch(() => setConnectorIds([]));
   }, [building.id]);
 
-  // Esc: stop drawing / close the point
+  // Keyboard: Esc stops what is going on (and the next Esc goes back to Edit), D / V / B / X pick a mode
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (activeNodeId !== null || movingNodeId !== null) {
+          setActiveNodeId(null);
+          setMovingNodeId(null);
+        } else {
+          setMode('select');
+          setError(null);
+        }
+        return;
+      }
+
+      // A letter typed in a field (a point name, a connector id) is text, not a shortcut
+      const target = event.target as HTMLElement | null;
+      const isTyping = target !== null && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable);
+      if (isTyping || event.ctrlKey || event.metaKey || event.altKey) return;
+
+      const pickedMode = EDITOR_MODES.find((item) => item.keyCode === event.code);
+      if (pickedMode) {
+        setMode(pickedMode.value);
         setActiveNodeId(null);
         setMovingNodeId(null);
+        setError(null);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [activeNodeId, movingNodeId]);
 
   if (floors.length === 0) {
     return (
@@ -242,11 +262,36 @@ function GraphEditorPage() {
     }
 
     if (mode === 'delete') {
+      // The walkways of the point are deleted with it, so we ask first
+      const walkwayCount = graph.edges.filter((edge) => edge.from === node.id || edge.to === node.id).length;
+      if (walkwayCount > 0) {
+        const walkways = walkwayCount === 1 ? 'המעבר שמחובר אליה' : `${walkwayCount} המעברים שמחוברים אליה`;
+        if (!window.confirm(`למחוק את הנקודה? גם ${walkways} יימחקו.`)) return;
+      }
+
       run(async () => {
         await deleteNode(building.id, node.id);
         removeNodeFromScreen(node.id);
       });
     }
+  }
+
+  // A point was dragged to a new spot. It is shown there right away, and goes back if saving fails.
+  function handleNodeMove(node: GraphNode, x: number, y: number) {
+    if (busyRef.current) return;
+
+    replaceNodeOnScreen({ ...node, x, y });
+    setMovingNodeId(null);
+
+    run(async () => {
+      try {
+        const saved = await updateNode(building.id, node.id, { x, y });
+        replaceNodeOnScreen(saved);
+      } catch (moveError) {
+        replaceNodeOnScreen(node);
+        throw moveError;
+      }
+    });
   }
 
   function handleEdgeClick(edge: GraphEdge) {
@@ -320,11 +365,11 @@ function GraphEditorPage() {
   const activeNode = graph.nodes.find((node) => node.id === activeNodeId) ?? null;
   const activePlace = activeNode ? placeByEntry.get(activeNode.id) ?? null : null;
 
-  let mapHint: string | null = null;
-  if (mode === 'draw') {
-    mapHint = activeNodeId
-      ? 'לחצו כדי להוסיף את הנקודה הבאה. כדי לעצור, לחצו שוב על הנקודה האחרונה.'
-      : 'לחצו במפה כדי להתחיל מעבר, או על נקודה קיימת כדי להמשיך ממנה.';
+  // One line on top of the map: the mode we are in, and what a click does right now
+  const modeInfo = EDITOR_MODES.find((item) => item.value === mode) ?? EDITOR_MODES[0];
+  let mapHint = modeInfo.mapHint;
+  if (mode === 'draw' && activeNodeId) {
+    mapHint = 'לחצו כדי להוסיף את הנקודה הבאה. כדי לעצור, לחצו שוב על הנקודה האחרונה.';
   } else if (movingNodeId) {
     mapHint = 'לחצו על המיקום החדש של הנקודה.';
   }
@@ -348,12 +393,16 @@ function GraphEditorPage() {
             mode={mode}
             activeNodeId={activeNodeId}
             looseNodeIds={looseNodeIds}
+            canDrag={mode === 'select' && !isBusy}
             onNodeClick={handleNodeClick}
+            onNodeMove={handleNodeMove}
             onEdgeClick={handleEdgeClick}
           />
         </FloorMap>
 
-        {mapHint && <div className="admin-map-hint">{mapHint}</div>}
+        <div className={`admin-map-hint is-${mode}`} role="status">
+          <strong>{modeInfo.label}</strong> · {mapHint}
+        </div>
         <FloorSwitcher floors={floors} currentFloor={currentFloor.floor} onChange={changeFloor} />
       </div>
 
