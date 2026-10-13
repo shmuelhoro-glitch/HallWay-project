@@ -21,8 +21,15 @@ function EditorToolbar({ mode, onModeChange }: EditorToolbarProps) {
 
       <div className="segmented editor-modes" role="group" aria-label="מצב העורך">
         {EDITOR_MODES.map((item) => (
-          <button key={item.value} type="button" aria-pressed={mode === item.value} onClick={() => onModeChange(item.value)}>
+          <button
+            key={item.value}
+            type="button"
+            aria-pressed={mode === item.value}
+            title={`${item.label} (מקש ${item.shortcut})`}
+            onClick={() => onModeChange(item.value)}
+          >
             {item.label}
+            <kbd className="editor-key">{item.shortcut}</kbd>
           </button>
         ))}
       </div>
