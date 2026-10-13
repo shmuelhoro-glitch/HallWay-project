@@ -73,11 +73,15 @@ export async function deleteBuilding(req, res, next) {
 
     // The database deletes these rows with the building (on delete cascade), if the tables were
     // created from scripts/tables.sql. Deleting them here too costs nothing, and a table that
-    // does not exist yet must not stop the delete.
+    // does not exist yet (PGRST205) has nothing to delete and must not stop the delete.
     for (const table of BUILDING_TABLES) {
-      await undo(`delete the ${table} of building ${buildingId}`, () =>
-        supabaseRepo.deleteOne(table, { building_id: buildingId })
-      );
+      try {
+        await supabaseRepo.deleteOne(table, { building_id: buildingId });
+      } catch (error) {
+        if (error.code !== "PGRST205") {
+          console.error(`Could not delete the ${table} rows of building ${buildingId}:`, error.message);
+        }
+      }
     }
 
     // No manager keeps a building that is gone
