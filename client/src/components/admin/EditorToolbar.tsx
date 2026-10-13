@@ -6,12 +6,17 @@ import type { EditorMode } from './editorModes';
 interface EditorToolbarProps {
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
+  undoLabel: string | null; // what "Undo" would undo ("הזזת נקודה"), null when there is nothing
+  redoLabel: string | null;
+  isBusy: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 const LEGEND_TYPES: NodeType[] = ['corridor', 'entrance', 'qr', 'stairs', 'elevator'];
 
 // The four modes of the editor, what the current one does, and what the colors mean
-function EditorToolbar({ mode, onModeChange }: EditorToolbarProps) {
+function EditorToolbar({ mode, onModeChange, undoLabel, redoLabel, isBusy, onUndo, onRedo }: EditorToolbarProps) {
   const currentMode = EDITOR_MODES.find((item) => item.value === mode);
 
   return (
@@ -35,6 +40,29 @@ function EditorToolbar({ mode, onModeChange }: EditorToolbarProps) {
       </div>
 
       {currentMode && <p className="field-hint">{currentMode.hint}</p>}
+
+      {/* Every change is saved right away. Undo sends the opposite change to the server. */}
+      <div className="editor-history">
+        <button
+          type="button"
+          className="btn btn-small"
+          disabled={isBusy || undoLabel === null}
+          title={undoLabel ? `ביטול: ${undoLabel} (Ctrl+Z)` : 'אין מה לבטל'}
+          onClick={onUndo}
+        >
+          ביטול
+        </button>
+        <button
+          type="button"
+          className="btn btn-small"
+          disabled={isBusy || redoLabel === null}
+          title={redoLabel ? `ביצוע מחדש: ${redoLabel} (Ctrl+Y)` : 'אין מה לבצע מחדש'}
+          onClick={onRedo}
+        >
+          ביצוע מחדש
+        </button>
+        {undoLabel && <span className="editor-history-last">אחרון: {undoLabel}</span>}
+      </div>
 
       <div className="editor-legend">
         {LEGEND_TYPES.map((type) => (

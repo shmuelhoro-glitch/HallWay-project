@@ -89,6 +89,8 @@ export interface NewNode {
   x: number;
   y: number;
   type?: NodeType;
+  connectorId?: string;
+  label?: string;
   connectFrom?: string; // draw mode: the point before this one
 }
 

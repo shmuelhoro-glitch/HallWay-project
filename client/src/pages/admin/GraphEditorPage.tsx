@@ -29,6 +29,16 @@ import type { EditorMode } from '../../components/admin/editorModes';
 
 const EMPTY_GRAPH: Graph = { nodes: [], edges: [] };
 
+// One change that can be undone. Every change in the editor is saved on the server right away,
+// so "undo" is not local: it sends the opposite change to the server, and "redo" sends the change again.
+interface HistoryEntry {
+  label: string; // what the buttons say: "הזזת נקודה"
+  undo: () => Promise<void>;
+  redo: () => Promise<void>;
+}
+
+const MAX_HISTORY = 50;
+
 // The "Walkways" tab: draw the paths visitors walk on, floor by floor
 function GraphEditorPage() {
   const { building } = useAdminBuilding();
@@ -89,7 +99,23 @@ function GraphEditorPage() {
       .catch(() => setConnectorIds([]));
   }, [building.id]);
 
-  // Keyboard: Esc stops what is going on (and the next Esc goes back to Edit), D / V / B / X pick a mode
+  // ---------- Undo / redo ----------
+  // The history belongs to the floor on screen, and is forgotten when the floor changes.
+  const [undoStack, setUndoStack] = useState<HistoryEntry[]>([]);
+  const [redoStack, setRedoStack] = useState<HistoryEntry[]>([]);
+
+  // A point or a walkway that was deleted and brought back gets a new id from the server.
+  // Older history entries still know it by the old id, so we keep "old id -> new id" here.
+  const newIds = useRef(new Map<string, string>());
+
+  // The keyboard handler below is set up once, and reads the newest undo / redo from here
+  const historyActions = useRef({ undo: () => {}, redo: () => {} });
+  useEffect(() => {
+    historyActions.current = { undo: undoLast, redo: redoLast };
+  });
+
+  // Keyboard: Esc stops what is going on (and the next Esc goes back to Edit), D / V / B / X pick a mode,
+  // Ctrl+Z / Ctrl+Y undo and redo
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -106,7 +132,19 @@ function GraphEditorPage() {
       // A letter typed in a field (a point name, a connector id) is text, not a shortcut
       const target = event.target as HTMLElement | null;
       const isTyping = target !== null && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable);
-      if (isTyping || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (isTyping || event.altKey) return; // in a field, Ctrl+Z undoes the typing, as always
+
+      if (event.ctrlKey || event.metaKey) {
+        const isRedo = event.code === 'KeyY' || (event.code === 'KeyZ' && event.shiftKey);
+        if (isRedo) {
+          event.preventDefault();
+          historyActions.current.redo();
+        } else if (event.code === 'KeyZ') {
+          event.preventDefault();
+          historyActions.current.undo();
+        }
+        return;
+      }
 
       const pickedMode = EDITOR_MODES.find((item) => item.keyCode === event.code);
       if (pickedMode) {
@@ -180,6 +218,148 @@ function GraphEditorPage() {
     }
   }
 
+  // ---------- Undo / redo ----------
+
+  // The id a point or a walkway has now (it changes when it is deleted and brought back)
+  function currentId(id: string): string {
+    let current = id;
+    while (newIds.current.has(current)) {
+      current = newIds.current.get(current) as string;
+    }
+    return current;
+  }
+
+  function rememberNewId(oldId: string, newId: string) {
+    newIds.current.set(currentId(oldId), newId);
+  }
+
+  function clearHistory() {
+    setUndoStack([]);
+    setRedoStack([]);
+    newIds.current.clear();
+  }
+
+  // Called after every change that worked. A new change makes the "redo" list meaningless.
+  function record(entry: HistoryEntry) {
+    setUndoStack((current) => [...current, entry].slice(-MAX_HISTORY));
+    setRedoStack([]);
+  }
+
+  // An undo that failed in the middle may have done half of its work. The server knows
+  // what is really saved, so the floor is loaded again and the history starts over.
+  async function reloadAfterFailedHistory() {
+    clearHistory();
+    setActiveNodeId(null);
+    try {
+      setGraph(await getGraph(building.id, floor));
+    } catch {
+      // The error of the undo itself is the one that is shown
+    }
+  }
+
+  function undoLast() {
+    const entry = undoStack[undoStack.length - 1];
+    if (!entry) return;
+
+    run(async () => {
+      try {
+        await entry.undo();
+      } catch (undoError) {
+        await reloadAfterFailedHistory();
+        throw undoError;
+      }
+      setUndoStack((current) => current.slice(0, -1));
+      setRedoStack((current) => [...current, entry]);
+    });
+  }
+
+  function redoLast() {
+    const entry = redoStack[redoStack.length - 1];
+    if (!entry) return;
+
+    run(async () => {
+      try {
+        await entry.redo();
+      } catch (redoError) {
+        await reloadAfterFailedHistory();
+        throw redoError;
+      }
+      setRedoStack((current) => current.slice(0, -1));
+      setUndoStack((current) => [...current, entry]);
+    });
+  }
+
+  // ---------- Changes, each with its way back ----------
+
+  async function moveNode(node: GraphNode, x: number, y: number) {
+    const saved = await updateNode(building.id, node.id, { x, y });
+    replaceNodeOnScreen(saved);
+
+    async function moveTo(spot: { x: number; y: number }) {
+      replaceNodeOnScreen(await updateNode(building.id, currentId(node.id), spot));
+    }
+    record({
+      label: 'הזזת נקודה',
+      undo: () => moveTo({ x: node.x, y: node.y }),
+      redo: () => moveTo({ x, y }),
+    });
+  }
+
+  // Deletes a point. Its walkways go with it, and come back with it on undo.
+  async function removeNode(node: GraphNode) {
+    const lostEdges = graph.edges.filter((edge) => edge.from === node.id || edge.to === node.id);
+
+    await deleteNode(building.id, node.id);
+    removeNodeFromScreen(node.id);
+
+    record({
+      label: 'מחיקת נקודה',
+      undo: async () => {
+        const created = await createNode(building.id, {
+          floor: node.floor,
+          x: node.x,
+          y: node.y,
+          type: node.type,
+          connectorId: node.connectorId ?? undefined,
+          label: node.label || undefined,
+        });
+        rememberNewId(node.id, created.id);
+        addNodeToScreen(created);
+
+        for (const lost of lostEdges) {
+          await restoreEdge(lost);
+        }
+      },
+      redo: async () => {
+        const id = currentId(node.id);
+        await deleteNode(building.id, id);
+        removeNodeFromScreen(id);
+      },
+    });
+  }
+
+  // Brings a deleted walkway back, blocked if it was blocked
+  async function restoreEdge(lost: GraphEdge) {
+    let edge = await createEdge(building.id, currentId(lost.from), currentId(lost.to));
+    if (lost.blocked) {
+      edge = await setEdgeBlocked(building.id, edge.id, true);
+    }
+    rememberNewId(lost.id, edge.id);
+    addEdgeToScreen(edge);
+  }
+
+  function recordNewEdge(edge: GraphEdge) {
+    record({
+      label: 'חיבור נקודות',
+      undo: async () => {
+        const id = currentId(edge.id);
+        await deleteEdge(building.id, id);
+        removeEdgeFromScreen(id);
+      },
+      redo: () => restoreEdge(edge),
+    });
+  }
+
   // ---------- Clicks ----------
 
   function handleMapClick(point: SvgPoint) {
@@ -208,16 +388,40 @@ function GraphEditorPage() {
         if (edge) {
           addEdgeToScreen(edge);
         }
+
+        record({
+          label: 'הוספת נקודה',
+          undo: async () => {
+            const id = currentId(node.id);
+            await deleteNode(building.id, id); // the server deletes its walkway too
+            removeNodeFromScreen(id);
+            setActiveNodeId(null);
+          },
+          redo: async () => {
+            const again = await createNode(building.id, {
+              floor: node.floor,
+              x: node.x,
+              y: node.y,
+              connectFrom: previousNodeId ? currentId(previousNodeId) : undefined,
+            });
+            const { edge: newEdge, ...newNode } = again;
+            rememberNewId(node.id, newNode.id);
+            addNodeToScreen(newNode);
+            if (edge && newEdge) {
+              rememberNewId(edge.id, newEdge.id);
+              addEdgeToScreen(newEdge);
+            }
+          },
+        });
       });
       return;
     }
 
     if (mode === 'select') {
-      if (movingNodeId) {
-        const nodeId = movingNodeId;
+      const movingNode = graph.nodes.find((node) => node.id === movingNodeId);
+      if (movingNode) {
         run(async () => {
-          const node = await updateNode(building.id, nodeId, { x, y });
-          replaceNodeOnScreen(node);
+          await moveNode(movingNode, x, y);
           setMovingNodeId(null);
         });
       } else {
@@ -244,6 +448,7 @@ function GraphEditorPage() {
         try {
           const edge = await createEdge(building.id, previousNodeId, node.id);
           addEdgeToScreen(edge);
+          recordNewEdge(edge);
         } catch (edgeError) {
           // Already connected - not a problem, just continue from this point
           if (!(edgeError instanceof ApiError && edgeError.code === 'EDGE_EXISTS')) {
@@ -268,12 +473,17 @@ function GraphEditorPage() {
         const walkways = walkwayCount === 1 ? 'המעבר שמחובר אליה' : `${walkwayCount} המעברים שמחוברים אליה`;
         if (!window.confirm(`למחוק את הנקודה? גם ${walkways} יימחקו.`)) return;
       }
+      if (!confirmQrDelete(node)) return;
 
-      run(async () => {
-        await deleteNode(building.id, node.id);
-        removeNodeFromScreen(node.id);
-      });
+      run(() => removeNode(node));
     }
+  }
+
+  // A printed QR code holds the id of its point. Deleting the point breaks the code for good:
+  // even after undo, the point comes back with a new id.
+  function confirmQrDelete(node: GraphNode): boolean {
+    if (node.type !== 'qr') return true;
+    return window.confirm('זו נקודת QR. קודים שכבר הודפסו עבורה יפסיקו לעבוד, גם אם תבטלו את המחיקה. למחוק?');
   }
 
   // A point was dragged to a new spot. It is shown there right away, and goes back if saving fails.
@@ -285,8 +495,7 @@ function GraphEditorPage() {
 
     run(async () => {
       try {
-        const saved = await updateNode(building.id, node.id, { x, y });
-        replaceNodeOnScreen(saved);
+        await moveNode(node, x, y);
       } catch (moveError) {
         replaceNodeOnScreen(node);
         throw moveError;
@@ -297,15 +506,29 @@ function GraphEditorPage() {
   function handleEdgeClick(edge: GraphEdge) {
     if (mode === 'block') {
       run(async () => {
-        const updated = await setEdgeBlocked(building.id, edge.id, !edge.blocked);
-        replaceEdgeOnScreen(updated);
+        async function setBlocked(blocked: boolean) {
+          replaceEdgeOnScreen(await setEdgeBlocked(building.id, currentId(edge.id), blocked));
+        }
+
+        await setBlocked(!edge.blocked);
+        record({
+          label: edge.blocked ? 'פתיחת מעבר' : 'חסימת מעבר',
+          undo: () => setBlocked(edge.blocked),
+          redo: () => setBlocked(!edge.blocked),
+        });
       });
     }
 
     if (mode === 'delete') {
       run(async () => {
-        await deleteEdge(building.id, edge.id);
-        removeEdgeFromScreen(edge.id);
+        async function remove() {
+          const id = currentId(edge.id);
+          await deleteEdge(building.id, id);
+          removeEdgeFromScreen(id);
+        }
+
+        await remove();
+        record({ label: 'מחיקת מעבר', undo: () => restoreEdge(edge), redo: remove });
       });
     }
   }
@@ -324,28 +547,50 @@ function GraphEditorPage() {
     setIsLoading(true);
     setActiveNodeId(null);
     setMovingNodeId(null);
+    clearHistory(); // the history is of the floor that was on screen
   }
 
   function handleInspectorSave(changes: NodeChanges) {
-    if (!activeNodeId) return;
-    const nodeId = activeNodeId;
+    const before = graph.nodes.find((node) => node.id === activeNodeId);
+    if (!before || Object.keys(changes).length === 0) return;
+
+    // The same fields, with the values they had: that is the way back
+    const back: NodeChanges = {};
+    if (changes.type !== undefined) back.type = before.type;
+    if (changes.connectorId !== undefined) back.connectorId = before.connectorId ?? '';
+    if (changes.label !== undefined) back.label = before.label;
+    const nodeId = before.id;
 
     run(async () => {
-      const node = await updateNode(building.id, nodeId, changes);
-      replaceNodeOnScreen(node);
+      async function apply(values: NodeChanges) {
+        const node = await updateNode(building.id, currentId(nodeId), values);
+        replaceNodeOnScreen(node);
+        return node;
+      }
+
+      const node = await apply(changes);
       if (node.connectorId && !connectorIds.includes(node.connectorId)) {
         setConnectorIds([...connectorIds, node.connectorId].sort());
       }
+
+      record({
+        label: 'שינוי נקודה',
+        undo: async () => {
+          await apply(back);
+        },
+        redo: async () => {
+          await apply(changes);
+        },
+      });
     });
   }
 
   function handleInspectorDelete() {
-    if (!activeNodeId) return;
-    const nodeId = activeNodeId;
+    const node = graph.nodes.find((item) => item.id === activeNodeId);
+    if (!node || !confirmQrDelete(node)) return;
 
     run(async () => {
-      await deleteNode(building.id, nodeId);
-      removeNodeFromScreen(nodeId);
+      await removeNode(node);
       setActiveNodeId(null);
     });
   }
@@ -407,7 +652,15 @@ function GraphEditorPage() {
       </div>
 
       <div className="admin-panel">
-        <EditorToolbar mode={mode} onModeChange={changeMode} />
+        <EditorToolbar
+          mode={mode}
+          onModeChange={changeMode}
+          undoLabel={undoStack.length > 0 ? undoStack[undoStack.length - 1].label : null}
+          redoLabel={redoStack.length > 0 ? redoStack[redoStack.length - 1].label : null}
+          isBusy={isBusy}
+          onUndo={undoLast}
+          onRedo={redoLast}
+        />
 
         {error && <p className="message-error">{error}</p>}
         {isLoading && <p className="message-info">טוען...</p>}
