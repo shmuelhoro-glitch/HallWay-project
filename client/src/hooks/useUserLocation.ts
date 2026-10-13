@@ -24,30 +24,34 @@ const LOCATION_OPTIONS: PositionOptions = {
   maximumAge: 60000, // a position from the last minute is good enough
 };
 
+// Only while developing: ?mock_lat=..&mock_lng=.. puts the visitor at that spot, to try
+// "near a building" without going there. On the real site a link must not decide where a visitor is.
+function readMockPosition(): UserPosition | null {
+  if (!import.meta.env.DEV) return null;
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const lat = parseFloat(searchParams.get('mock_lat') ?? '');
+  const lng = parseFloat(searchParams.get('mock_lng') ?? '');
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  return { lat, lng, accuracy: 10 };
+}
+
 // Asks the device where the user is: once when the page opens, and again on every locate()
 export function useUserLocation() {
-  const [position, setPosition] = useState<UserPosition | null>(null);
-  const [status, setStatus] = useState<LocationStatus>(canAskForLocation() ? 'locating' : 'insecure');
+  const [mockPosition] = useState(readMockPosition);
+
+  const [position, setPosition] = useState<UserPosition | null>(mockPosition);
+  const [status, setStatus] = useState<LocationStatus>(() => {
+    if (mockPosition) return 'found';
+    return canAskForLocation() ? 'locating' : 'insecure';
+  });
 
   // Every press on "locate me" adds 1, and that runs the effect again
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    // Support testing and simulation via URL parameters (?mock_lat=..&mock_lng=..)
-    const searchParams = new URLSearchParams(window.location.search);
-    const mockLat = searchParams.get('mock_lat');
-    const mockLng = searchParams.get('mock_lng');
-    if (mockLat && mockLng) {
-      const lat = parseFloat(mockLat);
-      const lng = parseFloat(mockLng);
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        setPosition({ lat, lng, accuracy: 10 });
-        setStatus('found');
-        return;
-      }
-    }
-
-    if (!canAskForLocation()) return;
+    if (mockPosition || !canAskForLocation()) return;
 
     let isCancelled = false;
 
@@ -72,10 +76,10 @@ export function useUserLocation() {
     return () => {
       isCancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, mockPosition]);
 
   function locate() {
-    if (!canAskForLocation()) return;
+    if (mockPosition || !canAskForLocation()) return;
     setStatus('locating');
     setAttempt((current) => current + 1);
   }

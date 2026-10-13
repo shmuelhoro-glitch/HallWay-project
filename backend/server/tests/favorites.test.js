@@ -92,32 +92,44 @@ test("register returns initial empty favorites", async () => {
   assert.deepEqual(res.body.user.favorites, { buildings: [], places: [] });
 });
 
-test("updateFavorites falls back to mongoRepo when supabase update throws", async () => {
-  supabaseRepo.failOn("updateOne", "users");
+test("a user that was saved before the favorites column existed has empty favorites", async () => {
+  const old = await supabaseRepo.insertOne("users", { username: "old_user", email: "old@example.com", role: "visitor" });
 
-  const sampleFavorites = {
-    buildings: ["b-fallback"],
-    places: [{ id: "p-fallback", buildingId: "b-fallback", name: "קפה גרג", category: "אוכל", floor: 2 }],
-  };
+  const res = await callController(getFavorites, { user: { userId: old.id } });
 
-  const req = {
-    user: { userId: testUserId },
-    body: { favorites: sampleFavorites },
-  };
-
-  const res = await callController(updateFavorites, req);
-  assert.equal(res.status, 200);
-  assert.equal(res.body.success, true);
-  assert.deepEqual(res.body.favorites, sampleFavorites);
-
-  // Check saved in mongo fallback collection
-  const mongoDoc = await mongoRepo.findOne("user_favorites", { userId: testUserId });
-  assert.ok(mongoDoc);
-  assert.deepEqual(mongoDoc.favorites, sampleFavorites);
-
-  // Verify getFavorites reads from mongo fallback
-  const getRes = await callController(getFavorites, { user: { userId: testUserId } });
-  assert.equal(getRes.status, 200);
-  assert.deepEqual(getRes.body.favorites, sampleFavorites);
+  assert.deepEqual(res.body.favorites, { buildings: [], places: [] });
 });
 
+test("when the favorites can't be saved the client gets the error, and nothing is saved anywhere else", async () => {
+  supabaseRepo.failOn("updateOne", "users");
+
+  const res = await callController(updateFavorites, {
+    user: { userId: testUserId },
+    body: { favorites: { buildings: ["b-1"], places: [] } },
+  });
+
+  assert.ok(res.error);
+  assert.deepEqual(mongoRepo.all("user_favorites"), []);
+  assert.deepEqual((await supabaseRepo.findOne("users", { id: testUserId })).favorites, { buildings: [], places: [] });
+});
+
+test("favorites that were emptied stay empty", async () => {
+  const user = { userId: testUserId };
+  await callController(updateFavorites, { user, body: { favorites: { buildings: ["b-1"], places: [] } } });
+  await callController(updateFavorites, { user, body: { favorites: { buildings: [], places: [] } } });
+
+  const res = await callController(getFavorites, { user });
+
+  assert.deepEqual(res.body.favorites, { buildings: [], places: [] });
+});
+
+test("the favorites of a user that was deleted can't be saved", async () => {
+  await supabaseRepo.deleteOne("users", { id: testUserId });
+
+  const res = await callController(updateFavorites, {
+    user: { userId: testUserId },
+    body: { favorites: { buildings: [], places: [] } },
+  });
+
+  assert.equal(res.error.code, "USER_NOT_FOUND");
+});

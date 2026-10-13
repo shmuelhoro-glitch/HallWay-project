@@ -16,7 +16,7 @@ const MAX_CARDS_COLLAPSED = 10;
 
 // Displays buildings: horizontal row when collapsed, full vertical list when expanded
 function NearbyBuildings({ results, onPick, isExpanded = false, onPromptLogin }: NearbyBuildingsProps) {
-  const isBuildingFavorite = useFavoritesStore((state) => state.isBuildingFavorite);
+  const favoriteBuildings = useFavoritesStore((state) => state.favorites.buildings);
   const toggleBuildingFavorite = useFavoritesStore((state) => state.toggleBuildingFavorite);
 
   function handleToggleFavorite(e: React.MouseEvent, buildingId: string) {
@@ -31,7 +31,7 @@ function NearbyBuildings({ results, onPick, isExpanded = false, onPromptLogin }:
     return (
       <div className="nearby-list">
         {results.map(({ building, distanceKm }) => {
-          const isFav = isBuildingFavorite(building.id);
+          const isFav = favoriteBuildings.includes(building.id);
           return (
             <div
               key={building.id}

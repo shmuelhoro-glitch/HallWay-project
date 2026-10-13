@@ -21,6 +21,9 @@ import { startAlertPoller } from './services/alerts.service.js';
 
 const app = express()
 
+// On Render the requests come through a proxy. Without this every visitor has the address of the proxy.
+app.set('trust proxy', 1)
+
 app.use(express.json({limit: "5mb" }))
 app.use(cors())
 

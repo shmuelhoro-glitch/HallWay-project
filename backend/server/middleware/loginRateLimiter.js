@@ -1,187 +1,80 @@
-// In-memory rate limiting for login attempts.
-// Locks an IP out after 5 failed login attempts within a 15-second window.
+// Slows down guessing of passwords: after 5 wrong passwords in 15 seconds, the same visitor
+// can't try the same account again until the 15 seconds pass.
+// Kept in memory: enough for one server, and a restart only forgets a few seconds.
 
-export const WINDOW_MS = 15 * 1000; // 15 seconds
+export const WINDOW_MS = 15 * 1000;
 export const MAX_ATTEMPTS = 5;
-export const CLEANUP_INTERVAL_MS = 15 * 1000; // 15 seconds
 
-// IP -> { count: number, firstAttempt: number, lastAttempt: number, timestamp: number, resetTime: number, timestamps: number[] }
-const attempts = new Map();
+// key -> the times of the wrong passwords inside the window
+const failures = new Map();
 
 export function getClientIp(req) {
-  if (!req) return "unknown";
-  const rawIp = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || "unknown";
-  return typeof rawIp === "string" ? rawIp.replace(/^::ffff:/, "") : "unknown";
+  const ip = req?.ip || req?.socket?.remoteAddress || "unknown";
+  return String(ip).replace(/^::ffff:/, "");
 }
 
-function resolveIp(ipOrReq) {
-  if (!ipOrReq) return "unknown";
-  if (typeof ipOrReq === "string") return ipOrReq.replace(/^::ffff:/, "");
-  return getClientIp(ipOrReq);
+// Who is counted: this address trying this account.
+// The address alone is not enough: behind a proxy many visitors can share one, and then the wrong
+// passwords of one visitor would lock everyone out (and a login of another would free him).
+export function getLoginKey(req) {
+  const email = String(req?.body?.email ?? "").trim().toLowerCase();
+  return `${getClientIp(req)}|${email}`;
 }
 
-// Records a failed attempt for the given IP (increments failure count and updates timestamp)
-export function recordFailedAttempt(ipOrReq, now = Date.now()) {
-  const ip = resolveIp(ipOrReq);
-  const entry = attempts.get(ip);
-
-  if (!entry) {
-    const newEntry = {
-      count: 1,
-      firstAttempt: now,
-      lastAttempt: now,
-      timestamp: now,
-      resetTime: now + WINDOW_MS,
-      timestamps: [now],
-    };
-    attempts.set(ip, newEntry);
-    return newEntry;
-  }
-
-  // Filter existing timestamps within the 15-second window
-  const recent = entry.timestamps.filter((time) => now - time < WINDOW_MS);
-  recent.push(now);
-  recent.sort((a, b) => a - b);
-
-  entry.timestamps = recent;
-  entry.count = recent.length;
-  entry.firstAttempt = recent[0];
-  entry.lastAttempt = now;
-  entry.timestamp = now;
-  entry.resetTime = (entry.count >= MAX_ATTEMPTS
-    ? recent[recent.length - MAX_ATTEMPTS]
-    : recent[0]) + WINDOW_MS;
-
-  attempts.set(ip, entry);
-  return entry;
-}
-
-// Resets failure count when an IP logs in successfully
-export function resetFailedAttempts(ipOrReq) {
-  const ip = resolveIp(ipOrReq);
-  attempts.delete(ip);
-}
-
-// Checks whether an IP is currently locked out
-export function isLocked(ipOrReq, now = Date.now()) {
-  const ip = resolveIp(ipOrReq);
-  const entry = attempts.get(ip);
-  if (!entry) return false;
-
-  const recent = entry.timestamps.filter((time) => now - time < WINDOW_MS);
+// The wrong passwords of this key that still count. Old ones are dropped on the way.
+function recentFailures(key, now) {
+  const recent = (failures.get(key) ?? []).filter((time) => now - time < WINDOW_MS);
   if (recent.length === 0) {
-    attempts.delete(ip);
-    return false;
+    failures.delete(key);
+  } else {
+    failures.set(key, recent);
   }
-  return recent.length >= MAX_ATTEMPTS;
+  return recent;
 }
 
-// Returns the remaining seconds until unlock for an IP (0 if not locked)
-export function getRemainingSeconds(ipOrReq, now = Date.now()) {
-  const ip = resolveIp(ipOrReq);
-  const entry = attempts.get(ip);
-  if (!entry) return 0;
-
-  const recent = entry.timestamps.filter((time) => now - time < WINDOW_MS);
-  if (recent.length < MAX_ATTEMPTS) {
-    if (recent.length === 0) {
-      attempts.delete(ip);
-    }
-    return 0;
-  }
-
-  const oldestBlockingTime = recent[recent.length - MAX_ATTEMPTS];
-  const remainingMs = (oldestBlockingTime + WINDOW_MS) - now;
-  return Math.max(1, Math.ceil(remainingMs / 1000));
+export function recordFailedAttempt(key, now = Date.now()) {
+  failures.set(key, [...recentFailures(key, now), now]);
 }
 
-// Cleans up expired entries periodically so memory does not leak
-export function cleanupExpiredAttempts(now = Date.now()) {
-  for (const [ip, entry] of attempts.entries()) {
-    const recent = entry.timestamps.filter((time) => now - time < WINDOW_MS);
-    if (recent.length === 0) {
-      attempts.delete(ip);
-    } else {
-      entry.timestamps = recent;
-      entry.count = recent.length;
-      entry.firstAttempt = recent[0];
-      entry.lastAttempt = recent[recent.length - 1];
-      entry.timestamp = entry.lastAttempt;
-      entry.resetTime = (entry.count >= MAX_ATTEMPTS
-        ? recent[recent.length - MAX_ATTEMPTS]
-        : recent[0]) + WINDOW_MS;
-    }
-  }
+// A successful login starts the count again
+export function resetFailedAttempts(key) {
+  failures.delete(key);
 }
 
-// Clears all tracked attempts (useful for test resets)
+// How many seconds until this key may try again. 0 = it may try now.
+export function getRemainingSeconds(key, now = Date.now()) {
+  const recent = recentFailures(key, now);
+  if (recent.length < MAX_ATTEMPTS) return 0;
+
+  // Free again when the 5th newest wrong password leaves the window
+  const blockingTime = recent[recent.length - MAX_ATTEMPTS];
+  return Math.max(1, Math.ceil((blockingTime + WINDOW_MS - now) / 1000));
+}
+
+export function isLocked(key, now = Date.now()) {
+  return getRemainingSeconds(key, now) > 0;
+}
+
+// For the tests
 export function clearAllAttempts() {
-  attempts.clear();
+  failures.clear();
 }
 
-// Periodic cleanup interval: unref so it won't keep the Node.js process alive
-const cleanupTimer = setInterval(() => {
-  cleanupExpiredAttempts();
-}, CLEANUP_INTERVAL_MS);
-
-if (cleanupTimer && typeof cleanupTimer.unref === "function") {
-  cleanupTimer.unref();
-}
-
-export function stopCleanupTimer() {
-  if (cleanupTimer) {
-    clearInterval(cleanupTimer);
-  }
-}
-
-// Middleware: blocks login requests if the client IP has >= 5 failed attempts in 15 seconds
-export function checkLoginRateLimit(req, res, next) {
-  const ip = getClientIp(req);
+// Keys that nobody asked about again would stay forever. unref: the timer never keeps the server alive.
+setInterval(() => {
   const now = Date.now();
-  const entry = attempts.get(ip);
+  for (const key of failures.keys()) {
+    recentFailures(key, now);
+  }
+}, WINDOW_MS).unref();
 
-  if (!entry) {
+// Before the login controller: a locked key is refused without checking the password
+export function checkLoginRateLimit(req, res, next) {
+  const remainingSeconds = getRemainingSeconds(getLoginKey(req));
+  if (remainingSeconds === 0) {
     return next();
   }
 
-  const recent = entry.timestamps.filter((time) => now - time < WINDOW_MS);
-  if (recent.length === 0) {
-    attempts.delete(ip);
-    return next();
-  }
-
-  entry.timestamps = recent;
-  entry.count = recent.length;
-  entry.firstAttempt = recent[0];
-  entry.lastAttempt = recent[recent.length - 1];
-  entry.timestamp = entry.lastAttempt;
-  entry.resetTime = (entry.count >= MAX_ATTEMPTS
-    ? entry.timestamps[entry.timestamps.length - MAX_ATTEMPTS]
-    : entry.firstAttempt) + WINDOW_MS;
-
-  if (entry.count < MAX_ATTEMPTS) {
-    return next();
-  }
-
-  // Calculate remaining seconds until unlock
-  const remainingSeconds = getRemainingSeconds(ip, now);
-
-  if (typeof res.setHeader === "function") {
-    res.setHeader("Retry-After", String(remainingSeconds));
-  }
-  if (typeof res.set === "function") {
-    res.set("Retry-After", String(remainingSeconds));
-  }
-
-  return res.status(429).json({
-    status: 429,
-    code: "ACCOUNT_LOCKED",
-    message: "Too many failed login attempts. Please try again in 15 seconds.",
-    error: {
-      code: "ACCOUNT_LOCKED",
-      message: "Too many failed login attempts. Please try again in 15 seconds.",
-    },
-  });
+  res.set("Retry-After", String(remainingSeconds));
+  next({ status: 429, code: "ACCOUNT_LOCKED", message: `Too many failed login attempts. Try again in ${remainingSeconds} seconds.` });
 }
-
-export default checkLoginRateLimit;

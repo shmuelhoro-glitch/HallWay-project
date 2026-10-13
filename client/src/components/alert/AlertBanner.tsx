@@ -21,7 +21,7 @@ function AlertBanner() {
     <div className="alert-banner" role="alert">
       <SirenIcon size={18} />
       <span className="alert-banner-text">
-        צבע אדום · <strong>{secondsLeft} שניות</strong>
+        {alert?.isSimulation ? 'תרגיל צבע אדום' : 'צבע אדום'} · <strong>{secondsLeft} שניות</strong>
       </span>
       <button type="button" className="alert-banner-button" onClick={restore}>
         איפה אני?

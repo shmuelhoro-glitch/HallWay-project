@@ -43,6 +43,7 @@ create table if not exists chat_bans (
   unique (building_id, user_id)
 );
 
--- User favorites: saved buildings and places
+-- User favorites: saved buildings and places.
+-- The server saves the favorites only here, so this line must be run before favorites can be used.
 alter table users add column if not exists favorites jsonb default '{"buildings":[], "places":[]}'::jsonb;
 

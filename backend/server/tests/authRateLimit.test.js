@@ -1,333 +1,179 @@
-import { beforeEach, mock, test } from "node:test";
+import { after, before, beforeEach, mock, test } from "node:test";
 import assert from "node:assert/strict";
 import bcrypt from "bcrypt";
+import express from "express";
 import { useFakeRepos } from "./helpers.js";
+
+// Too many wrong passwords lock the login for a few seconds.
+// The login tests go through the real route, over HTTP on this computer only.
 
 process.env.JWT_SECRET = "test-secret";
 
 const { supabaseRepo, resetData } = useFakeRepos();
 
 const {
-  WINDOW_MS,
   MAX_ATTEMPTS,
-  checkLoginRateLimit,
+  WINDOW_MS,
+  clearAllAttempts,
+  getLoginKey,
+  getRemainingSeconds,
+  isLocked,
   recordFailedAttempt,
   resetFailedAttempts,
-  isLocked,
-  getRemainingSeconds,
-  cleanupExpiredAttempts,
-  clearAllAttempts,
-  stopCleanupTimer,
 } = await import("../middleware/loginRateLimiter.js");
 
-const { login } = await import("../controllers/auth.controller.js");
+const { errorHandler } = await import("../middleware/errorHandler.js");
+const { default: authRoutes } = await import("../routes/auth.routes.js");
+
+const app = express();
+app.use(express.json());
+app.use("/api/auth", authRoutes);
+app.use(errorHandler);
+
+let server;
+let baseUrl;
+
+before(async () => {
+  server = app.listen(0, "127.0.0.1");
+  await new Promise((resolve) => server.once("listening", resolve));
+  baseUrl = `http://127.0.0.1:${server.address().port}`;
+});
+
+after(() => server.close());
 
 beforeEach(async () => {
   await resetData();
   clearAllAttempts();
   mock.method(console, "error", () => {});
+
+  // 4 rounds: fast, and the tests only need a hash that matches
+  for (const name of ["dana", "noa"]) {
+    await supabaseRepo.insertOne("users", {
+      username: name,
+      email: `${name}@example.com`,
+      hashPassword: await bcrypt.hash("Correct123", 4),
+      role: "visitor",
+      buildingIds: [],
+    });
+  }
 });
 
-function callMiddleware(middleware, req) {
-  const result = {
-    statusCode: 200,
-    headers: {},
-    body: null,
-    calledNext: false,
-  };
-
-  const res = {
-    status(code) {
-      result.statusCode = code;
-      return res;
-    },
-    json(data) {
-      result.body = data;
-      return res;
-    },
-    setHeader(key, val) {
-      result.headers[key.toLowerCase()] = String(val);
-      return res;
-    },
-    set(key, val) {
-      result.headers[key.toLowerCase()] = String(val);
-      return res;
-    },
-  };
-
-  middleware(req, res, () => {
-    result.calledNext = true;
+async function login(email, password) {
+  const response = await fetch(`${baseUrl}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
   });
-
-  return result;
+  return { status: response.status, body: await response.json(), retryAfter: response.headers.get("retry-after") };
 }
 
-test("recordFailedAttempt increments failure count and updates timestamp", () => {
-  const ip = "192.168.1.10";
-  const now = 100000;
+async function failTimes(email, times) {
+  for (let i = 0; i < times; i++) {
+    await login(email, "wrong-password");
+  }
+}
 
-  const entry1 = recordFailedAttempt(ip, now);
-  assert.equal(entry1.count, 1);
-  assert.equal(entry1.timestamp, now);
+// ---------- The count itself ----------
 
-  const entry2 = recordFailedAttempt(ip, now + 1000);
-  assert.equal(entry2.count, 2);
-  assert.equal(entry2.timestamp, now + 1000);
+test("a key is locked only from the 5th wrong password, and for what is left of the 15 seconds", () => {
+  const start = 1_000_000;
+
+  for (let i = 0; i < MAX_ATTEMPTS - 1; i++) {
+    recordFailedAttempt("key", start + i * 1000);
+  }
+  assert.equal(isLocked("key", start + 4000), false);
+
+  recordFailedAttempt("key", start + 4000);
+  assert.equal(isLocked("key", start + 4000), true);
+  assert.equal(getRemainingSeconds("key", start + 4000), 11); // the first wrong password leaves after 15 seconds
 });
 
-test("resetFailedAttempts clears failure count for an IP", () => {
-  const ip = "192.168.1.11";
-  recordFailedAttempt(ip);
-  recordFailedAttempt(ip);
-  assert.equal(isLocked(ip), false);
-
-  resetFailedAttempts(ip);
-  assert.equal(getRemainingSeconds(ip), 0);
-  assert.equal(isLocked(ip), false);
-});
-
-test("allows requests when failed attempts are fewer than MAX_ATTEMPTS (5)", () => {
-  const ip = "10.0.0.1";
-  for (let i = 0; i < 4; i++) {
-    recordFailedAttempt(ip);
+test("when the window passes the key is free again, without anyone freeing it", () => {
+  const start = 1_000_000;
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    recordFailedAttempt("key", start);
   }
 
-  const req = { ip };
-  const res = callMiddleware(checkLoginRateLimit, req);
-
-  assert.equal(res.calledNext, true);
-  assert.equal(res.statusCode, 200);
+  assert.equal(isLocked("key", start + WINDOW_MS - 1), true);
+  assert.equal(isLocked("key", start + WINDOW_MS), false);
+  assert.equal(getRemainingSeconds("key", start + WINDOW_MS), 0);
 });
 
-test("locks out an IP after 5 failed attempts in 15 seconds with 429 and Retry-After", () => {
-  const ip = "10.0.0.2";
-  const baseTime = Date.now();
-
-  for (let i = 0; i < 5; i++) {
-    recordFailedAttempt(ip, baseTime + i * 1000);
+test("a wrong password that is older than the window does not count", () => {
+  const start = 1_000_000;
+  recordFailedAttempt("key", start);
+  for (let i = 0; i < MAX_ATTEMPTS - 1; i++) {
+    recordFailedAttempt("key", start + WINDOW_MS + i);
   }
 
-  assert.equal(isLocked(ip, baseTime + 5000), true);
-
-  const req = { ip };
-  const res = callMiddleware(checkLoginRateLimit, req);
-
-  assert.equal(res.calledNext, false);
-  assert.equal(res.statusCode, 429);
-  assert.equal(res.body.code, "ACCOUNT_LOCKED");
-  assert.equal(res.body.error.code, "ACCOUNT_LOCKED");
-  assert.equal(res.body.message, "Too many failed login attempts. Please try again in 15 seconds.");
-  assert.ok(res.headers["retry-after"], "Retry-After header must be set");
-
-  const retryAfter = Number(res.headers["retry-after"]);
-  assert.ok(retryAfter > 0 && retryAfter <= 15, "Retry-After should be within 15 seconds");
+  assert.equal(isLocked("key", start + WINDOW_MS + 10), false);
 });
 
-test("different IPs have independent attempt counts", () => {
-  const ipA = "10.0.0.3";
-  const ipB = "10.0.0.4";
-
-  for (let i = 0; i < 5; i++) {
-    recordFailedAttempt(ipA);
+test("one key does not lock another, and a reset frees only its own key", () => {
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    recordFailedAttempt("first");
+    recordFailedAttempt("second");
   }
 
-  assert.equal(isLocked(ipA), true);
-  assert.equal(isLocked(ipB), false);
+  resetFailedAttempts("first");
 
-  const resA = callMiddleware(checkLoginRateLimit, { ip: ipA });
-  const resB = callMiddleware(checkLoginRateLimit, { ip: ipB });
-
-  assert.equal(resA.calledNext, false);
-  assert.equal(resA.statusCode, 429);
-
-  assert.equal(resB.calledNext, true);
-  assert.equal(resB.statusCode, 200);
+  assert.equal(isLocked("first"), false);
+  assert.equal(isLocked("second"), true);
+  assert.equal(isLocked("third"), false);
 });
 
-test("attempts older than 15 seconds expire and do not lock out the IP", () => {
-  const ip = "10.0.0.5";
-  const t0 = 1000000;
+test("the key is the address with the email, whatever the letters of the email", () => {
+  const key = getLoginKey({ ip: "::ffff:10.0.0.7", body: { email: " Dana@Example.com " } });
 
-  // 4 attempts at t0
-  for (let i = 0; i < 4; i++) {
-    recordFailedAttempt(ip, t0);
-  }
-
-  // 15 seconds + 1 second later
-  const tLater = t0 + WINDOW_MS + 1000;
-  // 5th attempt much later
-  recordFailedAttempt(ip, tLater);
-
-  // Since old 4 expired, only 1 recent attempt exists
-  assert.equal(isLocked(ip, tLater), false);
-  assert.equal(getRemainingSeconds(ip, tLater), 0);
+  assert.equal(key, "10.0.0.7|dana@example.com");
+  assert.notEqual(key, getLoginKey({ ip: "10.0.0.7", body: { email: "noa@example.com" } }));
+  assert.notEqual(key, getLoginKey({ ip: "10.0.0.8", body: { email: "dana@example.com" } }));
 });
 
-test("cleanupExpiredAttempts removes entries whose attempts have expired", () => {
-  const ip = "10.0.0.6";
-  const t0 = 500000;
-  recordFailedAttempt(ip, t0);
+// ---------- The login route ----------
 
-  const tLater = t0 + WINDOW_MS + 1000;
-  cleanupExpiredAttempts(tLater);
+test("after 5 wrong passwords the login is refused, also with the right password", async () => {
+  await failTimes("dana@example.com", MAX_ATTEMPTS);
 
-  assert.equal(isLocked(ip, tLater), false);
-  assert.equal(getRemainingSeconds(ip, tLater), 0);
+  const result = await login("dana@example.com", "Correct123");
+
+  assert.equal(result.status, 429);
+  assert.equal(result.body.error.code, "ACCOUNT_LOCKED");
+  assert.ok(Number(result.retryAfter) >= 1 && Number(result.retryAfter) <= 15);
 });
 
-test("login controller increments failed attempts on invalid credentials and resets on success", async () => {
-  const ip = "10.0.0.7";
-  const hashPassword = await bcrypt.hash("correct-pass", 10);
-  await supabaseRepo.insertOne("users", {
-    email: "test@example.com",
-    username: "tester",
-    hashPassword,
-    role: "visitor",
-    buildingIds: [],
-  });
+test("4 wrong passwords do not lock, and a login after them starts the count again", async () => {
+  await failTimes("dana@example.com", MAX_ATTEMPTS - 1);
 
-  // Attempt 1: wrong password
-  let err1 = null;
-  const req1 = { ip, body: { email: "test@example.com", password: "wrong-pass" } };
-  await login(req1, {}, (err) => { err1 = err; });
-  assert.equal(err1?.code, "INVALID_CREDENTIALS");
-  assert.equal(getRemainingSeconds(ip), 0); // 1 fail, not locked yet
+  const ok = await login("dana@example.com", "Correct123");
+  assert.equal(ok.status, 200);
 
-  // Attempt 2: non-existent email
-  let err2 = null;
-  const req2 = { ip, body: { email: "nonexistent@example.com", password: "pass" } };
-  await login(req2, {}, (err) => { err2 = err; });
-  assert.equal(err2?.code, "INVALID_CREDENTIALS");
-
-  // Attempt 3..5: 3 more wrong passwords
-  for (let i = 0; i < 3; i++) {
-    await login(req1, {}, () => {});
-  }
-
-  // Now IP has 5 failures and should be locked
-  assert.equal(isLocked(ip), true);
-  assert.ok(getRemainingSeconds(ip) > 0);
-
-  // Now simulate successful login with correct credentials from another IP to prove reset
-  const ipSuccess = "10.0.0.8";
-  for (let i = 0; i < 3; i++) {
-    await login({ ip: ipSuccess, body: { email: "test@example.com", password: "wrong" } }, {}, () => {});
-  }
-  // Not locked yet, has 3 failures
-  assert.equal(isLocked(ipSuccess), false);
-
-  let successResult = null;
-  const resSuccess = {
-    json(data) {
-      successResult = data;
-    },
-  };
-  await login({ ip: ipSuccess, body: { email: "test@example.com", password: "correct-pass" } }, resSuccess, () => {});
-
-  assert.ok(successResult?.token, "Successful login returns token");
-  // Failures for ipSuccess must have been reset to 0
-  assert.equal(getRemainingSeconds(ipSuccess), 0);
-  assert.equal(isLocked(ipSuccess), false);
+  await failTimes("dana@example.com", MAX_ATTEMPTS - 1);
+  const stillOpen = await login("dana@example.com", "Correct123");
+  assert.equal(stillOpen.status, 200);
 });
 
-test("handles IP resolution from socket.remoteAddress and fallbacks safely", () => {
-  const reqWithSocket = { socket: { remoteAddress: "172.16.0.1" } };
-  recordFailedAttempt(reqWithSocket);
-  assert.equal(isLocked("172.16.0.1"), false);
+test("wrong passwords for one account do not lock another account from the same address", async () => {
+  await failTimes("dana@example.com", MAX_ATTEMPTS);
 
-  const reqEmpty = {};
-  recordFailedAttempt(reqEmpty);
-  assert.equal(isLocked("unknown"), false);
+  const other = await login("noa@example.com", "Correct123");
+
+  assert.equal(other.status, 200);
 });
 
-test("normalizes IPv6-mapped IPv4 addresses so ::ffff:1.2.3.4 and 1.2.3.4 share limit", () => {
-  const ipv4 = "192.168.20.1";
-  const mapped = "::ffff:192.168.20.1";
+test("a login of another account does not free a locked one", async () => {
+  await failTimes("dana@example.com", MAX_ATTEMPTS);
+  await login("noa@example.com", "Correct123");
 
-  for (let i = 0; i < 3; i++) {
-    recordFailedAttempt(mapped);
-  }
-  for (let i = 0; i < 2; i++) {
-    recordFailedAttempt(ipv4);
-  }
+  const result = await login("dana@example.com", "Correct123");
 
-  // Combined attempts = 5, both forms should be locked
-  assert.equal(isLocked(ipv4), true);
-  assert.equal(isLocked(mapped), true);
-  assert.ok(getRemainingSeconds(mapped) > 0);
-  assert.equal(getRemainingSeconds(ipv4), getRemainingSeconds(mapped));
-
-  resetFailedAttempts(mapped);
-  assert.equal(isLocked(ipv4), false);
+  assert.equal(result.status, 429);
 });
 
-test("calculates exact remaining seconds when more than 5 attempts occur", () => {
-  const ip = "10.0.0.99";
-  const baseTime = 1000000;
+test("an email that is not registered is counted too, so nobody learns who is registered", async () => {
+  await failTimes("nobody@example.com", MAX_ATTEMPTS);
 
-  // 6 attempts at intervals of 1 second:
-  // t0=1000000, t1=1001000, t2=1002000, t3=1003000, t4=1004000, t5=1005000
-  for (let i = 0; i < 6; i++) {
-    recordFailedAttempt(ip, baseTime + i * 1000);
-  }
+  const result = await login("nobody@example.com", "whatever");
 
-  // At now = baseTime + 6000 (6 seconds later):
-  // With 6 attempts, unlocking occurs when attempt 1 (t1=1001000) expires,
-  // because after attempt 0 expires, 5 attempts remain (still locked).
-  // Unlock time = 1001000 + 15000 = 1016000.
-  // Remaining ms = 1016000 - 1006000 = 10000 ms -> 10 seconds.
-  const now = baseTime + 6000;
-  assert.equal(isLocked(ip, now), true);
-  assert.equal(getRemainingSeconds(ip, now), 10);
+  assert.equal(result.status, 429);
 });
-
-test("checkLoginRateLimit unlocks IP and allows request when 15-second window expires", () => {
-  const ip = "10.0.0.88";
-  const baseTime = 2000000;
-
-  for (let i = 0; i < 5; i++) {
-    recordFailedAttempt(ip, baseTime);
-  }
-
-  assert.equal(isLocked(ip, baseTime), true);
-
-  // Still locked at baseTime + 14 seconds (14000 ms)
-  const stillLockedRes = callMiddleware(
-    (req, res, next) => {
-      // Mock Date.now inside check
-      const origNow = Date.now;
-      Date.now = () => baseTime + 14000;
-      try {
-        checkLoginRateLimit(req, res, next);
-      } finally {
-        Date.now = origNow;
-      }
-    },
-    { ip }
-  );
-  assert.equal(stillLockedRes.statusCode, 429);
-  assert.equal(stillLockedRes.calledNext, false);
-
-  // Unlocked at baseTime + WINDOW_MS + 1000 ms (expired)
-  const unlockedRes = callMiddleware(
-    (req, res, next) => {
-      const origNow = Date.now;
-      Date.now = () => baseTime + WINDOW_MS + 1000;
-      try {
-        checkLoginRateLimit(req, res, next);
-      } finally {
-        Date.now = origNow;
-      }
-    },
-    { ip }
-  );
-  assert.equal(unlockedRes.statusCode, 200);
-  assert.equal(unlockedRes.calledNext, true);
-});
-
-test("stopCleanupTimer stops interval without error", () => {
-  assert.doesNotThrow(() => {
-    stopCleanupTimer();
-  });
-});
-
