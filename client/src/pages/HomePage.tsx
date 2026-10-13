@@ -18,7 +18,7 @@ import UserMenu from '../components/home/UserMenu';
 import LoginPromptModal from '../components/favorites/LoginPromptModal';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
-import { Logo, QrIcon } from '../components/ui/Icons';
+import { ChevronDownIcon, ChevronUpIcon, Logo, QrIcon } from '../components/ui/Icons';
 import './HomePage.css';
 
 const BUILDING_ZOOM = 16; // close enough to see the building and the streets around it
@@ -51,6 +51,7 @@ function HomePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
 
   const isBuildingFavorite = useFavoritesStore((state) => state.isBuildingFavorite);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -126,6 +127,7 @@ function HomePage() {
   function selectBuilding(building: Building) {
     const point = getBuildingPoint(building);
     setSelectedId(building.id);
+    setIsSheetExpanded(false);
     setMapFocus({ kind: 'point', lat: point.lat, lng: point.lng, zoom: BUILDING_ZOOM });
   }
 
@@ -199,11 +201,33 @@ function HomePage() {
     return (
       <>
         <div className="sheet-header">
-          <h2 className="sheet-title">{title}</h2>
-          {!isLoading && !error && <span className="home-count">{results.length}</span>}
+          <div className="sheet-title-group">
+            <h2 className="sheet-title">{title}</h2>
+            {!isLoading && !error && <span className="home-count">{results.length}</span>}
+          </div>
+          {!isLoading && !error && results.length > 0 && (
+            <button
+              type="button"
+              className="sheet-toggle-expand-btn"
+              onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+              aria-expanded={isSheetExpanded}
+            >
+              {isSheetExpanded ? (
+                <>
+                  <span>חזרה למפה</span>
+                  <ChevronDownIcon size={16} />
+                </>
+              ) : (
+                <>
+                  <span>הצג הכול</span>
+                  <ChevronUpIcon size={16} />
+                </>
+              )}
+            </button>
+          )}
         </div>
 
-        {locationMessage && (
+        {locationMessage && !isSheetExpanded && (
           <p className="sheet-text">
             {locationMessage}
             {locationStatus === 'unavailable' && (
@@ -227,7 +251,14 @@ function HomePage() {
 
         {!isLoading && !error && results.length === 0 && <p className="message-info">לא נמצאו מבנים.</p>}
 
-        {results.length > 0 && <NearbyBuildings results={results} onPick={selectBuilding} />}
+        {results.length > 0 && (
+          <NearbyBuildings
+            results={results}
+            onPick={selectBuilding}
+            isExpanded={isSheetExpanded}
+            onPromptLogin={() => setIsLoginPromptOpen(true)}
+          />
+        )}
 
         <div className="sheet-actions">
           <button type="button" className="btn btn-outline home-scan-wide" onClick={() => setIsScannerOpen(true)}>
@@ -285,8 +316,19 @@ function HomePage() {
         />
       </div>
 
-      <div className="sheet">
-        <div className="sheet-handle" />
+      <div className={`sheet${isSheetExpanded ? ' is-expanded' : ''}`}>
+        <button
+          type="button"
+          className="sheet-handle-btn"
+          onClick={() => {
+            if (!selectedBuilding) {
+              setIsSheetExpanded(!isSheetExpanded);
+            }
+          }}
+          aria-label={isSheetExpanded ? 'כיווץ המגירה למפה' : 'הרחבת המגירה לרשימה מלאה'}
+        >
+          <div className="sheet-handle" />
+        </button>
         {renderSheetContent()}
       </div>
 

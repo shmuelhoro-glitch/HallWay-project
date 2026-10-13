@@ -50,3 +50,57 @@
   padding: 0;
   color: inherit;
 }
+
+/* Sheet title and count group */
+.sheet-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Expand toggle button in header */
+.sheet-toggle-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sheet-toggle-expand-btn:hover {
+  border-color: var(--ink);
+  background: var(--surface-soft);
+}
+
+/* Clickable handle button */
+.sheet-handle-btn {
+  display: block;
+  width: 100%;
+  padding: 4px 0 12px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sheet-handle-btn:hover .sheet-handle {
+  background: var(--muted);
+}
+
+/* Smooth expansion of the sheet */
+.sheet {
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheet.is-expanded {
+  max-height: 80dvh;
+  height: 80dvh;
+}
+

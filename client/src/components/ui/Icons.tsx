@@ -58,6 +58,22 @@ export function ChevronIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function ChevronUpIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M18 15l-6-6-6 6" />
+    </BaseIcon>
+  );
+}
+
+export function ChevronDownIcon({ size = 18 }: IconProps) {
+  return (
+    <BaseIcon size={size}>
+      <path d="M6 9l6 6 6-6" />
+    </BaseIcon>
+  );
+}
+
 export function CloseIcon({ size }: IconProps) {
   return (
     <BaseIcon size={size}>
