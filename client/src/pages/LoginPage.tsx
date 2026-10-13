@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { login } from '../api/auth';
 import { ApiError } from '../api/client';
 import { useAuthStore } from '../store/authStore';
+import { useCountdown } from '../hooks/useCountdown';
 import { Logo } from '../components/ui/Icons';
 import './AuthPages.css';
 
@@ -15,10 +16,12 @@ function getRedirect(value: string | null): string {
   return '/';
 }
 
+// The same as the server (middleware/loginRateLimiter.js): 5 wrong passwords lock the login for up to 15 seconds
+const LOCK_SECONDS = 15;
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === 'INVALID_CREDENTIALS') return 'האימייל או הסיסמה שגויים.';
-    if (error.code === 'ACCOUNT_LOCKED') return 'יותר מדי ניסיונות. נסו שוב בעוד 15 שניות.';
     if (error.code === 'VALIDATION_ERROR') return 'יש להזין אימייל וסיסמה תקינים.';
   }
   return 'ההתחברות נכשלה. נסו שוב.';
@@ -35,6 +38,11 @@ function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // After too many wrong passwords: when the lock started. The button waits until it is over.
+  const [lockedAt, setLockedAt] = useState<number | null>(null);
+  const lockSecondsLeft = useCountdown(lockedAt, LOCK_SECONDS);
+  const isLocked = lockedAt !== null && lockSecondsLeft > 0;
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -45,7 +53,11 @@ function LoginPage() {
       setAuth(result.token, result.user);
       navigate(redirect, { replace: true });
     } catch (loginError) {
-      setError(getErrorMessage(loginError));
+      if (loginError instanceof ApiError && loginError.code === 'ACCOUNT_LOCKED') {
+        setLockedAt(Date.now());
+      } else {
+        setError(getErrorMessage(loginError));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -88,9 +100,14 @@ function LoginPage() {
           onChange={(event) => setPassword(event.target.value)}
         />
 
-        {error && <p className="message-error" role="alert">{error}</p>}
+        {error && !isLocked && <p className="message-error" role="alert">{error}</p>}
+        {isLocked && (
+          <p className="message-error" role="alert">
+            יותר מדי ניסיונות. נסו שוב בעוד {lockSecondsLeft} שניות.
+          </p>
+        )}
 
-        <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
+        <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting || isLocked}>
           {isSubmitting ? 'מתחבר...' : 'התחברות'}
         </button>
       </form>

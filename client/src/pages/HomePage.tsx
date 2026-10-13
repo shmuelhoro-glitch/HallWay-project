@@ -21,6 +21,7 @@ import type { QrResult } from '../components/alert/QrScanner';
 import { ChevronDownIcon, ChevronUpIcon, Logo, QrIcon } from '../components/ui/Icons';
 import './HomePage.css';
 
+const MAX_AUTO_ENTER_ACCURACY_M = 100;
 const BUILDING_ZOOM = 16; // close enough to see the building and the streets around it
 
 // The line under the list title, when we don't have the user's location
@@ -53,7 +54,7 @@ function HomePage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
 
-  const isBuildingFavorite = useFavoritesStore((state) => state.isBuildingFavorite);
+  const favoriteBuildings = useFavoritesStore((state) => state.favorites.buildings);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
 
@@ -87,7 +88,7 @@ function HomePage() {
   // What the map, the list and the search show: filtered by text and type, best first
   const baseResults = searchBuildings(buildings, searchText, type, userPoint);
   const results = favoritesOnly
-    ? baseResults.filter(({ building }) => isBuildingFavorite(building.id))
+    ? baseResults.filter(({ building }) => favoriteBuildings.includes(building.id))
     : baseResults;
 
   const selectedBuilding = buildings.find((building) => building.id === selectedId) ?? null;
@@ -101,12 +102,14 @@ function HomePage() {
 
   // Auto-enter closest building if user is within 150m (and has not already exited/entered in this session)
   useEffect(() => {
-    if (!userPoint || buildings.length === 0 || isLoading) return;
+    if (!userPosition || buildings.length === 0 || isLoading) return;
+    // A position that may be hundreds of meters off says nothing about which building this is
+    if (userPosition.accuracy > MAX_AUTO_ENTER_ACCURACY_M) return;
 
     const hasAutoEntered = sessionStorage.getItem('inroute_auto_entered');
     if (hasAutoEntered) return;
 
-    const match = findClosestBuildingWithinRadius(userPoint, buildings);
+    const match = findClosestBuildingWithinRadius({ lat: userPosition.lat, lng: userPosition.lng }, buildings);
     if (match) {
       sessionStorage.setItem('inroute_auto_entered', match.building.id);
       addRecent(match.building);
@@ -114,7 +117,7 @@ function HomePage() {
         state: { autoEntered: true, buildingName: match.building.name },
       });
     }
-  }, [userPoint, buildings, isLoading, addRecent, navigate]);
+  }, [userPosition, buildings, isLoading, addRecent, navigate]);
 
   function handleToggleFavorites() {
     if (!user) {

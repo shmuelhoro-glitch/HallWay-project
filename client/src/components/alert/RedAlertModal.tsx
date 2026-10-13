@@ -24,6 +24,7 @@ function RedAlertModal({ buildingName, floors, places, currentFloor, onPickLandm
   const clearAlert = useAlertStore((state) => state.clearAlert);
 
   const secondsLeft = useCountdown(receivedAt, alert ? alert.countdown : 0);
+  const isSimulation = alert?.isSimulation === true;
 
   if (status === 'none' || isMinimized) {
     return null;
@@ -48,17 +49,17 @@ function RedAlertModal({ buildingName, floors, places, currentFloor, onPickLandm
   }
 
   return (
-    <div className="red-alert" role="alertdialog" aria-label="צבע אדום">
+    <div className="red-alert" role="alertdialog" aria-label={isSimulation ? 'תרגיל צבע אדום' : 'צבע אדום'}>
       <div className="red-alert-source">
         <span className="red-alert-source-icon">
           <SirenIcon size={18} />
         </span>
-        התרעת פיקוד העורף
+        {isSimulation ? 'תרגיל · זו לא התרעת אמת' : 'התרעת פיקוד העורף'}
       </div>
 
       <div className="red-alert-head">
         <div>
-          <h1 className="red-alert-title">צבע אדום</h1>
+          <h1 className="red-alert-title">{isSimulation ? 'תרגיל צבע אדום' : 'צבע אדום'}</h1>
           <p className="red-alert-subtitle">
             {alert?.title} · {buildingName}
           </p>

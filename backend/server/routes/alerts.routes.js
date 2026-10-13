@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verifyToken, requireSuper } from "../middleware/authentication.js";
 import { validateRequest } from "../middleware/validation.js";
 import {
   simulateAlertSchema,
@@ -16,7 +17,9 @@ const router = Router();
 
 router.get("/areas", getAlertAreas);
 router.get("/active/:buildingId", validateRequest(activeAlertSchema), getActiveAlert);
-router.post("/simulate", validateRequest(simulateAlertSchema), simulateAlert);
-router.post("/stop", validateRequest(stopAlertSchema), stopAlert);
+
+// A drill reaches every visitor in the building, so only we (the owners of the system) start and stop one
+router.post("/simulate", verifyToken, requireSuper, validateRequest(simulateAlertSchema), simulateAlert);
+router.post("/stop", verifyToken, requireSuper, validateRequest(stopAlertSchema), stopAlert);
 
 export default router;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getBuildingById, getPlanUrl } from '../api/buildings';
 import { getPlaces } from '../api/places';
@@ -68,10 +68,11 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   const user = useAuthStore((state) => state.user);
   const isAdmin = user !== null && (user.role === 'admin' || user.role === 'super');
+  const isSuper = user !== null && user.role === 'super';
 
   const isBuildingFav = useFavoritesStore((state) => state.isBuildingFavorite(buildingId));
   const toggleBuildingFav = useFavoritesStore((state) => state.toggleBuildingFavorite);
-  const isPlaceFavorite = useFavoritesStore((state) => state.isPlaceFavorite);
+  const favoritePlaces = useFavoritesStore((state) => state.favorites.places);
 
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -92,6 +93,10 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const [stepIndex, setStepIndex] = useState(0);
   const [isShelterRoute, setIsShelterRoute] = useState(false);
   const [accessible, setAccessible] = useState(false);
+  // The same value, for startRoute. If startRoute itself depended on "accessible" it would be a new
+  // function after every press, the ?node= effect would run again, and the visitor would jump back
+  // to the QR point he came from.
+  const accessibleRef = useRef(false);
 
   // ---------- Open panels ----------
   // A visitor first looks around: the map and the search come before any question.
@@ -131,7 +136,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   // Ask the server for a route and show it
   const startRoute = useCallback(
     async (from: StartPoint, to: Destination, isAccessible?: boolean) => {
-      const useAccessible = isAccessible ?? accessible;
+      const useAccessible = isAccessible ?? accessibleRef.current;
       setDestination(to);
       setRoute(null);
       setIsShelterRoute(false);
@@ -159,7 +164,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         setRouteStatus('error');
       }
     },
-    [buildingId, accessible],
+    [buildingId],
   );
 
   // ?node= from a QR code: that node is the starting point
@@ -282,6 +287,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   function handleToggleAccessible() {
     const nextAccessible = !accessible;
+    accessibleRef.current = nextAccessible;
     setAccessible(nextAccessible);
 
     if (start && destination) {
@@ -293,6 +299,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     }
   }
 
+  // A drill: only for the owners of the system. Everyone in the building gets it, marked as a drill.
   async function handleToggleAlertSimulation() {
     try {
       if (alertStatus === 'active') {
@@ -397,7 +404,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
   const currentFloor = floors.find((floor) => floor.floor === floorChoice) ?? floors[0];
   const planUrl = getPlanUrl(buildingId, currentFloor.floor);
   const floorPlaces = places.filter(
-    (place) => place.floor === currentFloor.floor && (!favoritesOnly || isPlaceFavorite(place._id))
+    (place) => place.floor === currentFloor.floor && (!favoritesOnly || favoritePlaces.some((item) => item.id === place._id))
   );
   const categories = [...new Set(places.map((place) => place.category).filter(Boolean))].sort();
 
@@ -578,15 +585,17 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         >
           <StarIcon size={20} filled={isBuildingFav} />
         </button>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={alertStatus === 'active' ? 'עצירת התרעת בדיקה' : 'סימולציית צבע אדום'}
-          title={alertStatus === 'active' ? 'עצירת התרעת בדיקה' : 'סימולציית צבע אדום'}
-          onClick={handleToggleAlertSimulation}
-        >
-          <SirenIcon size={20} />
-        </button>
+        {isSuper && (
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label={alertStatus === 'active' ? 'עצירת התרגיל' : 'תרגיל צבע אדום'}
+            title={alertStatus === 'active' ? 'עצירת התרגיל' : 'תרגיל צבע אדום'}
+            onClick={handleToggleAlertSimulation}
+          >
+            <SirenIcon size={20} />
+          </button>
+        )}
         <ShareLocationButton
           buildingId={buildingId}
           start={start}

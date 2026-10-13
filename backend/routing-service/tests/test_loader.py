@@ -342,7 +342,9 @@ def test_accessible_route_uses_elevator_when_stairs_is_shorter():
     add_node("S1", 1, 10, 0, connector_id="stairs-main", node_type="stairs")
     add_node("E0", 0, 50, 0, connector_id="elevator-main", node_type="elevator")
     add_node("E1", 1, 50, 0, connector_id="elevator-main", node_type="elevator")
-    add_node("GOAL", 1, 60, 0)
+    # The goal is closer to the stairs: 60 through them, 100 through the elevator.
+    # (At 60,0 both ways cost 90, and which one comes out is luck.)
+    add_node("GOAL", 1, 30, 0)
 
     add_edge("START", "S0")
     add_edge("START", "E0")

@@ -21,6 +21,8 @@ const { default: authRoutes } = await import("../routes/auth.routes.js");
 const { default: buildingsRoutes } = await import("../routes/buildings.routes.js");
 const { default: placesRoutes } = await import("../routes/places.routes.js");
 const { default: graphRoutes } = await import("../routes/graph.routes.js");
+const { default: alertsRoutes } = await import("../routes/alerts.routes.js");
+const { resetAlertsState } = await import("../services/alerts.service.js");
 
 // The same paths as server.js (server.js itself can't be imported: it starts listening)
 const app = express();
@@ -29,6 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/buildings", buildingsRoutes);
 app.use("/api/buildings/:buildingId/places", placesRoutes);
 app.use("/api/buildings/:buildingId/graph", graphRoutes);
+app.use("/api/alerts", alertsRoutes);
 app.use(errorHandler);
 
 const OTHER_BUILDING_ID = "22222222-2222-4222-8222-222222222222";
@@ -326,6 +329,38 @@ test("when the delete fails in the middle, the building stays in the list and ca
   assert.equal(again.status, 204);
   assert.deepEqual(buildingsLeft(), [OTHER_BUILDING_ID]);
   assert.deepEqual(mongoRepo.all("nodes").map((doc) => doc.buildingId), [OTHER_BUILDING_ID]);
+});
+
+// ---------- A drill of a red alert ----------
+
+test("only a super starts and stops a drill - not an admin of the building, not a visitor, not a stranger", async () => {
+  const owner = await addUser("super");
+  const admin = await addUser("admin", [BUILDING_ID]);
+  const visitor = await addUser("visitor");
+  const body = { buildingId: BUILDING_ID, countdown: 30 };
+
+  for (const path of ["/api/alerts/simulate", "/api/alerts/stop"]) {
+    const refused = [
+      await request("POST", path, { token: admin.token, body }),
+      await request("POST", path, { token: visitor.token, body }),
+      await request("POST", path, { body }),
+    ];
+    assert.deepEqual(refused.map((result) => result.status), [403, 403, 401], path);
+  }
+  const before = await request("GET", `/api/alerts/active/${BUILDING_ID}`);
+  assert.equal(before.body.active, false);
+
+  const started = await request("POST", "/api/alerts/simulate", { token: owner.token, body });
+  assert.equal(started.status, 200);
+
+  // Everyone may ask if there is an alert now - a visitor who opens the building in the middle of one
+  const during = await request("GET", `/api/alerts/active/${BUILDING_ID}`);
+  assert.equal(during.body.active, true);
+  assert.equal(during.body.alert.isSimulation, true);
+
+  const stopped = await request("POST", "/api/alerts/stop", { token: owner.token, body });
+  assert.equal(stopped.status, 200);
+  resetAlertsState();
 });
 
 // ---------- The list in the admin home screen ----------

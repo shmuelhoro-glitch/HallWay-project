@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import type { Socket } from 'socket.io-client';
 import { createSocket } from './socket';
+import { getActiveAlert } from '../api/alerts';
 import { useAuthStore } from '../store/authStore';
 import { useAlertStore } from '../store/alertStore';
 import type { AlertPayload } from '../types/alert';
@@ -28,12 +29,26 @@ export function useBuildingRoom(buildingId: string): Socket {
       endAlert();
     }
 
+    // alert:start is sent once. A visitor who opens the building in the middle of an alert
+    // missed it, so we also ask.
+    let isCancelled = false;
+    getActiveAlert(buildingId)
+      .then((result) => {
+        if (!isCancelled && result.active && result.alert && useAlertStore.getState().status !== 'active') {
+          startAlert(result.alert);
+        }
+      })
+      .catch(() => {
+        // No answer: an alert that starts from now on still arrives through the socket
+      });
+
     socket.on('connect', handleConnect);
     socket.on('alert:start', handleAlertStart);
     socket.on('alert:end', handleAlertEnd);
     socket.connect();
 
     return () => {
+      isCancelled = true;
       socket.off('connect', handleConnect);
       socket.off('alert:start', handleAlertStart);
       socket.off('alert:end', handleAlertEnd);
