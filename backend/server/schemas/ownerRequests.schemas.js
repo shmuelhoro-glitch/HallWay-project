@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // A visitor asks to become a building manager. We (the owners) read the request and,
-// if we approve it, change his role by hand in the users table.
+// if we approve it, his role becomes admin.
 
 export const createOwnerRequestSchema = {
   body: z.object({
@@ -22,5 +22,11 @@ export const updateOwnerRequestSchema = {
   }),
   body: z.object({
     status: z.enum(["new", "handled"]),
+  }),
+};
+
+export const approveOwnerRequestSchema = {
+  params: z.object({
+    requestId: z.coerce.number().int().positive(),
   }),
 };
