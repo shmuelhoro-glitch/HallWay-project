@@ -118,6 +118,12 @@ a:hover {
   outline-offset: 2px;
 }
 
+/* Leaflet places its tooltips, popups and controls for a left-to-right page. Inside a right-to-left
+   page they land far from their marker, so the map itself stays left-to-right (Hebrew text in it still reads right). */
+.leaflet-container {
+  direction: ltr;
+}
+
 /* Arrows (back, forward, send) point the other way when the page is right-to-left */
 [dir='rtl'] .icon-directional {
   transform: scaleX(-1);
