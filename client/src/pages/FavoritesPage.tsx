@@ -34,15 +34,18 @@ function FavoritesPage() {
       .catch((err) => console.error('Failed to load buildings:', err));
   }, []);
 
+  const favBuildings = favorites?.buildings ?? [];
+  const favPlaces = favorites?.places ?? [];
+
   // Filtered favorite buildings
   const favoriteBuildings = useMemo(() => {
-    return allBuildings.filter((b) => favorites.buildings.includes(b.id));
-  }, [allBuildings, favorites.buildings]);
+    return allBuildings.filter((b) => favBuildings.includes(b.id));
+  }, [allBuildings, favBuildings]);
 
   // All distinct categories from saved places and buildings
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    favorites.places.forEach((p) => {
+    favPlaces.forEach((p) => {
       if (p.category) cats.add(p.category);
     });
     favoriteBuildings.forEach((b) => {
@@ -50,7 +53,7 @@ function FavoritesPage() {
       cats.add(label);
     });
     return Array.from(cats);
-  }, [favorites.places, favoriteBuildings]);
+  }, [favPlaces, favoriteBuildings]);
 
   // Filtered lists by selected category
   const displayedBuildings = useMemo(() => {
@@ -64,9 +67,9 @@ function FavoritesPage() {
 
   const displayedPlaces = useMemo(() => {
     if (activeTab === 'buildings') return [];
-    if (!selectedCategory) return favorites.places;
-    return favorites.places.filter((p) => p.category === selectedCategory);
-  }, [activeTab, selectedCategory, favorites.places]);
+    if (!selectedCategory) return favPlaces;
+    return favPlaces.filter((p) => p.category === selectedCategory);
+  }, [activeTab, selectedCategory, favPlaces]);
 
   const totalCount = displayedBuildings.length + displayedPlaces.length;
 
@@ -120,7 +123,7 @@ function FavoritesPage() {
           aria-pressed={activeTab === 'all'}
           onClick={() => setActiveTab('all')}
         >
-          הכול ({favorites.buildings.length + favorites.places.length})
+          הכול ({favBuildings.length + favPlaces.length})
         </button>
         <button
           type="button"
@@ -129,7 +132,7 @@ function FavoritesPage() {
           aria-pressed={activeTab === 'buildings'}
           onClick={() => setActiveTab('buildings')}
         >
-          מבנים ({favorites.buildings.length})
+          מבנים ({favBuildings.length})
         </button>
         <button
           type="button"
@@ -138,7 +141,7 @@ function FavoritesPage() {
           aria-pressed={activeTab === 'places'}
           onClick={() => setActiveTab('places')}
         >
-          חנויות ומקומות ({favorites.places.length})
+          חנויות ומקומות ({favPlaces.length})
         </button>
       </div>
 

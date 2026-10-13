@@ -24,12 +24,13 @@ export const useFavoritesStore = create<FavoritesState>()(
       favorites: NO_FAVORITES,
       ownerId: null,
 
-      isBuildingFavorite: (buildingId) => get().favorites.buildings.includes(buildingId),
+      isBuildingFavorite: (buildingId) => Boolean(get().favorites?.buildings?.includes(buildingId)),
 
-      isPlaceFavorite: (placeId) => get().favorites.places.some((place) => place.id === placeId),
+      isPlaceFavorite: (placeId) => Boolean(get().favorites?.places?.some((place) => place.id === placeId)),
 
       toggleBuildingFavorite: (buildingId) => {
-        const { buildings, places } = get().favorites;
+        const buildings = Array.isArray(get().favorites?.buildings) ? get().favorites.buildings : [];
+        const places = Array.isArray(get().favorites?.places) ? get().favorites.places : [];
         const isFavorite = buildings.includes(buildingId);
 
         return saveFavorites({
@@ -39,7 +40,8 @@ export const useFavoritesStore = create<FavoritesState>()(
       },
 
       togglePlaceFavorite: (place) => {
-        const { buildings, places } = get().favorites;
+        const buildings = Array.isArray(get().favorites?.buildings) ? get().favorites.buildings : [];
+        const places = Array.isArray(get().favorites?.places) ? get().favorites.places : [];
         const isFavorite = places.some((item) => item.id === place.id);
 
         return saveFavorites({
@@ -48,7 +50,20 @@ export const useFavoritesStore = create<FavoritesState>()(
         });
       },
     }),
-    { name: 'inroute-favorites' },
+    {
+      name: 'inroute-favorites',
+      merge: (persistedState: any, currentState: FavoritesState) => {
+        const persisted = (persistedState as Partial<FavoritesState>) || {};
+        return {
+          ...currentState,
+          ...persisted,
+          favorites: {
+            buildings: Array.isArray(persisted.favorites?.buildings) ? persisted.favorites.buildings : [],
+            places: Array.isArray(persisted.favorites?.places) ? persisted.favorites.places : [],
+          },
+        };
+      },
+    },
   ),
 );
 
@@ -61,10 +76,15 @@ function saveFavorites(next: UserFavorites): boolean {
   const user = useAuthStore.getState().user;
   if (!user) return false;
 
-  changeCount += 1;
-  useFavoritesStore.setState({ favorites: next, ownerId: user.id });
+  const sanitized: UserFavorites = {
+    buildings: Array.isArray(next?.buildings) ? next.buildings : [],
+    places: Array.isArray(next?.places) ? next.places : [],
+  };
 
-  updateFavorites(next).catch(() => {
+  changeCount += 1;
+  useFavoritesStore.setState({ favorites: sanitized, ownerId: user.id });
+
+  updateFavorites(sanitized).catch(() => {
     // Not saved: show what the server really has, and not a star that will be gone tomorrow
     loadFavorites(user.id);
   });
@@ -80,7 +100,13 @@ async function loadFavorites(userId: string) {
 
     const isStillThisUser = useAuthStore.getState().user?.id === userId;
     if (isStillThisUser && changeCount === changesBefore) {
-      useFavoritesStore.setState({ favorites, ownerId: userId });
+      useFavoritesStore.setState({
+        favorites: {
+          buildings: Array.isArray(favorites?.buildings) ? favorites.buildings : [],
+          places: Array.isArray(favorites?.places) ? favorites.places : [],
+        },
+        ownerId: userId,
+      });
     }
   } catch {
     // No answer: the saved copy stays

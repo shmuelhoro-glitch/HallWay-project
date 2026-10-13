@@ -12,6 +12,7 @@ import { nodeToStartPoint, placeToStartPoint } from '../utils/startPoint';
 import type { BuildingDetails } from '../types/building';
 import type { Place } from '../types/place';
 import type { Destination, RouteNode, RouteStatus, StartPoint } from '../types/navigation';
+import type { SvgPoint } from '../utils/svgCoords';
 
 import FloorMap from '../components/map/FloorMap';
 import FloorSwitcher from '../components/map/FloorSwitcher';
@@ -72,7 +73,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   const isBuildingFav = useFavoritesStore((state) => state.isBuildingFavorite(buildingId));
   const toggleBuildingFav = useFavoritesStore((state) => state.toggleBuildingFavorite);
-  const favoritePlaces = useFavoritesStore((state) => state.favorites.places);
+  const favoritePlaces = useFavoritesStore((state) => state.favorites?.places ?? []);
 
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -113,9 +114,10 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       .then(([buildingData, placesData]) => {
         if (isCancelled) return;
         setBuilding(buildingData);
-        setPlaces(placesData);
+        setPlaces(Array.isArray(placesData) ? placesData : []);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Failed to load building data:', err);
         if (isCancelled) return;
         setLoadError('לא הצלחנו לטעון את המבנה.');
       });
@@ -143,6 +145,12 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       setRouteStatus('loading');
 
       try {
+        if (!from?.nodeId) {
+          console.error('startRoute error: starting point has no nodeId', from);
+          setRouteStatus('error');
+          return;
+        }
+
         const path = await getRoute({
           buildingId,
           fromNodeId: from.nodeId,
@@ -160,7 +168,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
         setStepIndex(0);
         setFloorChoice(path[0].floor);
         setRouteStatus('idle');
-      } catch {
+      } catch (err) {
+        console.error('startRoute failed to fetch route:', err);
         setRouteStatus('error');
       }
     },
@@ -384,15 +393,20 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     );
   }
 
-  const floors = [...building.floors].sort((a, b) => a.floor - b.floor);
+  const floors = Array.isArray(building?.floors)
+    ? [...building.floors].sort((a, b) => a.floor - b.floor)
+    : [];
 
   if (floors.length === 0) {
     return (
       <div className="screen">
         <div className="screen-message">
-          <p>למבנה הזה עדיין אין תוכניות קומה.</p>
-          <Link to="/" className="btn btn-outline">
-            חזרה למפה
+          <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>{building.name}</h2>
+          <p style={{ color: 'var(--ink-soft)', marginBottom: '16px' }}>
+            למבנה זה עדיין אין תוכניות קומה במערכת.
+          </p>
+          <Link to="/" className="btn btn-primary">
+            חזרה למפה הראשית
           </Link>
         </div>
       </div>
@@ -403,8 +417,10 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   const currentFloor = floors.find((floor) => floor.floor === floorChoice) ?? floors[0];
   const planUrl = getPlanUrl(buildingId, currentFloor.floor);
-  const floorPlaces = places.filter(
-    (place) => place.floor === currentFloor.floor && (!favoritesOnly || favoritePlaces.some((item) => item.id === place._id))
+  const floorPlaces = (places || []).filter(
+    (place) =>
+      place.floor === currentFloor.floor &&
+      (!favoritesOnly || (Array.isArray(favoritePlaces) && favoritePlaces.some((item) => item?.id === place._id)))
   );
   const categories = [...new Set(places.map((place) => place.category).filter(Boolean))].sort();
 
@@ -530,6 +546,34 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     );
   }
 
+  // Tapping anywhere on the floor map selects the closest place on the current floor (Snap-to-Nearest)
+  function handleMapClick(point: SvgPoint, unitsPerPixel: number) {
+    if (floorPlaces.length === 0) return;
+
+    // Allow snap within a generous touch radius (120 screen pixels converted to SVG units)
+    const MAX_SNAP_DISTANCE = 120 * unitsPerPixel;
+
+    let closestPlace: Place | null = null;
+    let minDistance = Infinity;
+
+    for (const place of floorPlaces) {
+      const dist = Math.hypot(place.x - point.x, place.y - point.y);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestPlace = place;
+      }
+    }
+
+    if (closestPlace && minDistance <= MAX_SNAP_DISTANCE) {
+      handleMapPlaceClick(closestPlace);
+    } else {
+      // Tapped far outside on empty area: clear selected place unless picking a location
+      if (!isPickerOpen) {
+        setSelectedPlace(null);
+      }
+    }
+  }
+
   return (
     <div className="screen">
       <AlertBanner />
@@ -639,7 +683,13 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
       <div className="building-map">
         {/* key: a new floor = a fresh map, so zoom and position reset */}
-        <FloorMap key={planUrl} planUrl={planUrl} width={currentFloor.width} height={currentFloor.height}>
+        <FloorMap
+          key={planUrl}
+          planUrl={planUrl}
+          width={currentFloor.width}
+          height={currentFloor.height}
+          onMapClick={handleMapClick}
+        >
           <PlacesLayer
             places={floorPlaces}
             selectedPlaceId={selectedPlace ? selectedPlace._id : null}

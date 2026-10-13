@@ -19,7 +19,8 @@ function PlacesLayer({ places, selectedPlaceId, highlightShelters, onSelect, sho
         const isSelected = place._id === selectedPlaceId;
         const isShelter = place.type === 'shelter';
         const isBig = isSelected || (isShelter && highlightShelters);
-        // The floor plan already shows the names. A label is added only where it helps.
+        // The floor plan already shows the names and walls. Only show dots when selected, during an alert, or in admin editor.
+        const showDot = showAllLabels || isSelected || (isShelter && highlightShelters);
         const showLabel = showAllLabels || isSelected || (isShelter && highlightShelters);
 
         const classNames = ['map-place'];
@@ -38,16 +39,29 @@ function PlacesLayer({ places, selectedPlaceId, highlightShelters, onSelect, sho
           >
             <title>{place.name}</title>
 
-            {/* Transparent, bigger circle = easier to tap with a finger */}
-            <circle cx={place.x} cy={place.y} r={20 * scale} fill="transparent" />
+            {/* Transparent hit area: easy to tap directly */}
+            <circle cx={place.x} cy={place.y} r={22 * scale} fill="transparent" />
 
-            <circle
-              className="map-place-dot"
-              cx={place.x}
-              cy={place.y}
-              r={(isBig ? 11 : 7) * scale}
-              strokeWidth={2.5 * scale}
-            />
+            {/* Pulsing ring around the selected place */}
+            {isSelected && (
+              <circle
+                className="map-place-pulse"
+                cx={place.x}
+                cy={place.y}
+                r={20 * scale}
+              />
+            )}
+
+            {/* Only render visible dot when selected, shelter during alert, or in admin mode */}
+            {showDot && (
+              <circle
+                className="map-place-dot"
+                cx={place.x}
+                cy={place.y}
+                r={(isBig ? 11 : 7) * scale}
+                strokeWidth={2.5 * scale}
+              />
+            )}
 
             {showLabel && (
               <text

@@ -15,6 +15,23 @@
 .map-place.is-selected .map-place-dot {
   fill: var(--yellow);
   stroke: var(--ink);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.map-place-pulse {
+  fill: var(--yellow);
+  opacity: 0.35;
+  animation: placeHaloPulse 2s infinite ease-in-out;
+}
+
+@keyframes placeHaloPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform-origin: center;
+  }
+  50% {
+    opacity: 0.15;
+  }
 }
 
 .map-place-label {

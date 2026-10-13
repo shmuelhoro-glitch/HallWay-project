@@ -54,7 +54,7 @@ function HomePage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
 
-  const favoriteBuildings = useFavoritesStore((state) => state.favorites.buildings);
+  const favoriteBuildings = useFavoritesStore((state) => state.favorites?.buildings ?? []);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
 
@@ -88,7 +88,7 @@ function HomePage() {
   // What the map, the list and the search show: filtered by text and type, best first
   const baseResults = searchBuildings(buildings, searchText, type, userPoint);
   const results = favoritesOnly
-    ? baseResults.filter(({ building }) => favoriteBuildings.includes(building.id))
+    ? baseResults.filter(({ building }) => (favoriteBuildings || []).includes(building.id))
     : baseResults;
 
   const selectedBuilding = buildings.find((building) => building.id === selectedId) ?? null;
