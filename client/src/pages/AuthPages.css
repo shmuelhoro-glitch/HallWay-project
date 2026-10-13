@@ -50,19 +50,6 @@
   margin-top: 0;
 }
 
-.auth-input {
-  height: 52px;
-  padding: 0 16px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  font-size: 16px;
-  outline: none;
-}
-
-.auth-input:focus {
-  border-color: var(--ink);
-}
 
 .auth-submit {
   flex: none;

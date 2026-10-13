@@ -62,29 +62,20 @@
   margin-top: 12px;
 }
 
+/* The look of the field itself is in theme.css (Text fields) */
 .chat-input {
   flex: 1;
   min-width: 0;
-  height: 52px;
-  padding: 0 16px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  outline: none;
-}
-
-.chat-input:focus {
-  border-color: var(--ink);
 }
 
 .chat-send {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  width: var(--control-height);
+  height: var(--control-height);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--yellow);
   color: var(--ink);
   cursor: pointer;
