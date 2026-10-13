@@ -371,6 +371,37 @@
   font-size: 13px;
 }
 
+/* Layers and snap: small check boxes in a row */
+.editor-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 14px;
+}
+
+.editor-options-title {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.editor-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.editor-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ink);
+}
+
 /* The letter of the keyboard shortcut, small, next to the name of the mode */
 .editor-key {
   margin-inline-start: 6px;

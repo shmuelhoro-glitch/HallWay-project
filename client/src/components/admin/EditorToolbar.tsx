@@ -1,7 +1,7 @@
 import { NODE_TYPE_LABELS } from '../../types/graph';
 import type { NodeType } from '../../types/graph';
-import { EDITOR_MODES, NODE_COLORS } from './editorModes';
-import type { EditorMode } from './editorModes';
+import { EDITOR_LAYERS, EDITOR_MODES, NODE_COLORS } from './editorModes';
+import type { EditorLayers, EditorMode } from './editorModes';
 
 interface EditorToolbarProps {
   mode: EditorMode;
@@ -11,12 +11,28 @@ interface EditorToolbarProps {
   isBusy: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  layers: EditorLayers;
+  onLayersChange: (layers: EditorLayers) => void;
+  isSnapOn: boolean;
+  onSnapChange: (isSnapOn: boolean) => void;
 }
 
 const LEGEND_TYPES: NodeType[] = ['corridor', 'entrance', 'qr', 'stairs', 'elevator'];
 
 // The four modes of the editor, what the current one does, and what the colors mean
-function EditorToolbar({ mode, onModeChange, undoLabel, redoLabel, isBusy, onUndo, onRedo }: EditorToolbarProps) {
+function EditorToolbar({
+  mode,
+  onModeChange,
+  undoLabel,
+  redoLabel,
+  isBusy,
+  onUndo,
+  onRedo,
+  layers,
+  onLayersChange,
+  isSnapOn,
+  onSnapChange,
+}: EditorToolbarProps) {
   const currentMode = EDITOR_MODES.find((item) => item.value === mode);
 
   return (
@@ -62,6 +78,27 @@ function EditorToolbar({ mode, onModeChange, undoLabel, redoLabel, isBusy, onUnd
           ביצוע מחדש
         </button>
         {undoLabel && <span className="editor-history-last">אחרון: {undoLabel}</span>}
+      </div>
+
+      <div className="editor-options">
+        <span className="editor-options-title">מה מוצג במפה</span>
+        {EDITOR_LAYERS.map((layer) => (
+          <label key={layer.key} className="editor-option">
+            <input
+              type="checkbox"
+              checked={layers[layer.key]}
+              onChange={(event) => onLayersChange({ ...layers, [layer.key]: event.target.checked })}
+            />
+            {layer.label}
+          </label>
+        ))}
+      </div>
+
+      <div className="editor-options">
+        <label className="editor-option" title="נקודה שכמעט מיושרת עם שכנה מתיישרת איתה, ולחיצה ליד נקודה מתחברת אליה">
+          <input type="checkbox" checked={isSnapOn} onChange={(event) => onSnapChange(event.target.checked)} />
+          הצמדה לנקודות ולקווים ישרים
+        </label>
       </div>
 
       <div className="editor-legend">
