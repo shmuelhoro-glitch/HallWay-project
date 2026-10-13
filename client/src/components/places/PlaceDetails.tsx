@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import type { Place } from '../../types/place';
 import type { RouteStatus } from '../../types/navigation';
-import { ChatIcon, ClockIcon, CloseIcon, LinkIcon } from '../ui/Icons';
+import { ChatIcon, ClockIcon, CloseIcon, LinkIcon, StarIcon } from '../ui/Icons';
+import { useFavoritesStore } from '../../store/favoritesStore';
+import LoginPromptModal from '../favorites/LoginPromptModal';
 import './PlaceDetails.css';
 
 interface PlaceDetailsProps {
@@ -19,7 +22,24 @@ function isWebLink(url: string | undefined): url is string {
 }
 
 function PlaceDetails({ place, floorName, routeStatus, accessible = false, onNavigate, onClose, onOpenChat }: PlaceDetailsProps) {
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+  const isFavorite = useFavoritesStore((state) => state.isPlaceFavorite(place._id));
+  const togglePlace = useFavoritesStore((state) => state.togglePlaceFavorite);
+
   const isLoading = routeStatus === 'loading';
+
+  function handleToggleFavorite() {
+    const success = togglePlace({
+      id: place._id,
+      buildingId: place.buildingId,
+      name: place.name,
+      category: place.category,
+      floor: place.floor,
+    });
+    if (!success) {
+      setIsPromptOpen(true);
+    }
+  }
 
   return (
     <div className="place-details">
@@ -30,9 +50,20 @@ function PlaceDetails({ place, floorName, routeStatus, accessible = false, onNav
             {place.category} · {floorName}
           </p>
         </div>
-        <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
-          <CloseIcon />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            type="button"
+            className="icon-btn icon-btn-plain"
+            aria-label={isFavorite ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+            title={isFavorite ? 'הסרה ממועדפים' : 'שמירה במועדפים'}
+            onClick={handleToggleFavorite}
+          >
+            <StarIcon size={22} filled={isFavorite} />
+          </button>
+          <button type="button" className="icon-btn icon-btn-plain" aria-label="סגירה" onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </div>
       </div>
 
       <div className="place-details-info">
@@ -70,6 +101,12 @@ function PlaceDetails({ place, floorName, routeStatus, accessible = false, onNav
           צ׳אט
         </button>
       </div>
+
+      <LoginPromptModal
+        isOpen={isPromptOpen}
+        onClose={() => setIsPromptOpen(false)}
+        title="רוצים לשמור את המקום?"
+      />
     </div>
   );
 }

@@ -27,10 +27,28 @@ export async function register(req, res, next) {
 
         // 10 rounds, like the seed script. More rounds = much slower on the free cloud server.
         const hashPassword = await bcrypt.hash(password, 10)
-        const data = await supabaseRepo.insertOne("users", { username, email, hashPassword, role, buildingIds: [] })
+        const initialFavorites = { buildings: [], places: [] }
+        const data = await supabaseRepo.insertOne("users", {
+            username,
+            email,
+            hashPassword,
+            role,
+            buildingIds: [],
+            favorites: initialFavorites,
+        })
 
         const token = createToken(data.id, role)
-        res.status(201).json({ token, user: { id: data.id, username, email, role, buildingIds: [] } })
+        res.status(201).json({
+            token,
+            user: {
+                id: data.id,
+                username,
+                email,
+                role,
+                buildingIds: [],
+                favorites: initialFavorites,
+            },
+        })
     } catch (error) {
         next(error)
     }
@@ -66,8 +84,45 @@ export async function login(req, res, next) {
                 email: user.email,
                 role: user.role,
                 buildingIds: user.buildingIds,
+                favorites: user.favorites || { buildings: [], places: [] },
             },
         })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export async function getFavorites(req, res, next) {
+    try {
+        const user = await supabaseRepo.findOne("users", { id: req.user.userId })
+        if (!user) {
+            throw { status: 404, code: "USER_NOT_FOUND", message: "User not found" }
+        }
+        res.json({ favorites: user.favorites || { buildings: [], places: [] } })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export async function updateFavorites(req, res, next) {
+    try {
+        const { favorites } = req.body
+        if (!favorites || typeof favorites !== "object") {
+            throw { status: 400, code: "INVALID_FAVORITES", message: "Favorites object is required" }
+        }
+
+        const cleanFavorites = {
+            buildings: Array.isArray(favorites.buildings) ? favorites.buildings : [],
+            places: Array.isArray(favorites.places) ? favorites.places : [],
+        }
+
+        await supabaseRepo.updateOne(
+            "users",
+            { id: req.user.userId },
+            { favorites: cleanFavorites }
+        )
+
+        res.json({ success: true, favorites: cleanFavorites })
     } catch (error) {
         next(error)
     }

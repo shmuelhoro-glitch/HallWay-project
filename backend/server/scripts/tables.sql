@@ -42,3 +42,7 @@ create table if not exists chat_bans (
   created_at timestamptz not null default now(),
   unique (building_id, user_id)
 );
+
+-- User favorites: saved buildings and places
+alter table users add column if not exists favorites jsonb default '{"buildings":[], "places":[]}'::jsonb;
+

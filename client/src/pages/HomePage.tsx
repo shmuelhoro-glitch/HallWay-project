@@ -5,6 +5,7 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useRecentStore } from '../store/recentStore';
 import { useAuthStore } from '../store/authStore';
+import { useFavoritesStore } from '../store/favoritesStore';
 import type { Building, BuildingType } from '../types/building';
 import { searchBuildings } from '../utils/buildingSearch';
 import { getBuildingPoint, getDistanceKm } from '../utils/distance';
@@ -14,6 +15,7 @@ import BuildingSearch from '../components/home/BuildingSearch';
 import NearbyBuildings from '../components/home/NearbyBuildings';
 import BuildingCard from '../components/home/BuildingCard';
 import UserMenu from '../components/home/UserMenu';
+import LoginPromptModal from '../components/favorites/LoginPromptModal';
 import QrScanner from '../components/alert/QrScanner';
 import type { QrResult } from '../components/alert/QrScanner';
 import { Logo, QrIcon } from '../components/ui/Icons';
@@ -50,6 +52,10 @@ function HomePage() {
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
+  const isBuildingFavorite = useFavoritesStore((state) => state.isBuildingFavorite);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+
   // All the buildings come from the server once.
   // The search runs here in the browser, so results show up while typing.
   useEffect(() => {
@@ -78,7 +84,10 @@ function HomePage() {
   const userPoint = userPosition ? { lat: userPosition.lat, lng: userPosition.lng } : null;
 
   // What the map, the list and the search show: filtered by text and type, best first
-  const results = searchBuildings(buildings, searchText, type, userPoint);
+  const baseResults = searchBuildings(buildings, searchText, type, userPoint);
+  const results = favoritesOnly
+    ? baseResults.filter(({ building }) => isBuildingFavorite(building.id))
+    : baseResults;
 
   const selectedBuilding = buildings.find((building) => building.id === selectedId) ?? null;
   const selectedDistance =
@@ -88,6 +97,14 @@ function HomePage() {
   const searchPlaceholder = user && user.username ? `לאן הולכים, ${user.username}?` : 'לאן הולכים היום?';
 
   // ---------- Actions ----------
+
+  function handleToggleFavorites() {
+    if (!user) {
+      setIsLoginPromptOpen(true);
+      return;
+    }
+    setFavoritesOnly(!favoritesOnly);
+  }
 
   function selectBuilding(building: Building) {
     const point = getBuildingPoint(building);
@@ -219,7 +236,12 @@ function HomePage() {
         text={searchText}
         onTextChange={setSearchText}
         type={type}
-        onTypeChange={handleTypeChange}
+        onTypeChange={(newType) => {
+          setFavoritesOnly(false);
+          handleTypeChange(newType);
+        }}
+        favoritesOnly={favoritesOnly}
+        onToggleFavorites={handleToggleFavorites}
         results={results}
         onPick={selectBuilding}
         onShowAll={showResultsOnMap}
@@ -247,6 +269,12 @@ function HomePage() {
       </div>
 
       {isScannerOpen && <QrScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
+
+      <LoginPromptModal
+        isOpen={isLoginPromptOpen}
+        onClose={() => setIsLoginPromptOpen(false)}
+        title="רוצים לראות מועדפים?"
+      />
     </div>
   );
 }

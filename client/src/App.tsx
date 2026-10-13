@@ -5,6 +5,7 @@ import BuildingPage from './pages/BuildingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JoinPage from './pages/JoinPage';
+import FavoritesPage from './pages/FavoritesPage';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminHomePage from './pages/admin/AdminHomePage';
 import RequestsPage from './pages/admin/RequestsPage';
@@ -24,6 +25,7 @@ function App() {
       <Route path="/b/:buildingId" element={<BuildingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/favorites" element={<FavoritesPage />} />
       {/* A visitor asks to become a building manager */}
       <Route path="/join" element={<JoinPage />} />
 

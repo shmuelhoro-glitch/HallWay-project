@@ -5,7 +5,7 @@ import type { Building, BuildingType } from '../../types/building';
 import type { BuildingResult } from '../../utils/buildingSearch';
 import { formatDistance } from '../../utils/distance';
 import type { RecentBuilding } from '../../store/recentStore';
-import { BuildingTypeIcon, ChevronIcon, ClockIcon, CloseIcon, SearchIcon } from '../ui/Icons';
+import { BuildingTypeIcon, ChevronIcon, ClockIcon, CloseIcon, SearchIcon, StarIcon } from '../ui/Icons';
 import './BuildingSearch.css';
 
 interface BuildingSearchProps {
@@ -13,6 +13,8 @@ interface BuildingSearchProps {
   onTextChange: (text: string) => void;
   type: BuildingType | null;
   onTypeChange: (type: BuildingType | null) => void;
+  favoritesOnly?: boolean;
+  onToggleFavorites?: () => void;
   results: BuildingResult[]; // already filtered and sorted by the page
   onPick: (building: Building) => void; // one building was picked from the list
   onShowAll: () => void; // Enter with many results: show them all on the map
@@ -51,6 +53,8 @@ function BuildingSearch({
   onTextChange,
   type,
   onTypeChange,
+  favoritesOnly = false,
+  onToggleFavorites,
   results,
   onPick,
   onShowAll,
@@ -212,12 +216,24 @@ function BuildingSearch({
       )}
 
       <div className="chip-row building-search-types" role="group" aria-label="סוג מבנה">
+        {onToggleFavorites && (
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={favoritesOnly}
+            onClick={onToggleFavorites}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <StarIcon size={16} filled={favoritesOnly} />
+            <span>מועדפים</span>
+          </button>
+        )}
         {TYPE_FILTERS.map((filter) => (
           <button
             key={filter.label}
             type="button"
             className="chip"
-            aria-pressed={type === filter.value}
+            aria-pressed={!favoritesOnly && type === filter.value}
             onClick={() => onTypeChange(filter.value)}
           >
             {filter.label}

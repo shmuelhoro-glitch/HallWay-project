@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { DashboardIcon, LogoutIcon } from '../ui/Icons';
+import { DashboardIcon, LogoutIcon, StarIcon } from '../ui/Icons';
 import './UserMenu.css';
 
 // A small round button with the first letter of the name.
@@ -82,6 +82,11 @@ function UserMenu() {
             </div>
           )}
           <div className="user-popover-role">{roleLabel}</div>
+
+          <Link to="/favorites" role="menuitem" className="user-popover-link" onClick={() => setIsOpen(false)}>
+            <StarIcon size={18} filled />
+            האזור האישי · מועדפים
+          </Link>
 
           {isAdmin && (
             <Link to="/admin" role="menuitem" className="user-popover-link" onClick={() => setIsOpen(false)}>

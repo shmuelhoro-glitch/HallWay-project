@@ -1,7 +1,8 @@
 import { validateRequest } from "../middleware/validation.js";
 import { checkLoginRateLimit } from "../middleware/loginRateLimiter.js";
+import { verifyToken } from "../middleware/authentication.js";
 import { loginSchema } from "../schemas/login.schema.js";
-import { login, register } from "../controllers/auth.controller.js";
+import { getFavorites, login, register, updateFavorites } from "../controllers/auth.controller.js";
 import { registerSchema } from "../schemas/auth.schemas.js";
 
 import { Router } from "express";
@@ -12,5 +13,8 @@ router.post('/register', validateRequest(registerSchema), register)
 
 router.post('/login', checkLoginRateLimit, validateRequest(loginSchema), login)
 
+router.get('/favorites', verifyToken, getFavorites)
+
+router.put('/favorites', verifyToken, updateFavorites)
 
 export default router
