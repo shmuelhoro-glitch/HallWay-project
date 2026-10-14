@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import type { StartPoint } from '../../types/navigation';
 import { ShareIcon } from '../ui/Icons';
@@ -73,7 +74,9 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
         <ShareIcon />
       </button>
 
-      {isConfirmOpen && start && (
+      {/* In document.body: the button sits in the header, and anything drawn inside the header
+          stays under the floating parts of the screen (the bottom dock), whatever its z-index */}
+      {isConfirmOpen && start && createPortal(
         <div className="overlay" onClick={() => setIsConfirmOpen(false)}>
           <div
             className="dialog"
@@ -100,13 +103,15 @@ function ShareLocationButton({ buildingId, start, floorName, onNeedLocation }: S
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
-      {toast && (
+      {toast && createPortal(
         <div className="share-toast" role="status">
           {toast}
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

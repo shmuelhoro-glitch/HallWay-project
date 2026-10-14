@@ -405,3 +405,32 @@
   font-size: 14px;
   cursor: pointer;
 }
+
+/* ---------- Narrow phones ---------- */
+
+.building-title-pill {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.building-title-name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.building-title-floor {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 440px) {
+  /* "Sea Mall · you are near ..." does not fit next to five buttons: the name alone does */
+  .building-title-sep,
+  .building-title-floor {
+    display: none;
+  }
+}
+
+.building-quick-sheet .sheet-header {
+  padding: 0;
+}

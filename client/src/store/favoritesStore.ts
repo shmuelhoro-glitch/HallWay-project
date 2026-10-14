@@ -52,7 +52,7 @@ export const useFavoritesStore = create<FavoritesState>()(
     }),
     {
       name: 'inroute-favorites',
-      merge: (persistedState: any, currentState: FavoritesState) => {
+      merge: (persistedState: unknown, currentState: FavoritesState) => {
         const persisted = (persistedState as Partial<FavoritesState>) || {};
         return {
           ...currentState,

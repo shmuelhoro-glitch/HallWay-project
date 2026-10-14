@@ -440,8 +440,8 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     return (
       <div className="screen">
         <div className="screen-message">
-          <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>{building.name}</h2>
-          <p style={{ color: 'var(--ink-soft)', marginBottom: '16px' }}>
+          <h2 className="screen-message-title">{building.name}</h2>
+          <p className="screen-message-text">
             למבנה זה עדיין אין תוכניות קומה במערכת.
           </p>
           <Link to="/" className="btn btn-primary">
@@ -456,6 +456,12 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
 
   const currentFloor = floors.find((floor) => floor.floor === floorChoice) ?? floors[0];
   const planUrl = getPlanUrl(buildingId, currentFloor.floor);
+
+  // A long plan does not fit a phone whole, so the map opens where the visitor needs it:
+  // on the route of this floor, or on "you are here". A new start or a new route opens it again there.
+  const routeOnFloor = route ? route.find((node) => node.floor === currentFloor.floor) : undefined;
+  const mapStart = routeOnFloor ?? (start && start.floor === currentFloor.floor ? start : null);
+  const mapKey = `${planUrl}|${start ? start.nodeId : ''}|${route ? `${route[0].id}-${route.length}` : ''}`;
   const floorPlaces = (places || []).filter(
     (place) =>
       place.floor === currentFloor.floor &&
@@ -468,11 +474,6 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     subtitle = `מסלול אל ${destination.label}`;
   } else if (start) {
     subtitle = `אתם ליד ${start.label}`;
-  }
-
-  let floorBadge = getFloorName(floors, currentFloor.floor);
-  if (start && start.floor === currentFloor.floor) {
-    floorBadge += ' · אתם כאן';
   }
 
   const chatButton = (
@@ -558,7 +559,7 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     if (destination) {
       return (
         <div className="building-quick-sheet">
-          <div className="sheet-header" style={{ padding: 0 }}>
+          <div className="sheet-header">
             <div>
               <h2 className="sheet-title">{title}</h2>
               <p className="sheet-text">{text}</p>
@@ -588,12 +589,13 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
     return null;
   }
 
-  // Tapping anywhere on the floor map selects the closest place on the current floor (Snap-to-Nearest)
+  // A tap next to a place (not exactly on its point) still picks it: the closest place, if it is near
+  // the finger. Not much more than a fingertip, or in a busy mall every tap picks some store, and
+  // a tap on an empty spot could never close the card.
   function handleMapClick(point: SvgPoint, unitsPerPixel: number) {
     if (floorPlaces.length === 0) return;
 
-    // Allow snap within a generous touch radius (120 screen pixels converted to SVG units)
-    const MAX_SNAP_DISTANCE = 120 * unitsPerPixel;
+    const MAX_SNAP_DISTANCE = 32 * unitsPerPixel;
 
     let closestPlace: Place | null = null;
     let minDistance = Infinity;
@@ -760,11 +762,12 @@ function BuildingPage({ buildingId, nodeParam, targetParam }: BuildingPageProps)
       ) : (
         <div className="building-map full-screen">
           <FloorMap
-            key={planUrl}
+            key={mapKey}
             planUrl={planUrl}
             width={currentFloor.width}
             height={currentFloor.height}
             onMapClick={handleMapClick}
+            startAt={mapStart}
           >
             <PlacesLayer
               places={floorPlaces}
