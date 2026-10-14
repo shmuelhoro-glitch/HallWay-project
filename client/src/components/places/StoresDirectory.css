@@ -281,3 +281,29 @@
   background: #fffbeb;
   transform: scale(1.1);
 }
+
+/* A long name wraps to a second line instead of being cut ("...a Fashion") */
+.store-card-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 440px) {
+  /* On a phone the three buttons took most of the card: "navigate" keeps only its icon */
+  .store-btn.is-nav span {
+    display: none;
+  }
+
+  .store-card {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .store-card-main {
+    gap: 10px;
+  }
+}

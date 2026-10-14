@@ -12,6 +12,18 @@
   stroke: var(--green);
 }
 
+/* A quiet point: it marks the place without hiding the name that the plan writes there */
+.map-place.is-point .map-place-dot {
+  fill: var(--ink);
+  stroke: #ffffff;
+  opacity: 0.5;
+}
+
+.map-place.is-point.is-shelter .map-place-dot {
+  fill: var(--green);
+  opacity: 0.9;
+}
+
 .map-place.is-selected .map-place-dot {
   fill: var(--yellow);
   stroke: var(--ink);
